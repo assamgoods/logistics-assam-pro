@@ -5,6 +5,7 @@ import { Truck, ArrowLeft, MapPin, Clock, Package, CheckCircle2, Circle, Loader2
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { LogoMark } from '@/components/Logo'
 
 const PHONE = '8847428801'
 
@@ -32,18 +33,18 @@ export default function TrackPage() {
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="gradient-navy text-white">
-        <div className="container mx-auto px-4 py-6 flex items-center justify-between">
-          <button onClick={() => router.push('/')} className="flex items-center gap-2 text-white/90 hover:text-agc-gold text-sm font-semibold">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <button onClick={() => router.push('/')} className="flex items-center gap-2 text-white/90 hover:text-agc-orange text-sm font-semibold">
             <ArrowLeft className="h-4 w-4"/> Back to Home
           </button>
-          <div className="font-black tracking-tight">ASSAM GOODS CARRIER</div>
+          <div className="flex items-center gap-2.5"><LogoMark size={32}/><div className="font-black tracking-tight">ASSAM GOODS CARRIER</div></div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
         <form onSubmit={(e)=>{e.preventDefault(); if(q.trim()) router.push(`/track/${encodeURIComponent(q.trim())}`)}} className="flex gap-2 max-w-2xl">
           <Input value={q} onChange={e=>setQ(e.target.value)} placeholder="LR / Bilty number" className="h-11"/>
-          <Button className="bg-[#0B2545] hover:bg-[#13315C] text-white h-11 px-6 font-bold">Track</Button>
+          <Button className="bg-[#0F3D91] hover:bg-[#1E4FB8] text-white h-11 px-6 font-bold">Track</Button>
         </form>
 
         {loading && (<div className="mt-10 flex items-center gap-2 text-slate-500"><Loader2 className="h-5 w-5 animate-spin"/> Fetching shipment...</div>)}
@@ -68,7 +69,7 @@ export default function TrackPage() {
                     <div className="mt-1"><span className="tracking-number-lg">{data.lrNumber}</span></div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-agc-gold text-[#0B2545]">{(data.stages.find(s=>s.key===data.status)?.label) || data.status}</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-agc-gold text-[#0F3D91]">{(data.stages.find(s=>s.key===data.status)?.label) || data.status}</span>
                     <a href={`/print/${encodeURIComponent(data.lrNumber)}`} target="_blank" rel="noreferrer"><Button variant="outline" className="h-9"><Printer className="h-4 w-4 mr-2"/>LR Copy</Button></a>
                   </div>
                 </div>
@@ -85,7 +86,7 @@ export default function TrackPage() {
                 </div>
 
                 <div className="mt-8">
-                  <div className="font-bold text-[#0B2545] mb-4">Shipment Timeline</div>
+                  <div className="font-bold text-[#0F3D91] mb-4">Shipment Timeline</div>
                   <div className="relative pl-6">
                     <div className="absolute left-2 top-1 bottom-1 w-0.5 bg-slate-200"/>
                     {data.stages.map((stg, i) => {
@@ -95,9 +96,9 @@ export default function TrackPage() {
                       return (
                         <div key={stg.key} className="relative pb-6">
                           <div className={`absolute -left-4 top-0 h-4 w-4 rounded-full grid place-items-center ${done? 'bg-agc-gold' : 'bg-slate-200'}`}>
-                            {done ? <CheckCircle2 className="h-3 w-3 text-[#0B2545]"/> : <Circle className="h-2 w-2 text-slate-400"/>}
+                            {done ? <CheckCircle2 className="h-3 w-3 text-[#0F3D91]"/> : <Circle className="h-2 w-2 text-slate-400"/>}
                           </div>
-                          <div className={`ml-2 ${active ? 'font-bold text-[#0B2545]' : done ? 'text-slate-700' : 'text-slate-400'}`}>
+                          <div className={`ml-2 ${active ? 'font-bold text-[#0F3D91]' : done ? 'text-slate-700' : 'text-slate-400'}`}>
                             {stg.label}
                           </div>
                           {evt && (
@@ -118,13 +119,13 @@ export default function TrackPage() {
                 <CardContent className="p-6">
                   <div className="font-bold text-agc-gold">Need Help?</div>
                   <div className="text-sm text-white/80 mt-1">Talk to our support team for updates.</div>
-                  <a href={`tel:${PHONE}`}><Button className="mt-4 w-full bg-agc-gold text-[#0B2545] font-bold hover:brightness-110"><Phone className="h-4 w-4 mr-2"/>Call {PHONE}</Button></a>
+                  <a href={`tel:${PHONE}`}><Button className="mt-4 w-full bg-agc-gold text-[#0F3D91] font-bold hover:brightness-110"><Phone className="h-4 w-4 mr-2"/>Call {PHONE}</Button></a>
                   <a href={`https://wa.me/91${PHONE}`} target="_blank" rel="noreferrer"><Button className="mt-2 w-full bg-emerald-500 hover:bg-emerald-600 text-white"><MessageCircle className="h-4 w-4 mr-2"/>WhatsApp Us</Button></a>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-6">
-                  <div className="font-bold text-[#0B2545] flex items-center gap-2"><Truck className="h-4 w-4 text-agc-gold"/> Last Updated</div>
+                  <div className="font-bold text-[#0F3D91] flex items-center gap-2"><Truck className="h-4 w-4 text-agc-gold"/> Last Updated</div>
                   <div className="text-sm text-slate-600 mt-1">{data.updatedAt ? new Date(data.updatedAt).toLocaleString('en-IN') : '—'}</div>
                 </CardContent>
               </Card>
@@ -140,7 +141,7 @@ function Info({ label, value }) {
   return (
     <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">
       <div className="text-[10px] uppercase tracking-widest text-slate-500">{label}</div>
-      <div className="text-sm font-semibold text-[#0B2545] mt-0.5">{value}</div>
+      <div className="text-sm font-semibold text-[#0F3D91] mt-0.5">{value}</div>
     </div>
   )
 }

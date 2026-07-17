@@ -1,4 +1,5 @@
 'use client'
+import { LogoMark } from '@/components/Logo'
 import { useEffect, useState, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -34,11 +35,11 @@ export default function StickerPage() {
     <div className={`min-h-screen ${preview ? 'bg-slate-800' : 'bg-slate-200'} py-6 print:py-0 print:bg-white`}>
       <div className="no-print print-toolbar sticky top-0 max-w-6xl mx-auto px-4 pt-4 pb-4 mb-4 space-y-3 rounded-b-xl border-b border-slate-200" style={{ zIndex: 100 }}>
         <div className="flex flex-wrap justify-between items-center gap-3">
-          <a href={`/print/${lr}`} className="text-sm text-slate-600 hover:text-[#0B2545]">← Back to LR</a>
+          <a href={`/print/${lr}`} className="text-sm text-slate-600 hover:text-[#0F3D91]">← Back to LR</a>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={()=>setPreview(p=>!p)}><Eye className="h-4 w-4 mr-2"/>{preview?'Exit Preview':'Print Preview'}</Button>
-            <Button onClick={()=>window.print()} className="bg-[#0B2545] hover:bg-[#13315C] text-white font-bold"><Printer className="h-4 w-4 mr-2"/>Print Labels</Button>
-            <Button onClick={()=>window.print()} className="bg-agc-gold text-[#0B2545] font-bold hover:brightness-110"><Download className="h-4 w-4 mr-2"/>Save as PDF</Button>
+            <Button onClick={()=>window.print()} className="bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold"><Printer className="h-4 w-4 mr-2"/>Print Labels</Button>
+            <Button onClick={()=>window.print()} className="bg-agc-gold text-[#0F3D91] font-bold hover:brightness-110"><Download className="h-4 w-4 mr-2"/>Save as PDF</Button>
           </div>
         </div>
         <Card><CardContent className="p-4">
@@ -104,7 +105,7 @@ function Sticker({ b, pkgNo, total, size }) {
   useEffect(() => {
     const url = `${window.location.origin}/track/${b.lrNumber}`
     const qrSize = Math.max(80, Math.round(u * 24 * 3.78))
-    QRCode.toDataURL(url, { width: qrSize, margin: 0, color: { dark:'#0B2545', light:'#ffffff' } }).then(setQr)
+    QRCode.toDataURL(url, { width: qrSize, margin: 0, color: { dark:'#0F3D91', light:'#ffffff' } }).then(setQr)
     if (barcodeRef.current) {
       try {
         JsBarcode(barcodeRef.current, b.lrNumber, {
@@ -113,7 +114,7 @@ function Sticker({ b, pkgNo, total, size }) {
           height: Math.max(18, Math.round(u * 5)),
           fontSize: Math.max(6, Math.round(u * 2.4)),
           background:'#ffffff',
-          lineColor:'#0B2545',
+          lineColor:'#0F3D91',
           margin:0,
           width: Math.max(1, u * 0.35)
         })
@@ -127,7 +128,7 @@ function Sticker({ b, pkgNo, total, size }) {
     padding: isTiny ? '1mm' : isSmall ? '1.5mm' : '2mm',
     boxSizing: 'border-box',
     fontSize: `${u * 2.4}mm`,
-    color: '#0B2545',
+    color: '#0F3D91',
     background: '#fff',
     display: 'flex',
     flexDirection: isLandscape ? 'row' : 'column',
@@ -137,7 +138,7 @@ function Sticker({ b, pkgNo, total, size }) {
   // -------- TINY LAYOUT (50×25, 2×1) --------
   if (isTiny) {
     return (
-      <div className="sticker-card border-2 border-[#0B2545] shadow-md print:shadow-none" style={containerStyle}>
+      <div className="sticker-card border-2 border-[#0F3D91] shadow-md print:shadow-none" style={containerStyle}>
         <div style={{ flex: '1 1 auto', display:'flex', flexDirection:'column', justifyContent:'center', minWidth:0, paddingRight:'1mm' }}>
           <div style={{ fontWeight:900, fontSize: `${u*2.4}mm`, lineHeight:1, letterSpacing:'-0.02em' }}>AGC {b.lrNumber.replace('AGC-','')}</div>
           <svg ref={barcodeRef} style={{ height:`${u*5}mm`, width:'100%', maxWidth:`${w*0.55}mm`, marginTop:'0.5mm' }}/>
@@ -151,13 +152,13 @@ function Sticker({ b, pkgNo, total, size }) {
   // -------- LANDSCAPE LAYOUT (100×50, 100×75) --------
   if (isLandscape) {
     return (
-      <div className="sticker-card border-2 border-[#0B2545] shadow-md print:shadow-none" style={containerStyle}>
+      <div className="sticker-card border-2 border-[#0F3D91] shadow-md print:shadow-none" style={containerStyle}>
         <div style={{ flex: '1 1 60%', display:'flex', flexDirection:'column', minWidth:0, paddingRight:'2mm', borderRight:'1px solid #cbd5e1' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:`${u*0.5}mm`, borderBottom:`${u*0.4}mm solid #C9A227`, paddingBottom:`${u*0.4}mm` }}>
-            <div style={{ width:`${u*4}mm`, height:`${u*4}mm`, background:'linear-gradient(135deg,#C9A227,#E8C55A)', borderRadius:`${u*0.6}mm`, display:'grid', placeItems:'center', flexShrink:0 }}><Truck style={{ width:`${u*2.4}mm`, height:`${u*2.4}mm`, color:'#0B2545' }} strokeWidth={2.5}/></div>
+          <div style={{ display:'flex', alignItems:'center', gap:`${u*0.5}mm`, borderBottom:`${u*0.4}mm solid #F97316`, paddingBottom:`${u*0.4}mm` }}>
+            <div style={{ width:`${u*4}mm`, height:`${u*4}mm`, background:'linear-gradient(135deg,#F97316,#FB923C)', borderRadius:`${u*0.6}mm`, display:'grid', placeItems:'center', flexShrink:0 }}><Truck style={{ width:`${u*2.4}mm`, height:`${u*2.4}mm`, color:'#0F3D91' }} strokeWidth={2.5}/></div>
             <div style={{ minWidth:0 }}>
               <div style={{ fontWeight:900, fontSize:`${u*2.8}mm`, lineHeight:1 }}>ASSAM GOODS CARRIER</div>
-              <div style={{ fontSize:`${u*1.4}mm`, letterSpacing:'0.2em', color:'#C9A227', fontWeight:700 }}>SAFE • FAST • RELIABLE</div>
+              <div style={{ fontSize:`${u*1.4}mm`, letterSpacing:'0.2em', color:'#F97316', fontWeight:700 }}>SAFE • FAST • RELIABLE</div>
             </div>
           </div>
           <div style={{ display:'flex', alignItems:'baseline', gap:'1mm', marginTop:`${u*0.5}mm` }}>
@@ -166,7 +167,7 @@ function Sticker({ b, pkgNo, total, size }) {
             <div style={{ marginLeft:'auto', fontSize:`${u*1.8}mm` }}>{b.date}</div>
           </div>
           <div style={{ fontSize:`${u*2.2}mm`, marginTop:`${u*0.5}mm`, lineHeight:1.25 }}>
-            <div><b>{b.origin}</b> → <b style={{ color:'#C9A227' }}>{b.destination}</b></div>
+            <div><b>{b.origin}</b> → <b style={{ color:'#F97316' }}>{b.destination}</b></div>
             <div>{b.receiver?.name} · <b>{b.receiver?.phone || ''}</b></div>
             <div style={{ fontSize:`${u*1.8}mm`, color:'#475569' }}>Wt: {b.chargeableWeight || b.actualWeight || 0}kg</div>
           </div>
@@ -182,20 +183,20 @@ function Sticker({ b, pkgNo, total, size }) {
 
   // -------- PORTRAIT LAYOUT (100×150, 100×100, 75×50 portrait, small squares) --------
   return (
-    <div className="sticker-card border-2 border-[#0B2545] shadow-md print:shadow-none" style={containerStyle}>
+    <div className="sticker-card border-2 border-[#0F3D91] shadow-md print:shadow-none" style={containerStyle}>
       {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', gap:`${u*0.5}mm`, borderBottom:`${u*0.5}mm solid #C9A227`, paddingBottom:`${u*0.4}mm` }}>
-        <div style={{ width:`${u*4}mm`, height:`${u*4}mm`, background:'linear-gradient(135deg,#C9A227,#E8C55A)', borderRadius:`${u*0.6}mm`, display:'grid', placeItems:'center', flexShrink:0 }}><Truck style={{ width:`${u*2.4}mm`, height:`${u*2.4}mm`, color:'#0B2545' }} strokeWidth={2.5}/></div>
+      <div style={{ display:'flex', alignItems:'center', gap:`${u*0.5}mm`, borderBottom:`${u*0.5}mm solid #F97316`, paddingBottom:`${u*0.4}mm` }}>
+        <div style={{ width:`${u*4}mm`, height:`${u*4}mm`, background:'linear-gradient(135deg,#F97316,#FB923C)', borderRadius:`${u*0.6}mm`, display:'grid', placeItems:'center', flexShrink:0 }}><Truck style={{ width:`${u*2.4}mm`, height:`${u*2.4}mm`, color:'#0F3D91' }} strokeWidth={2.5}/></div>
         <div style={{ minWidth:0, flex:1 }}>
           <div style={{ fontWeight:900, fontSize:`${u*2.8}mm`, lineHeight:1 }}>ASSAM GOODS CARRIER</div>
-          <div style={{ fontSize:`${u*1.4}mm`, letterSpacing:'0.2em', color:'#C9A227', fontWeight:700 }}>SAFE • FAST • RELIABLE</div>
+          <div style={{ fontSize:`${u*1.4}mm`, letterSpacing:'0.2em', color:'#F97316', fontWeight:700 }}>SAFE • FAST • RELIABLE</div>
         </div>
       </div>
 
       {/* Package # */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginTop:`${u*0.4}mm` }}>
         <div style={{ fontSize:`${u*1.6}mm`, letterSpacing:'0.2em', color:'#64748b', textTransform:'uppercase' }}>Package No.</div>
-        <div style={{ fontSize:`${u*1.6}mm`, color:'#64748b' }}>Date: <b style={{ color:'#0B2545' }}>{b.date}</b></div>
+        <div style={{ fontSize:`${u*1.6}mm`, color:'#64748b' }}>Date: <b style={{ color:'#0F3D91' }}>{b.date}</b></div>
       </div>
       <div style={{ display:'flex', alignItems:'baseline', gap:'1mm', borderBottom:'1px solid #cbd5e1', paddingBottom:`${u*0.3}mm` }}>
         <div style={{ fontSize:`${u*10}mm`, fontWeight:900, lineHeight:1 }}>{pkgNo}</div>
@@ -205,7 +206,7 @@ function Sticker({ b, pkgNo, total, size }) {
       {/* Route */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:`${u*0.4}mm`, marginTop:`${u*0.5}mm` }}>
         <div style={{ border:'1px solid #cbd5e1', padding:`${u*0.4}mm` }}><div style={{ fontSize:`${u*1.4}mm`, color:'#64748b', textTransform:'uppercase' }}>From</div><div style={{ fontWeight:900, fontSize:`${u*2.6}mm`, lineHeight:1.1 }}>{b.origin}</div></div>
-        <div style={{ border:'1px solid #cbd5e1', padding:`${u*0.4}mm` }}><div style={{ fontSize:`${u*1.4}mm`, color:'#64748b', textTransform:'uppercase' }}>To</div><div style={{ fontWeight:900, fontSize:`${u*2.6}mm`, color:'#C9A227', lineHeight:1.1 }}>{b.destination}</div></div>
+        <div style={{ border:'1px solid #cbd5e1', padding:`${u*0.4}mm` }}><div style={{ fontSize:`${u*1.4}mm`, color:'#64748b', textTransform:'uppercase' }}>To</div><div style={{ fontWeight:900, fontSize:`${u*2.6}mm`, color:'#F97316', lineHeight:1.1 }}>{b.destination}</div></div>
       </div>
 
       {/* Consignor/Consignee - only on medium+ */}
@@ -223,7 +224,7 @@ function Sticker({ b, pkgNo, total, size }) {
       )}
 
       {/* Barcode + QR footer */}
-      <div style={{ marginTop:'auto', display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:`${u*0.5}mm`, paddingTop:`${u*0.4}mm`, borderTop:`${u*0.5}mm solid #C9A227` }}>
+      <div style={{ marginTop:'auto', display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:`${u*0.5}mm`, paddingTop:`${u*0.4}mm`, borderTop:`${u*0.5}mm solid #F97316` }}>
         <div style={{ flex:1, minWidth:0 }}>
           <div style={{ fontSize:`${u*1.4}mm`, color:'#64748b', textTransform:'uppercase', lineHeight:1 }}>LR / Bilty No.</div>
           <div style={{ fontWeight:900, fontSize:`${u*3}mm`, lineHeight:1.1 }}>{b.lrNumber}</div>

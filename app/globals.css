@@ -3,32 +3,98 @@
 @tailwind utilities;
 
 :root {
-  --agc-navy: #0B2545;
-  --agc-navy-2: #13315C;
-  --agc-gold: #C9A227;
-  --agc-gold-2: #E8C55A;
+  --agc-navy: #0F3D91;
+  --agc-navy-2: #1E4FB8;
+  --agc-navy-3: #3B82F6;
+  --agc-orange: #F97316;
+  --agc-orange-2: #FB923C;
+  --agc-orange-3: #EA580C;
+  --agc-gray: #374151;
+  --agc-gray-soft: #F3F4F6;
+  --agc-ring: rgba(15,61,145,0.15);
+  --shadow-card: 0 1px 3px rgba(15,23,42,0.06), 0 8px 24px -12px rgba(15,23,42,0.12);
+  --shadow-elev: 0 4px 6px -1px rgba(15,23,42,0.08), 0 20px 40px -18px rgba(15,23,42,0.20);
 }
 
 html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
 
+/* Legacy aliases (kept for compat with existing utility classes) */
 .bg-agc-navy { background-color: var(--agc-navy); }
 .bg-agc-navy-2 { background-color: var(--agc-navy-2); }
-.text-agc-gold { color: var(--agc-gold); }
-.bg-agc-gold { background-color: var(--agc-gold); }
-.border-agc-gold { border-color: var(--agc-gold); }
-.ring-agc-gold { --tw-ring-color: var(--agc-gold); }
+.text-agc-gold { color: var(--agc-orange); }
+.bg-agc-gold { background-color: var(--agc-orange); }
+.border-agc-gold { border-color: var(--agc-orange); }
+.ring-agc-gold { --tw-ring-color: var(--agc-orange); }
+
+/* New semantic tokens */
+.text-agc-orange { color: var(--agc-orange); }
+.bg-agc-orange { background-color: var(--agc-orange); }
+.border-agc-orange { border-color: var(--agc-orange); }
+.text-agc-navy { color: var(--agc-navy); }
+.border-agc-navy { border-color: var(--agc-navy); }
 
 .gradient-navy {
-  background: linear-gradient(135deg, #0B2545 0%, #13315C 50%, #1A4480 100%);
+  background: linear-gradient(135deg, #0F3D91 0%, #1E4FB8 55%, #3B82F6 100%);
 }
 
 .gradient-gold {
-  background: linear-gradient(135deg, #C9A227 0%, #E8C55A 100%);
+  background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
+}
+.gradient-orange {
+  background: linear-gradient(135deg, #F97316 0%, #FB923C 100%);
 }
 
 .hero-overlay {
-  background: linear-gradient(120deg, rgba(11,37,69,0.92) 0%, rgba(19,49,92,0.75) 60%, rgba(11,37,69,0.5) 100%);
+  background: linear-gradient(120deg, rgba(15,61,145,0.94) 0%, rgba(30,79,184,0.78) 55%, rgba(15,61,145,0.55) 100%);
 }
+
+/* Enterprise UI polish */
+.card-premium {
+  background: #ffffff;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 200ms ease, transform 200ms ease, border-color 200ms ease;
+}
+.card-premium:hover { box-shadow: var(--shadow-elev); border-color: #D1D5DB; }
+
+.btn-premium-primary {
+  background: linear-gradient(180deg, #0F3D91 0%, #0E378A 100%);
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(15,23,42,0.10), inset 0 1px 0 rgba(255,255,255,0.12);
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+.btn-premium-primary:hover { filter: brightness(1.08); box-shadow: 0 6px 16px -4px rgba(15,61,145,0.35); }
+.btn-premium-primary:active { transform: translateY(1px); }
+
+.btn-premium-accent {
+  background: linear-gradient(180deg, #F97316 0%, #EA580C 100%);
+  color: #ffffff;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px -4px rgba(249,115,22,0.35);
+}
+.btn-premium-accent:hover { filter: brightness(1.08); }
+
+/* Skeleton loader */
+@keyframes agc-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #F3F4F6 0px, #E5E7EB 40px, #F3F4F6 80px);
+  background-size: 400px 100%;
+  animation: agc-shimmer 1.4s infinite linear;
+  border-radius: 8px;
+}
+
+/* Smooth fade in for content */
+@keyframes agc-fade-up { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.animate-fade-up { animation: agc-fade-up 350ms ease both; }
 
 @keyframes truck-move {
   0%   { transform: translateX(-30%); }
@@ -45,7 +111,7 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
   to   { background-position: 200px 0; }
 }
 .road-lines {
-  background-image: repeating-linear-gradient(to right, #E8C55A 0 20px, transparent 20px 40px);
+  background-image: repeating-linear-gradient(to right, #FB923C 0 20px, transparent 20px 40px);
   animation: dash-move 0.8s linear infinite;
 }
 
@@ -95,7 +161,7 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
 [role="menuitem"][data-highlighted],
 [role="menuitem"]:hover {
   background-color: #F3F4F6 !important;
-  color: #0B2545 !important;
+  color: #0F3D91 !important;
 }
 
 /* Dialog / Modal overlay & content (Radix Dialog / Alert Dialog) */
@@ -163,6 +229,48 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
 .print-toolbar { position: relative; z-index: 100; background-color: #ffffff; }
 
 /* ============================================================ */
+/*  DEFINITIVE INPUT / FORM VISIBILITY — ENTERPRISE GRADE       */
+/* ============================================================ */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(.dark-input),
+textarea:not(.dark-input),
+select:not(.dark-input) {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #D1D5DB !important;
+  caret-color: #0F3D91;
+  opacity: 1 !important;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #6B7280 !important;
+  opacity: 1 !important;
+}
+input:focus:not(.dark-input),
+textarea:focus:not(.dark-input),
+select:focus:not(.dark-input) {
+  border-color: #0F3D91 !important;
+  box-shadow: 0 0 0 3px rgba(15,61,145,0.15) !important;
+  outline: none !important;
+}
+/* Explicit override for inputs inside dark cards that opt into dark-form */
+.dark-form input,
+.dark-form textarea {
+  background-color: rgba(255,255,255,0.12) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255,255,255,0.24) !important;
+}
+.dark-form input::placeholder,
+.dark-form textarea::placeholder {
+  color: rgba(255,255,255,0.7) !important;
+}
+.dark-form input:focus,
+.dark-form textarea:focus {
+  background-color: rgba(255,255,255,0.18) !important;
+  border-color: #F97316 !important;
+  box-shadow: 0 0 0 3px rgba(249,115,22,0.30) !important;
+}
+
+/* ============================================================ */
 /*  TRACKING / LR / BILTY NUMBER — ALWAYS READABLE              */
 /*  Ensures LR is dark, bold, on white bg, never invisible.     */
 /* ============================================================ */
@@ -193,7 +301,7 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
   font-family: 'JetBrains Mono', 'Courier New', ui-monospace, monospace !important;
   letter-spacing: 0.03em !important;
   padding: 4px 12px !important;
-  border: 2px solid #C9A227 !important;
+  border: 2px solid #F97316 !important;
   border-radius: 8px !important;
   display: inline-block !important;
   opacity: 1 !important;
@@ -204,9 +312,9 @@ table .tracking-number-lg { background-color: #ffffff !important; }
 /* Print-safe */
 @media print {
   .tracking-number, .tracking-number-lg {
-    color: #0B2545 !important;
+    color: #0F3D91 !important;
     background-color: #ffffff !important;
-    border-color: #0B2545 !important;
+    border-color: #0F3D91 !important;
   }
 }
 

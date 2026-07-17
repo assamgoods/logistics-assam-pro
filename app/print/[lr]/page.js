@@ -1,4 +1,5 @@
 'use client'
+import { LogoMark } from '@/components/Logo'
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -29,7 +30,7 @@ export default function PrintLR() {
     <div className="min-h-screen bg-slate-200 py-6 print:py-0 print:bg-white">
       <div className="no-print print-toolbar sticky top-0 max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-3 mb-4 px-4 py-3 rounded-b-xl border-b border-slate-200 bg-white" style={{ zIndex: 100 }}>
         <div className="flex items-center gap-2">
-          <a href={`/admin`} className="text-sm text-slate-600 hover:text-[#0B2545]">← Back to Admin</a>
+          <a href={`/admin`} className="text-sm text-slate-600 hover:text-[#0F3D91]">← Back to Admin</a>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex items-center gap-2">
@@ -41,8 +42,8 @@ export default function PrintLR() {
           </div>
           <Button variant="outline" onClick={()=>setPreview(p=>!p)}><Eye className="h-4 w-4 mr-2"/>{preview?'Exit Preview':'Print Preview'}</Button>
           <a href={`/sticker/${lr}`} target="_blank" rel="noreferrer"><Button variant="outline"><Package className="h-4 w-4 mr-2"/>Box Stickers</Button></a>
-          <Button onClick={()=>window.print()} className="bg-[#0B2545] hover:bg-[#13315C] text-white font-bold"><Printer className="h-4 w-4 mr-2"/>Print LR</Button>
-          <Button onClick={()=>window.print()} className="bg-agc-gold text-[#0B2545] hover:brightness-110 font-bold"><Download className="h-4 w-4 mr-2"/>Save as PDF</Button>
+          <Button onClick={()=>window.print()} className="bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold"><Printer className="h-4 w-4 mr-2"/>Print LR</Button>
+          <Button onClick={()=>window.print()} className="bg-agc-gold text-[#0F3D91] hover:brightness-110 font-bold"><Download className="h-4 w-4 mr-2"/>Save as PDF</Button>
         </div>
       </div>
 
@@ -69,9 +70,9 @@ function LRCopy({ b, copyIndex, totalCopies }) {
 
   useEffect(() => {
     const trackUrl = `${window.location.origin}/track/${b.lrNumber}`
-    QRCode.toDataURL(trackUrl, { width: 140, margin: 0, color: { dark:'#0B2545', light:'#ffffff' } }).then(setQr)
+    QRCode.toDataURL(trackUrl, { width: 140, margin: 0, color: { dark:'#0F3D91', light:'#ffffff' } }).then(setQr)
     if (barcodeRef.current) {
-      try { JsBarcode(barcodeRef.current, b.lrNumber, { format:'CODE128', displayValue:false, height:36, background:'#ffffff', lineColor:'#0B2545', margin:0, width:1.4 }) } catch(e){}
+      try { JsBarcode(barcodeRef.current, b.lrNumber, { format:'CODE128', displayValue:false, height:36, background:'#ffffff', lineColor:'#0F3D91', margin:0, width:1.4 }) } catch(e){}
     }
   }, [b.lrNumber])
 
@@ -96,14 +97,14 @@ function LRCopy({ b, copyIndex, totalCopies }) {
   return (
     <div className="lr-copy relative" style={{ width: '210mm', height: '148.5mm', boxSizing: 'border-box', padding: '5mm 6mm', pageBreakInside: 'avoid', overflow: 'hidden' }}>
       {/* Watermark */}
-      <div className="absolute inset-0 grid place-items-center pointer-events-none opacity-[0.04]"><Truck className="h-64 w-64 text-[#0B2545]"/></div>
+      <div className="absolute inset-0 grid place-items-center pointer-events-none opacity-[0.04]"><Truck className="h-64 w-64 text-[#0F3D91]"/></div>
 
       {/* Header */}
       <div className="relative flex items-start justify-between border-b-[3px] border-agc-gold pb-1.5">
         <div className="flex items-center gap-2">
-          <div className="h-11 w-11 rounded-md gradient-gold grid place-items-center"><Truck className="h-6 w-6 text-[#0B2545]" strokeWidth={2.5}/></div>
+          <LogoMark size={44}/>
           <div>
-            <div className="text-[16px] font-black text-[#0B2545] leading-tight">{COMPANY.name}</div>
+            <div className="text-[16px] font-black text-[#0F3D91] leading-tight">{COMPANY.name}</div>
             <div className="text-[7px] tracking-[0.3em] text-agc-gold font-bold">{COMPANY.tagline}</div>
             <div className="text-[8px] text-slate-600 leading-tight mt-0.5">{COMPANY.address}</div>
             <div className="text-[8px] text-slate-600">Mob: <b>{COMPANY.mobile}</b> • GSTIN: <b>{COMPANY.gst}</b> • {COMPANY.email}</div>
@@ -112,7 +113,7 @@ function LRCopy({ b, copyIndex, totalCopies }) {
         <div className="text-right flex items-start gap-2">
           <div>
             <div className="text-[8px] uppercase tracking-widest text-slate-500">LR / Bilty No.</div>
-            <div className="text-[15px] font-black text-[#0B2545] leading-tight">{b.lrNumber}</div>
+            <div className="text-[15px] font-black text-[#0F3D91] leading-tight">{b.lrNumber}</div>
             <svg ref={barcodeRef} style={{ height: '10mm', width: '40mm' }}/>
             <div className="text-[8px] text-slate-500">Date: <b>{b.date}</b></div>
           </div>
@@ -151,14 +152,14 @@ function LRCopy({ b, copyIndex, totalCopies }) {
       {/* Charges + Terms side by side */}
       <div className="relative grid grid-cols-2 gap-2 mt-1.5">
         <div className="border border-slate-400 text-[8.5px]">
-          <div className="grid grid-cols-2 bg-slate-100 border-b border-slate-400 font-bold text-[#0B2545]"><div className="px-1.5 py-1">DESCRIPTION</div><div className="px-1.5 py-1 text-right border-l border-slate-400">AMOUNT (₹)</div></div>
+          <div className="grid grid-cols-2 bg-slate-100 border-b border-slate-400 font-bold text-[#0F3D91]"><div className="px-1.5 py-1">DESCRIPTION</div><div className="px-1.5 py-1 text-right border-l border-slate-400">AMOUNT (₹)</div></div>
           {rows.map(([k,v]) => (<div key={k} className="grid grid-cols-2 border-b border-slate-200 last:border-b-0"><div className="px-1.5 py-0.5">{k}</div><div className="px-1.5 py-0.5 text-right border-l border-slate-200">{Number(v||0).toLocaleString('en-IN')}</div></div>))}
           <div className="grid grid-cols-2 border-t border-slate-400 font-semibold"><div className="px-1.5 py-0.5">Sub Total</div><div className="px-1.5 py-0.5 text-right border-l border-slate-400">{sub.toLocaleString('en-IN')}</div></div>
           <div className="grid grid-cols-2 border-t border-slate-200"><div className="px-1.5 py-0.5">GST @ 18%</div><div className="px-1.5 py-0.5 text-right border-l border-slate-200">{gst.toLocaleString('en-IN')}</div></div>
-          <div className="grid grid-cols-2 bg-agc-gold/30 border-t border-slate-400 font-black text-[#0B2545] text-[10px]"><div className="px-1.5 py-1">GRAND TOTAL</div><div className="px-1.5 py-1 text-right border-l border-slate-400">₹{Number(total).toLocaleString('en-IN')}</div></div>
+          <div className="grid grid-cols-2 bg-agc-gold/30 border-t border-slate-400 font-black text-[#0F3D91] text-[10px]"><div className="px-1.5 py-1">GRAND TOTAL</div><div className="px-1.5 py-1 text-right border-l border-slate-400">₹{Number(total).toLocaleString('en-IN')}</div></div>
         </div>
         <div className="border border-slate-400 text-[7.5px] p-1.5">
-          <div className="font-bold text-[#0B2545] text-[8.5px] mb-0.5">TERMS & CONDITIONS</div>
+          <div className="font-bold text-[#0F3D91] text-[8.5px] mb-0.5">TERMS & CONDITIONS</div>
           <ol className="list-decimal pl-3 space-y-0.5 leading-tight">
             <li>Goods once dispatched will not be taken back.</li>
             <li>Company is not responsible for damage in transit due to Act of God, war, riot, strike or natural calamity.</li>
@@ -168,7 +169,7 @@ function LRCopy({ b, copyIndex, totalCopies }) {
             <li>Freight/charges are payable in advance unless specified as 'To Pay' or 'TBB'.</li>
             <li>Subject to Guwahati jurisdiction. Any dispute settled here only.</li>
           </ol>
-          {b.remarks && (<div className="mt-1 pt-1 border-t border-slate-300"><b className="text-[8px] text-[#0B2545]">Remarks:</b> <span className="text-[8px]">{b.remarks}</span></div>)}
+          {b.remarks && (<div className="mt-1 pt-1 border-t border-slate-300"><b className="text-[8px] text-[#0F3D91]">Remarks:</b> <span className="text-[8px]">{b.remarks}</span></div>)}
         </div>
       </div>
 
@@ -188,7 +189,7 @@ function LRCopy({ b, copyIndex, totalCopies }) {
 function PartyBox({ title, name, phone, gst, address }) {
   return (
     <div className="border border-slate-400 text-[9px] leading-tight">
-      <div className="bg-slate-100 border-b border-slate-400 px-1.5 py-0.5 font-bold text-[#0B2545] text-[8px] uppercase tracking-wider">{title}</div>
+      <div className="bg-slate-100 border-b border-slate-400 px-1.5 py-0.5 font-bold text-[#0F3D91] text-[8px] uppercase tracking-wider">{title}</div>
       <div className="px-1.5 py-1 space-y-0.5">
         <div><b>Name:</b> {name || '—'}</div>
         <div><b>Mobile:</b> {phone || '—'} {gst && <span className="ml-2"><b>GSTIN:</b> {gst}</span>}</div>
@@ -202,7 +203,7 @@ function MiniCell({ k, v }) {
   return (
     <div className="border border-slate-300 px-1 py-0.5">
       <div className="text-[6.5px] uppercase tracking-widest text-slate-500 leading-none">{k}</div>
-      <div className="font-semibold text-[#0B2545] leading-tight">{v || '—'}</div>
+      <div className="font-semibold text-[#0F3D91] leading-tight">{v || '—'}</div>
     </div>
   )
 }

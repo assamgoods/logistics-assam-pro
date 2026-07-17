@@ -1,4 +1,5 @@
 'use client'
+import { LogoMark } from '@/components/Logo'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -47,16 +48,16 @@ export default function CustomerPortal() {
         <Card className="w-full max-w-md border-0 shadow-2xl shadow-black/40">
           <CardContent className="p-8">
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-lg gradient-gold grid place-items-center"><Truck className="h-5 w-5 text-[#0B2545]"/></div>
+              <LogoMark size={44}/>
               <div>
-                <div className="font-black text-[#0B2545]">Customer Portal</div>
+                <div className="font-black text-[#0F3D91]">Customer Portal</div>
                 <div className="text-[10px] uppercase tracking-[0.2em] text-agc-gold font-semibold">Assam Goods Carrier</div>
               </div>
             </div>
             <form onSubmit={login} className="mt-6 space-y-3">
               <Label className="text-xs">Registered Phone Number</Label>
               <Input value={phone} onChange={e=>setPhone(e.target.value.replace(/\D/g,''))} placeholder="10-digit mobile" className="h-11" maxLength={10}/>
-              <Button className="w-full h-11 bg-[#0B2545] hover:bg-[#13315C] font-bold">Continue <Phone className="h-4 w-4 ml-2"/></Button>
+              <Button className="w-full h-11 bg-[#0F3D91] hover:bg-[#1E4FB8] font-bold">Continue <Phone className="h-4 w-4 ml-2"/></Button>
               <div className="text-xs text-slate-500 text-center">Use the phone number linked to your bookings</div>
             </form>
           </CardContent>
@@ -70,7 +71,7 @@ export default function CustomerPortal() {
       <div className="gradient-navy text-white">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg gradient-gold grid place-items-center"><Truck className="h-5 w-5 text-[#0B2545]"/></div>
+            <LogoMark size={44}/>
             <div><div className="font-black leading-tight">Customer Portal</div><div className="text-[10px] tracking-[0.2em] text-agc-gold uppercase">{phone}</div></div>
           </div>
           <Button onClick={logout} variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10"><LogOut className="h-4 w-4 mr-2"/>Logout</Button>
@@ -79,12 +80,12 @@ export default function CustomerPortal() {
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           {[{t:'Total Bookings',v:bookings.length},{t:'Delivered',v:bookings.filter(b=>b.status==='DELIVERED').length},{t:'In Transit',v:bookings.filter(b=>['DISPATCHED','IN_TRANSIT','ARRIVED','OUT_FOR_DELIVERY'].includes(b.status)).length},{t:'Total Spent',v:`₹${bookings.reduce((a,b)=>a+Number(b.totalAmount||0),0).toLocaleString('en-IN')}`}].map((s,k)=>(
-            <Card key={k}><CardContent className="p-4"><div className="text-xs uppercase tracking-widest text-slate-500">{s.t}</div><div className="text-2xl font-black text-[#0B2545] mt-1">{s.v}</div></CardContent></Card>
+            <Card key={k}><CardContent className="p-4"><div className="text-xs uppercase tracking-widest text-slate-500">{s.t}</div><div className="text-2xl font-black text-[#0F3D91] mt-1">{s.v}</div></CardContent></Card>
           ))}
         </div>
         <Card>
           <CardContent className="p-0">
-            <div className="p-4 border-b border-slate-200 font-bold text-[#0B2545]">Your Booking History</div>
+            <div className="p-4 border-b border-slate-200 font-bold text-[#0F3D91]">Your Booking History</div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
@@ -97,7 +98,7 @@ export default function CustomerPortal() {
                       <Td><span className="tracking-number">{b.lrNumber}</span></Td>
                       <Td>{b.date}</Td>
                       <Td>{b.origin} → {b.destination}</Td>
-                      <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">{b.status}</span></Td>
+                      <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0F3D91]">{b.status}</span></Td>
                       <Td>₹{Number(b.totalAmount||0).toLocaleString('en-IN')}</Td>
                       <Td>
                         <div className="flex gap-2">

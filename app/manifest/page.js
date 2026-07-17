@@ -1,4 +1,5 @@
 'use client'
+import { LogoMark } from '@/components/Logo'
 import { useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -31,14 +32,14 @@ export default function ManifestPage() {
     <div className="min-h-screen bg-slate-200 py-6 print:py-0 print:bg-white">
       <div className="no-print print-toolbar sticky top-0 max-w-5xl mx-auto px-4 pt-3 pb-4 mb-4 space-y-3 rounded-b-xl border-b border-slate-200 bg-slate-50" style={{ zIndex: 100 }}>
         <div className="flex justify-between items-center">
-          <a href="/admin" className="text-sm text-slate-600 hover:text-[#0B2545]">← Back to Admin</a>
+          <a href="/admin" className="text-sm text-slate-600 hover:text-[#0F3D91]">← Back to Admin</a>
           <div className="flex gap-2">
-            <Button onClick={()=>window.print()} className="bg-[#0B2545] text-white font-bold"><Printer className="h-4 w-4 mr-2"/>Print Manifest</Button>
-            <Button onClick={()=>window.print()} className="bg-agc-gold text-[#0B2545] font-bold hover:brightness-110"><Download className="h-4 w-4 mr-2"/>Save as PDF</Button>
+            <Button onClick={()=>window.print()} className="bg-[#0F3D91] text-white font-bold"><Printer className="h-4 w-4 mr-2"/>Print Manifest</Button>
+            <Button onClick={()=>window.print()} className="bg-agc-gold text-[#0F3D91] font-bold hover:brightness-110"><Download className="h-4 w-4 mr-2"/>Save as PDF</Button>
           </div>
         </div>
         <Card><CardContent className="p-5">
-          <div className="font-bold text-[#0B2545] mb-3 flex items-center gap-2"><ListChecks className="h-4 w-4 text-agc-gold"/>Vehicle Loading Manifest — Setup</div>
+          <div className="font-bold text-[#0F3D91] mb-3 flex items-center gap-2"><ListChecks className="h-4 w-4 text-agc-gold"/>Vehicle Loading Manifest — Setup</div>
           <div className="grid md:grid-cols-4 gap-3">
             <div><Label className="text-xs">Manifest No.</Label><Input value={manifestNo} onChange={e=>setManifestNo(e.target.value)} className="mt-1"/></div>
             <div><Label className="text-xs">Date</Label><Input type="date" value={date} onChange={e=>setDate(e.target.value)} className="mt-1"/></div>
@@ -60,20 +61,20 @@ export default function ManifestPage() {
       <div className="max-w-[210mm] mx-auto bg-white shadow-xl print:shadow-none print-canvas" style={{ padding:'10mm', boxSizing:'border-box', minHeight:'297mm' }}>
         <div className="flex items-start justify-between border-b-[3px] border-agc-gold pb-3">
           <div className="flex items-center gap-3">
-            <div className="h-14 w-14 rounded-lg gradient-gold grid place-items-center"><Truck className="h-7 w-7 text-[#0B2545]" strokeWidth={2.5}/></div>
+            <LogoMark size={44}/>
             <div>
-              <div className="text-xl font-black text-[#0B2545]">{COMPANY.name}</div>
+              <div className="text-xl font-black text-[#0F3D91]">{COMPANY.name}</div>
               <div className="text-[10px] tracking-[0.3em] text-agc-gold font-bold">{COMPANY.tagline}</div>
               <div className="text-[10px] text-slate-600 mt-0.5">{COMPANY.address} • Mob: {COMPANY.mobile} • GST: {COMPANY.gst}</div>
             </div>
           </div>
           <div className="text-right">
             <div className="text-[10px] uppercase tracking-widest text-slate-500">Manifest No.</div>
-            <div className="text-lg font-black text-[#0B2545]">{manifestNo}</div>
+            <div className="text-lg font-black text-[#0F3D91]">{manifestNo}</div>
             <div className="text-[10px] text-slate-500">Date: <b>{date}</b></div>
           </div>
         </div>
-        <div className="text-center mt-2 py-1 bg-[#0B2545] text-white font-black tracking-[0.3em] text-sm">VEHICLE LOADING SHEET</div>
+        <div className="text-center mt-2 py-1 bg-[#0F3D91] text-white font-black tracking-[0.3em] text-sm">VEHICLE LOADING SHEET</div>
         <div className="grid grid-cols-3 gap-3 mt-3 text-sm">
           <ManCell k="Vehicle Number" v={vehicle || '—'}/>
           <ManCell k="Driver Name" v={driver || '—'}/>
@@ -81,7 +82,7 @@ export default function ManifestPage() {
         </div>
 
         <table className="w-full mt-4 border border-slate-500 text-[10px]">
-          <thead className="bg-[#0B2545] text-white">
+          <thead className="bg-[#0F3D91] text-white">
             <tr>
               <th className="border border-slate-500 px-1.5 py-1.5">SL</th>
               <th className="border border-slate-500 px-1.5 py-1.5 text-left">LR / Bilty</th>
@@ -100,7 +101,7 @@ export default function ManifestPage() {
             {selected.map((b, i) => (
               <tr key={b.lrNumber} className="even:bg-slate-50">
                 <td className="border border-slate-400 px-1.5 py-1 text-center">{i+1}</td>
-                <td className="border border-slate-400 px-1.5 py-1 font-mono font-bold text-[#0B2545]">{b.lrNumber}</td>
+                <td className="border border-slate-400 px-1.5 py-1 font-mono font-bold text-[#0F3D91]">{b.lrNumber}</td>
                 <td className="border border-slate-400 px-1.5 py-1">{b.date}</td>
                 <td className="border border-slate-400 px-1.5 py-1">{b.sender?.name}</td>
                 <td className="border border-slate-400 px-1.5 py-1">{b.receiver?.name}</td>
@@ -112,7 +113,7 @@ export default function ManifestPage() {
               </tr>
             ))}
             {selected.length > 0 && (
-              <tr className="bg-agc-gold/30 font-black text-[#0B2545]">
+              <tr className="bg-agc-gold/30 font-black text-[#0F3D91]">
                 <td colSpan="6" className="border border-slate-500 px-1.5 py-1.5 text-right">TOTALS</td>
                 <td className="border border-slate-500 px-1.5 py-1.5 text-center">{totals.packages}</td>
                 <td className="border border-slate-500 px-1.5 py-1.5 text-center">{totals.weight} kg</td>
@@ -143,5 +144,5 @@ export default function ManifestPage() {
 }
 
 function ManCell({ k, v }) {
-  return (<div className="border border-slate-400 rounded p-2"><div className="text-[8px] uppercase tracking-widest text-slate-500">{k}</div><div className="font-bold text-[#0B2545]">{v}</div></div>)
+  return (<div className="border border-slate-400 rounded p-2"><div className="text-[8px] uppercase tracking-widest text-slate-500">{k}</div><div className="font-bold text-[#0F3D91]">{v}</div></div>)
 }

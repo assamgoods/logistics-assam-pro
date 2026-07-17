@@ -67,19 +67,29 @@ async function handle(request, ctx) {
     }
     if (route === '/branch/login' && method === 'POST') {
       const { code, password } = await request.json()
-      const user = await db.collection('users').findOne({ role: 'branch', code, password, active: { $ne: false } })
+      const user = await db.collection('users').findOne({ role: 'branch', code, active: { $ne: false } })
       if (!user) return json({ ok: false, error: 'Invalid credentials' }, 401)
+      const bcrypt = (await import('bcryptjs')).default
+      const isHashed = String(user.password || '').startsWith('$2')
+      const ok = isHashed ? await bcrypt.compare(password||'', user.password) : (user.password === password)
+      if (!ok) return json({ ok: false, error: 'Invalid credentials' }, 401)
       const token = await createSession('branch', user.id, { name: user.name, code: user.code, branchId: user.branchId })
+      await db.collection('users').updateOne({ id: user.id }, { $set: { lastLoginAt: new Date(), lastLoginIp: request.headers.get('x-forwarded-for') || 'local', lastLoginUa: request.headers.get('user-agent') || '' } })
       await logActivity(db, { actor: user.id, role: 'branch', action: 'LOGIN', target: user.code })
-      return json({ ok: true, token, role: 'branch', name: user.name, code: user.code, permissions: ROLE_PERMISSIONS.branch })
+      return json({ ok: true, token, role: 'branch', name: user.name, code: user.code, permissions: ROLE_PERMISSIONS.branch, mustChangePassword: !!user.mustChangePassword })
     }
     if (route === '/driver/login' && method === 'POST') {
       const { phone, password } = await request.json()
-      const user = await db.collection('users').findOne({ role: 'driver', phone, password, active: { $ne: false } })
+      const user = await db.collection('users').findOne({ role: 'driver', phone, active: { $ne: false } })
       if (!user) return json({ ok: false, error: 'Invalid credentials' }, 401)
+      const bcrypt = (await import('bcryptjs')).default
+      const isHashed = String(user.password || '').startsWith('$2')
+      const ok = isHashed ? await bcrypt.compare(password||'', user.password) : (user.password === password)
+      if (!ok) return json({ ok: false, error: 'Invalid credentials' }, 401)
       const token = await createSession('driver', user.id, { name: user.name, phone })
+      await db.collection('users').updateOne({ id: user.id }, { $set: { lastLoginAt: new Date(), lastLoginIp: request.headers.get('x-forwarded-for') || 'local', lastLoginUa: request.headers.get('user-agent') || '' } })
       await logActivity(db, { actor: user.id, role: 'driver', action: 'LOGIN', target: phone })
-      return json({ ok: true, token, role: 'driver', name: user.name, permissions: ROLE_PERMISSIONS.driver })
+      return json({ ok: true, token, role: 'driver', name: user.name, permissions: ROLE_PERMISSIONS.driver, mustChangePassword: !!user.mustChangePassword })
     }
     if (route === '/customer/login' && method === 'POST') {
       // Simple phone-based customer login (in production add OTP)
@@ -196,6 +206,91 @@ async function handle(request, ctx) {
       await logActivity(db, { actor: s?.userId, role: s?.role, action: 'POD_UPLOAD', target: lr })
       await sendNotification({ event: 'DELIVERED', booking: val })
       return json({ ok: true, booking: sanitize(val) })
+    }
+
+    // -------- COMPANY SETTINGS ---------
+    if (route === '/settings' && method === 'GET') {
+      let s = await db.collection('settings').findOne({ _id: 'company' })
+      if (!s) {
+        s = {
+          _id: 'company',
+          companyName: 'ASSAM GOODS CARRIER',
+          tagline: 'Safe • Fast • Reliable',
+          gstNumber: '18AABCA1234A1Z5',
+          address: 'G.S. Road, Guwahati, Assam - 781005',
+          phone: '8847428801',
+          whatsapp: '8847428801',
+          email: 'bookings@assamgoodscarrier.in',
+          website: 'https://assamgoodscarrier.in',
+          bankName: '',
+          bankAccount: '',
+          bankIfsc: '',
+          bankBranch: '',
+          logoUrl: '',
+          lrPrefix: 'AGC',
+          transferPrefix: 'TXF',
+          gstPercent: 18,
+          sessionTimeoutMinutes: 60,
+          theme: 'light',
+          updatedAt: new Date(),
+        }
+        await db.collection('settings').insertOne(s)
+      }
+      const { _id, ...rest } = s
+      return json({ ok: true, settings: rest })
+    }
+    if (route === '/settings' && method === 'PUT') {
+      const s = await getSession(request)
+      if (!s || s.role !== 'admin') return json({ ok: false, error: 'Super Admin only' }, 403)
+      const body = await request.json()
+      const allow = ['companyName','tagline','gstNumber','address','phone','whatsapp','email','website','bankName','bankAccount','bankIfsc','bankBranch','logoUrl','lrPrefix','transferPrefix','gstPercent','sessionTimeoutMinutes','theme']
+      const set = { updatedAt: new Date() }
+      for (const k of allow) if (body[k] !== undefined) set[k] = body[k]
+      await db.collection('settings').updateOne({ _id: 'company' }, { $set: set }, { upsert: true })
+      await logActivity(db, { actor: s.userId, role: s.role, action: 'SETTINGS_UPDATE', target: 'company', meta: Object.keys(set) })
+      const updated = await db.collection('settings').findOne({ _id: 'company' })
+      const { _id, ...rest } = updated
+      return json({ ok: true, settings: rest })
+    }
+
+    // -------- PASSWORD MANAGEMENT ---------
+    if (route === '/users/change-password' && method === 'POST') {
+      const s = await getSession(request)
+      if (!s) return json({ ok:false, error:'Not authenticated' }, 401)
+      const { oldPassword, newPassword } = await request.json()
+      if (!newPassword || newPassword.length < 6) return json({ ok:false, error:'New password must be at least 6 characters' }, 400)
+      const user = await db.collection('users').findOne({ id: s.userId })
+      if (!user && s.role !== 'admin') return json({ ok:false, error:'User not found' }, 404)
+      // Verify old password (plain or hashed for backwards compat)
+      if (user) {
+        const bcrypt = (await import('bcryptjs')).default
+        const isHashed = String(user.password || '').startsWith('$2')
+        const match = isHashed ? await bcrypt.compare(oldPassword||'', user.password) : (user.password === oldPassword)
+        if (!match) return json({ ok:false, error:'Old password incorrect' }, 400)
+        const hashed = await bcrypt.hash(newPassword, 10)
+        await db.collection('users').updateOne({ id: s.userId }, { $set: { password: hashed, mustChangePassword: false, passwordChangedAt: new Date() } })
+      }
+      await logActivity(db, { actor: s.userId, role: s.role, action: 'PASSWORD_CHANGED', target: s.userId })
+      return json({ ok:true })
+    }
+    if (parts[0] === 'users' && parts[2] === 'reset-password' && method === 'POST') {
+      const s = await getSession(request)
+      if (!s || s.role !== 'admin') return json({ ok:false, error:'Super Admin only' }, 403)
+      const { newPassword } = await request.json()
+      const bcrypt = (await import('bcryptjs')).default
+      const hashed = await bcrypt.hash(newPassword || 'agc123', 10)
+      await db.collection('users').updateOne({ id: parts[1] }, { $set: { password: hashed, mustChangePassword: true, passwordChangedAt: new Date() } })
+      await logActivity(db, { actor: s.userId, role: s.role, action: 'PASSWORD_RESET', target: parts[1] })
+      return json({ ok:true })
+    }
+    if (parts[0] === 'users' && parts[2] === 'toggle-active' && method === 'POST') {
+      const s = await getSession(request)
+      if (!s || s.role !== 'admin') return json({ ok:false, error:'Super Admin only' }, 403)
+      const u = await db.collection('users').findOne({ id: parts[1] })
+      if (!u) return json({ ok:false, error:'Not found' }, 404)
+      await db.collection('users').updateOne({ id: parts[1] }, { $set: { active: !(u.active !== false) } })
+      await logActivity(db, { actor: s.userId, role: s.role, action: 'USER_TOGGLE_ACTIVE', target: parts[1] })
+      return json({ ok:true, active: !(u.active !== false) })
     }
 
     // -------- LABEL SIZES ---------
@@ -335,7 +430,10 @@ async function handle(request, ctx) {
     if (route === '/users' && method === 'GET') { const items = await db.collection('users').find({}).toArray(); return json({ items: items.map(sanitize) }) }
     if (route === '/users' && method === 'POST') {
       const b = await request.json()
-      const doc = { id: uuidv4(), name: b.name, role: b.role, phone: b.phone || '', code: b.code || '', branchId: b.branchId || null, password: b.password || 'agc123', active: true, createdAt: new Date() }
+      const bcrypt = (await import('bcryptjs')).default
+      const rawPw = b.password || Math.random().toString(36).slice(2, 10)
+      const hashed = await bcrypt.hash(rawPw, 10)
+      const doc = { id: uuidv4(), name: b.name, role: b.role, phone: b.phone || '', code: b.code || '', branchId: b.branchId || null, password: hashed, plainInitialPassword: rawPw, mustChangePassword: true, active: true, createdAt: new Date() }
       await db.collection('users').insertOne(doc); return json({ ok: true, user: sanitize(doc) })
     }
     if (parts[0] === 'users' && parts.length === 2 && method === 'DELETE') { await db.collection('users').deleteOne({ id: parts[1] }); return json({ ok: true }) }

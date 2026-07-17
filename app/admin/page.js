@@ -1,4 +1,5 @@
 'use client'
+import { LogoMark } from '@/components/Logo'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Lock, LayoutDashboard, Plus, Truck, IndianRupee, PackageCheck, PackageX, Timer, Wallet, LogOut, Printer, RefreshCw, Search, Bell, ClipboardList, Users, Building2, FileSpreadsheet, DollarSign, Trash2, Download, ArrowRightLeft, CheckCircle2, History, ChevronRight, Tag } from 'lucide-react'
@@ -41,11 +42,11 @@ export default function AdminPage() {
     <div className="min-h-screen gradient-navy grid place-items-center p-4">
       <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} className="w-full max-w-md">
         <Card className="border-0 shadow-2xl shadow-black/40"><CardContent className="p-8">
-          <div className="flex items-center gap-3"><div className="h-11 w-11 rounded-lg gradient-gold grid place-items-center"><Truck className="h-5 w-5 text-[#0B2545]"/></div><div><div className="font-black text-[#0B2545]">ASSAM GOODS CARRIER</div><div className="text-[10px] uppercase tracking-[0.2em] text-agc-gold font-semibold">Admin Portal</div></div></div>
-          <div className="mt-6 font-bold text-[#0B2545] flex items-center gap-2"><Lock className="h-4 w-4"/> Secure Login</div>
+          <div className="flex items-center gap-3"><LogoMark size={44}/><div><div className="font-black text-[#0F3D91]">ASSAM GOODS CARRIER</div><div className="text-[10px] uppercase tracking-[0.2em] text-agc-gold font-semibold">Admin Portal</div></div></div>
+          <div className="mt-6 font-bold text-[#0F3D91] flex items-center gap-2"><Lock className="h-4 w-4"/> Secure Login</div>
           <form onSubmit={login} className="mt-4 space-y-3">
             <div><Label className="text-xs">Admin Password</Label><Input type="password" value={pw} onChange={e=>setPw(e.target.value)} className="mt-1 h-11"/></div>
-            <Button disabled={loading} className="w-full h-11 bg-[#0B2545] hover:bg-[#13315C] font-bold">{loading ? 'Signing in...' : 'Sign In'}</Button>
+            <Button disabled={loading} className="w-full h-11 bg-[#0F3D91] hover:bg-[#1E4FB8] font-bold">{loading ? 'Signing in...' : 'Sign In'}</Button>
             <div className="text-xs text-slate-500 text-center">Default password: <b>assam123</b></div>
           </form>
         </CardContent></Card>
@@ -76,6 +77,7 @@ function Dashboard({ onLogout }) {
     { k:'transfers', l:'Branch Transfers', i: ArrowRightLeft },
     { k:'users', l:'Users & Roles', i: Users },
     { k:'labels', l:'Label Settings', i: Tag },
+    { k:'company', l:'Company Settings', i: Building2 },
     { k:'reports', l:'Reports', i: FileSpreadsheet },
     { k:'activity', l:'Activity Log', i: ClipboardList },
     { k:'notifications', l:'Notifications', i: Bell },
@@ -85,7 +87,7 @@ function Dashboard({ onLogout }) {
     <div className="min-h-screen bg-slate-100">
       <aside className="fixed inset-y-0 left-0 w-64 gradient-navy text-white hidden lg:flex flex-col">
         <div className="p-5 border-b border-white/10">
-          <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-lg gradient-gold grid place-items-center"><Truck className="h-5 w-5 text-[#0B2545]"/></div><div><div className="font-black leading-tight">AGC Admin</div><div className="text-[10px] uppercase tracking-[0.2em] text-agc-gold">Control Panel</div></div></div>
+          <div className="flex items-center gap-3"><LogoMark size={44}/><div><div className="font-black leading-tight">AGC Admin</div><div className="text-[10px] uppercase tracking-[0.2em] text-agc-gold">Control Panel</div></div></div>
         </div>
         <nav className="p-3 flex-1 space-y-1 text-sm overflow-y-auto">
           {tabs.map(t => (<SideItem key={t.k} icon={t.i} active={tab===t.k} onClick={()=>setTab(t.k)}>{t.l}</SideItem>))}
@@ -96,11 +98,11 @@ function Dashboard({ onLogout }) {
       <main className="lg:ml-64">
         <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
           <div className="px-6 py-4 flex items-center justify-between">
-            <div><div className="text-xs uppercase tracking-widest text-agc-gold font-bold">{tabs.find(t=>t.k===tab)?.l}</div><div className="text-xl font-black text-[#0B2545]">Welcome back, Admin</div></div>
+            <div><div className="text-xs uppercase tracking-widest text-agc-gold font-bold">{tabs.find(t=>t.k===tab)?.l}</div><div className="text-xl font-black text-[#0F3D91]">Welcome back, Admin</div></div>
             <Button onClick={loadAll} variant="outline" className="h-9"><RefreshCw className="h-4 w-4 mr-2"/>Refresh</Button>
           </div>
           <div className="flex lg:hidden px-6 pb-3 gap-2 text-xs overflow-x-auto">
-            {tabs.map(t => (<button key={t.k} onClick={()=>setTab(t.k)} className={`px-3 py-1 rounded-full whitespace-nowrap ${tab===t.k?'bg-[#0B2545] text-white':'bg-slate-100 text-slate-700'}`}>{t.l}</button>))}
+            {tabs.map(t => (<button key={t.k} onClick={()=>setTab(t.k)} className={`px-3 py-1 rounded-full whitespace-nowrap ${tab===t.k?'bg-[#0F3D91] text-white':'bg-slate-100 text-slate-700'}`}>{t.l}</button>))}
           </div>
         </div>
         <div className="p-6">
@@ -112,6 +114,7 @@ function Dashboard({ onLogout }) {
           {tab === 'transfers' && <TransfersModule/>}
           {tab === 'users' && <UsersModule/>}
           {tab === 'labels' && <LabelSizesModule/>}
+          {tab === 'company' && <CompanySettingsModule/>}
           {tab === 'reports' && <ReportsModule/>}
           {tab === 'activity' && <ActivityModule/>}
           {tab === 'notifications' && <NotificationsModule/>}
@@ -121,7 +124,7 @@ function Dashboard({ onLogout }) {
   )
 }
 
-function SideItem({ icon: Icon, active, children, onClick }) { return (<button onClick={onClick} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition ${active ? 'bg-agc-gold text-[#0B2545] font-bold' : 'text-white/80 hover:bg-white/10'}`}><Icon className="h-4 w-4"/> {children}</button>) }
+function SideItem({ icon: Icon, active, children, onClick }) { return (<button onClick={onClick} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition ${active ? 'bg-agc-gold text-[#0F3D91] font-bold' : 'text-white/80 hover:bg-white/10'}`}><Icon className="h-4 w-4"/> {children}</button>) }
 
 function Overview({ stats }) {
   const cards = [
@@ -134,7 +137,7 @@ function Overview({ stats }) {
     { i: PackageCheck, t: 'Delivered', v: stats?.deliveredShipments || 0, c:'from-green-500 to-green-600' },
     { i: PackageX, t: 'Cancelled', v: stats?.cancelledShipments || 0, c:'from-slate-500 to-slate-600' },
   ]
-  return (<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{cards.map(({i:Ic,t,v,c},k)=>(<motion.div key={k} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:k*0.03}}><Card className="overflow-hidden border-slate-200"><CardContent className="p-5"><div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${c} grid place-items-center text-white`}><Ic className="h-5 w-5"/></div><div className="mt-4 text-xs uppercase tracking-widest text-slate-500">{t}</div><div className="text-2xl font-black text-[#0B2545] mt-1">{v}</div></CardContent></Card></motion.div>))}</div>)
+  return (<div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{cards.map(({i:Ic,t,v,c},k)=>(<motion.div key={k} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:k*0.03}}><Card className="overflow-hidden border-slate-200"><CardContent className="p-5"><div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${c} grid place-items-center text-white`}><Ic className="h-5 w-5"/></div><div className="mt-4 text-xs uppercase tracking-widest text-slate-500">{t}</div><div className="text-2xl font-black text-[#0F3D91] mt-1">{v}</div></CardContent></Card></motion.div>))}</div>)
 }
 
 function BookingsList({ bookings, q, setQ, reload }) {
@@ -155,7 +158,7 @@ function BookingsList({ bookings, q, setQ, reload }) {
           <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"><tr><Th>LR Number</Th><Th>Date</Th><Th>Sender</Th><Th>Receiver</Th><Th>Route</Th><Th>Amount</Th><Th>Status</Th><Th></Th></tr></thead>
           <tbody>
             {bookings.length === 0 && (<tr><td colSpan="8" className="p-8 text-center text-slate-400">No bookings yet. Create your first booking!</td></tr>)}
-            {bookings.map(b => (<tr key={b.lrNumber} className="border-t border-slate-100 hover:bg-slate-50"><Td><span className="tracking-number">{b.lrNumber}</span></Td><Td>{b.date}</Td><Td>{b.sender?.name}</Td><Td>{b.receiver?.name}</Td><Td>{b.origin} → {b.destination}</Td><Td>₹{Number(b.totalAmount||0).toLocaleString('en-IN')}</Td><Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">{b.status}</span></Td><Td><div className="flex gap-1"><Button onClick={()=>setSelected(b)} size="sm" variant="outline" className="h-8">Update</Button><a href={`/print/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="h-8" title="Print LR"><Printer className="h-3 w-3"/></Button></a><a href={`/sticker/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="h-8" title="Box Stickers"><PackageCheck className="h-3 w-3"/></Button></a></div></Td></tr>))}
+            {bookings.map(b => (<tr key={b.lrNumber} className="border-t border-slate-100 hover:bg-slate-50"><Td><span className="tracking-number">{b.lrNumber}</span></Td><Td>{b.date}</Td><Td>{b.sender?.name}</Td><Td>{b.receiver?.name}</Td><Td>{b.origin} → {b.destination}</Td><Td>₹{Number(b.totalAmount||0).toLocaleString('en-IN')}</Td><Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0F3D91]">{b.status}</span></Td><Td><div className="flex gap-1"><Button onClick={()=>setSelected(b)} size="sm" variant="outline" className="h-8">Update</Button><a href={`/print/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="h-8" title="Print LR"><Printer className="h-3 w-3"/></Button></a><a href={`/sticker/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="h-8" title="Box Stickers"><PackageCheck className="h-3 w-3"/></Button></a></div></Td></tr>))}
           </tbody></table></div></CardContent></Card>
       {selected && <StatusUpdater booking={selected} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null); reload()}}/>}
     </div>
@@ -165,7 +168,7 @@ function BookingsList({ bookings, q, setQ, reload }) {
 function StatusUpdater({ booking, onClose, onSaved }) {
   const [status, setStatus] = useState(booking.status); const [location, setLocation] = useState(booking.currentLocation || ''); const [note, setNote] = useState(''); const [busy, setBusy] = useState(false)
   const save = async () => { setBusy(true); try { const r = await fetch(`/api/bookings/${encodeURIComponent(booking.lrNumber)}/status`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status, location, note })}); const d = await r.json(); if (d.ok) { toast.success('Status updated'); onSaved() } else toast.error(d.error || 'Failed') } catch { toast.error('Network error') } setBusy(false) }
-  return (<div className="agc-modal-backdrop" onClick={onClose}><Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}><CardContent className="p-6"><div className="font-bold text-[#0B2545]">Update Shipment Status</div><div className="text-xs text-slate-500 mt-1">{booking.lrNumber}</div><div className="mt-4 space-y-3"><div><Label className="text-xs">Status</Label><Select value={status} onValueChange={setStatus}><SelectTrigger className="mt-1"><SelectValue/></SelectTrigger><SelectContent>{STAGES.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}</SelectContent></Select></div><div><Label className="text-xs">Current Location</Label><Input value={location} onChange={e=>setLocation(e.target.value)} placeholder="e.g. Guwahati Hub" className="mt-1"/></div><div><Label className="text-xs">Note</Label><Input value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional note" className="mt-1"/></div></div><div className="mt-5 flex gap-2 justify-end"><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy} onClick={save} className="bg-[#0B2545] text-white font-bold">{busy?'Saving...':'Save Update'}</Button></div></CardContent></Card></div>)
+  return (<div className="agc-modal-backdrop" onClick={onClose}><Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}><CardContent className="p-6"><div className="font-bold text-[#0F3D91]">Update Shipment Status</div><div className="text-xs text-slate-500 mt-1">{booking.lrNumber}</div><div className="mt-4 space-y-3"><div><Label className="text-xs">Status</Label><Select value={status} onValueChange={setStatus}><SelectTrigger className="mt-1"><SelectValue/></SelectTrigger><SelectContent>{STAGES.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}</SelectContent></Select></div><div><Label className="text-xs">Current Location</Label><Input value={location} onChange={e=>setLocation(e.target.value)} placeholder="e.g. Guwahati Hub" className="mt-1"/></div><div><Label className="text-xs">Note</Label><Input value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional note" className="mt-1"/></div></div><div className="mt-5 flex gap-2 justify-end"><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy} onClick={save} className="bg-[#0F3D91] text-white font-bold">{busy?'Saving...':'Save Update'}</Button></div></CardContent></Card></div>)
 }
 
 function NewBooking({ onCreated }) {
@@ -184,12 +187,12 @@ function NewBooking({ onCreated }) {
     <Section title="Charges"><Field label="Freight Rate (₹/kg)"><Input type="number" value={f.freightRate} onChange={e=>set('freightRate',e.target.value)}/></Field><Field label="Bilty Charge"><Input type="number" value={f.biltyCharge} onChange={e=>set('biltyCharge',e.target.value)}/></Field><Field label="Door Delivery"><Input type="number" value={f.doorDeliveryCharge} onChange={e=>set('doorDeliveryCharge',e.target.value)}/></Field><Field label="Insurance"><Input type="number" value={f.insurance} onChange={e=>set('insurance',e.target.value)}/></Field><Field label="Hamali (Labor)"><Input type="number" value={f.hamali} onChange={e=>set('hamali',e.target.value)}/></Field><Field label="Load/Unload"><Input type="number" value={f.loadingUnloading} onChange={e=>set('loadingUnloading',e.target.value)}/></Field><Field label="Other Charges"><Input type="number" value={f.otherCharges} onChange={e=>set('otherCharges',e.target.value)}/></Field></Section>
     <Section title="Payment & Branch"><Field label="Payment Status"><Select value={f.paymentStatus} onValueChange={v=>set('paymentStatus',v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="PAID">Paid</SelectItem><SelectItem value="TO_PAY">To Pay</SelectItem><SelectItem value="TBB">TBB (To Be Billed)</SelectItem><SelectItem value="PENDING">Pending</SelectItem></SelectContent></Select></Field><Field label="Mode"><Select value={f.paymentMode} onValueChange={v=>set('paymentMode',v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK">Bank</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select></Field><Field label="Branch Code"><Input value={f.branchCode} onChange={e=>set('branchCode',e.target.value.toUpperCase())}/></Field><Field label="ETA"><Input value={f.eta} onChange={e=>set('eta',e.target.value)} placeholder="3-4 days"/></Field></Section>
     <Card className="border-2 border-agc-gold bg-amber-50"><CardContent className="p-5"><div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm"><Line label="Freight" value={`₹${freight.toLocaleString('en-IN')}`}/><Line label="Sub Total" value={`₹${subtotal.toLocaleString('en-IN')}`}/><Line label="GST 18%" value={`₹${gst.toLocaleString('en-IN')}`}/><Line label="Total" value={`₹${total.toLocaleString('en-IN')}`} big/></div></CardContent></Card>
-    <div className="flex justify-end"><Button disabled={busy} type="submit" className="h-12 px-8 bg-[#0B2545] hover:bg-[#13315C] text-white font-bold text-base">{busy ? 'Creating...' : 'Create Booking & Generate LR'}</Button></div>
+    <div className="flex justify-end"><Button disabled={busy} type="submit" className="h-12 px-8 bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold text-base">{busy ? 'Creating...' : 'Create Booking & Generate LR'}</Button></div>
   </form>)
 }
-function Section({ title, children }) { return (<Card><CardContent className="p-5"><div className="font-bold text-[#0B2545] mb-4">{title}</div><div className="grid md:grid-cols-4 gap-4">{children}</div></CardContent></Card>) }
+function Section({ title, children }) { return (<Card><CardContent className="p-5"><div className="font-bold text-[#0F3D91] mb-4">{title}</div><div className="grid md:grid-cols-4 gap-4">{children}</div></CardContent></Card>) }
 function Field({ label, wide, children }) { return (<div className={wide ? 'md:col-span-4' : ''}><Label className="text-xs">{label}</Label><div className="mt-1">{children}</div></div>) }
-function Line({ label, value, big }) { return (<div><div className="text-[10px] uppercase tracking-widest text-slate-500">{label}</div><div className={`font-black text-[#0B2545] ${big ? 'text-2xl' : 'text-lg'}`}>{value}</div></div>) }
+function Line({ label, value, big }) { return (<div><div className="text-[10px] uppercase tracking-widest text-slate-500">{label}</div><div className={`font-black text-[#0F3D91] ${big ? 'text-2xl' : 'text-lg'}`}>{value}</div></div>) }
 function Th({ children }) { return <th className="text-left px-4 py-3 font-semibold">{children}</th> }
 function Td({ children }) { return <td className="px-4 py-3">{children}</td> }
 
@@ -203,7 +206,7 @@ function RatesModule() {
   const add = async (e) => { e.preventDefault(); const r = await fetch('/api/rates', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)}); if((await r.json()).ok){toast.success('Rate added'); load()} }
   const del = async (id) => { await fetch(`/api/rates/${id}`, { method:'DELETE' }); load() }
   return (<div className="space-y-4">
-    <Card><CardContent className="p-5"><div className="font-bold text-[#0B2545] mb-4">Add New Rate</div><form onSubmit={add} className="grid grid-cols-2 md:grid-cols-4 gap-3">
+    <Card><CardContent className="p-5"><div className="font-bold text-[#0F3D91] mb-4">Add New Rate</div><form onSubmit={add} className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <div><Label className="text-xs">From State</Label><Input value={f.fromState} onChange={e=>set('fromState',e.target.value)}/></div>
       <div><Label className="text-xs">To State</Label><Input value={f.toState} onChange={e=>set('toState',e.target.value)}/></div>
       <div><Label className="text-xs">From City</Label><Input value={f.fromCity} onChange={e=>set('fromCity',e.target.value)}/></div>
@@ -215,7 +218,7 @@ function RatesModule() {
       <div><Label className="text-xs">Insurance %</Label><Input type="number" value={f.insurancePct} onChange={e=>set('insurancePct',e.target.value)}/></div>
       <div><Label className="text-xs">Fuel Surcharge %</Label><Input type="number" value={f.fuelSurcharge} onChange={e=>set('fuelSurcharge',e.target.value)}/></div>
       <div><Label className="text-xs">GST %</Label><Input type="number" value={f.gst} onChange={e=>set('gst',e.target.value)}/></div>
-      <div className="flex items-end"><Button className="w-full bg-[#0B2545] text-white font-bold">Add Rate</Button></div>
+      <div className="flex items-end"><Button className="w-full bg-[#0F3D91] text-white font-bold">Add Rate</Button></div>
     </form></CardContent></Card>
     <Card><CardContent className="p-0"><table className="w-full text-sm"><thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"><tr><Th>From</Th><Th>To</Th><Th>₹/kg</Th><Th>Min</Th><Th>Bilty</Th><Th>Door</Th><Th>Ins%</Th><Th>Fuel%</Th><Th>GST%</Th><Th></Th></tr></thead><tbody>
       {rates.length===0 && <tr><td colSpan="10" className="p-8 text-center text-slate-400">No rates defined. Add your first route rate above.</td></tr>}
@@ -232,14 +235,14 @@ function BranchesModule() {
   const add = async (e) => { e.preventDefault(); const r = await fetch('/api/branches', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)}); if((await r.json()).ok){toast.success('Branch added'); setF({ code:'', name:'', city:'', state:'Assam', phone:'', address:'' }); load()} }
   const del = async (id) => { await fetch(`/api/branches/${id}`, { method:'DELETE' }); load() }
   return (<div className="space-y-4">
-    <Card><CardContent className="p-5"><div className="font-bold text-[#0B2545] mb-4">Add Branch</div><form onSubmit={add} className="grid md:grid-cols-3 gap-3">
+    <Card><CardContent className="p-5"><div className="font-bold text-[#0F3D91] mb-4">Add Branch</div><form onSubmit={add} className="grid md:grid-cols-3 gap-3">
       <Input value={f.code} onChange={e=>setF(x=>({...x,code:e.target.value.toUpperCase()}))} placeholder="Branch Code (GHY01)" required/>
       <Input value={f.name} onChange={e=>setF(x=>({...x,name:e.target.value}))} placeholder="Name" required/>
       <Input value={f.city} onChange={e=>setF(x=>({...x,city:e.target.value}))} placeholder="City" required/>
       <Input value={f.state} onChange={e=>setF(x=>({...x,state:e.target.value}))} placeholder="State"/>
       <Input value={f.phone} onChange={e=>setF(x=>({...x,phone:e.target.value}))} placeholder="Phone"/>
       <Input value={f.address} onChange={e=>setF(x=>({...x,address:e.target.value}))} placeholder="Address"/>
-      <div className="md:col-span-3 flex justify-end"><Button className="bg-[#0B2545] text-white font-bold">Add Branch</Button></div>
+      <div className="md:col-span-3 flex justify-end"><Button className="bg-[#0F3D91] text-white font-bold">Add Branch</Button></div>
     </form></CardContent></Card>
     <Card><CardContent className="p-0"><table className="w-full text-sm"><thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"><tr><Th>Code</Th><Th>Name</Th><Th>City</Th><Th>Phone</Th><Th>Address</Th><Th></Th></tr></thead><tbody>{items.length===0 && <tr><td colSpan="6" className="p-8 text-center text-slate-400">No branches.</td></tr>}{items.map(b => (<tr key={b.id} className="border-t border-slate-100"><Td><span className="font-mono font-bold">{b.code}</span></Td><Td>{b.name}</Td><Td>{b.city}, {b.state}</Td><Td>{b.phone}</Td><Td>{b.address}</Td><Td><Button size="sm" variant="outline" onClick={()=>del(b.id)}><Trash2 className="h-3 w-3"/></Button></Td></tr>))}</tbody></table></CardContent></Card>
   </div>)
@@ -253,13 +256,13 @@ function UsersModule() {
   const add = async (e) => { e.preventDefault(); const r = await fetch('/api/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)}); if((await r.json()).ok){toast.success('User created'); setF({ name:'', role:'branch', code:'', phone:'', password:'' }); load()} }
   const del = async (id) => { await fetch(`/api/users/${id}`, { method:'DELETE' }); load() }
   return (<div className="space-y-4">
-    <Card><CardContent className="p-5"><div className="font-bold text-[#0B2545] mb-4">Create User</div><form onSubmit={add} className="grid md:grid-cols-5 gap-3">
+    <Card><CardContent className="p-5"><div className="font-bold text-[#0F3D91] mb-4">Create User</div><form onSubmit={add} className="grid md:grid-cols-5 gap-3">
       <Input value={f.name} onChange={e=>setF(x=>({...x,name:e.target.value}))} placeholder="Full Name" required/>
       <Select value={f.role} onValueChange={v=>setF(x=>({...x,role:v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="branch">Branch Staff</SelectItem><SelectItem value="driver">Driver</SelectItem><SelectItem value="admin">Admin</SelectItem></SelectContent></Select>
       <Input value={f.code} onChange={e=>setF(x=>({...x,code:e.target.value.toUpperCase()}))} placeholder="Branch Code (for branch)"/>
       <Input value={f.phone} onChange={e=>setF(x=>({...x,phone:e.target.value}))} placeholder="Phone (for driver)"/>
       <Input value={f.password} onChange={e=>setF(x=>({...x,password:e.target.value}))} placeholder="Password" required/>
-      <div className="md:col-span-5 flex justify-end"><Button className="bg-[#0B2545] text-white font-bold">Create User</Button></div>
+      <div className="md:col-span-5 flex justify-end"><Button className="bg-[#0F3D91] text-white font-bold">Create User</Button></div>
     </form></CardContent></Card>
     <Card><CardContent className="p-0"><table className="w-full text-sm"><thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"><tr><Th>Name</Th><Th>Role</Th><Th>Login</Th><Th>Password</Th><Th></Th></tr></thead><tbody>{items.length===0 && <tr><td colSpan="5" className="p-8 text-center text-slate-400">No users yet.</td></tr>}{items.map(u => (<tr key={u.id} className="border-t border-slate-100"><Td>{u.name}</Td><Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200">{u.role}</span></Td><Td>{u.role==='branch' ? u.code : u.phone}</Td><Td className="font-mono">{u.password}</Td><Td><Button size="sm" variant="outline" onClick={()=>del(u.id)}><Trash2 className="h-3 w-3"/></Button></Td></tr>))}</tbody></table></CardContent></Card>
   </div>)
@@ -382,7 +385,7 @@ function TransfersModule() {
     <div className="space-y-4">
       <div className="flex gap-2 border-b border-slate-200">
         {[['list','All Transfers'],['create','New Transfer']].map(([k,l]) => (
-          <button key={k} onClick={()=>setTab(k)} className={`px-4 py-2 text-sm font-semibold border-b-2 ${tab===k ? 'border-agc-gold text-[#0B2545]' : 'border-transparent text-slate-500 hover:text-[#0B2545]'}`}>{l}</button>
+          <button key={k} onClick={()=>setTab(k)} className={`px-4 py-2 text-sm font-semibold border-b-2 ${tab===k ? 'border-agc-gold text-[#0F3D91]' : 'border-transparent text-slate-500 hover:text-[#0F3D91]'}`}>{l}</button>
         ))}
       </div>
 
@@ -409,7 +412,7 @@ function TransfersModule() {
                   <tr key={t.transferId} className="border-t border-slate-100 hover:bg-slate-50">
                     <Td><span className="tracking-number">{t.transferId}</span></Td>
                     <Td><button onClick={()=>openHistory(t.lrNumber)} className="tracking-number" style={{color:"#2563eb",cursor:"pointer",background:"#fff"}}>{t.lrNumber}</button></Td>
-                    <Td><span className="font-semibold text-[#0B2545]">{t.fromBranch}</span> <ChevronRight className="h-3 w-3 inline mx-1"/> <span className="font-semibold text-[#0B2545]">{t.toBranch}</span></Td>
+                    <Td><span className="font-semibold text-[#0F3D91]">{t.fromBranch}</span> <ChevronRight className="h-3 w-3 inline mx-1"/> <span className="font-semibold text-[#0F3D91]">{t.toBranch}</span></Td>
                     <Td>{new Date(t.transferredAt).toLocaleString('en-IN')}<div className="text-[10px] text-slate-500">by {t.transferredBy}</div></Td>
                     <Td>{t.receivedAt ? <div>{new Date(t.receivedAt).toLocaleString('en-IN')}<div className="text-[10px] text-slate-500">by {t.receivedBy}</div></div> : <span className="text-slate-400">—</span>}</Td>
                     <Td><span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${t.status==='RECEIVED'?'bg-emerald-200 text-emerald-800':'bg-amber-200 text-amber-900'}`}>{t.status}</span></Td>
@@ -457,7 +460,7 @@ function NewTransferForm({ branches, bookings, onCreated }) {
 
   return (
     <Card><CardContent className="p-6">
-      <div className="font-bold text-[#0B2545] mb-4 flex items-center gap-2"><ArrowRightLeft className="h-4 w-4 text-agc-gold"/>Create Branch-to-Branch Transfer</div>
+      <div className="font-bold text-[#0F3D91] mb-4 flex items-center gap-2"><ArrowRightLeft className="h-4 w-4 text-agc-gold"/>Create Branch-to-Branch Transfer</div>
       <form onSubmit={submit} className="space-y-4">
         <div>
           <Label className="text-xs">Select LR / Bilty Number</Label>
@@ -500,7 +503,7 @@ function NewTransferForm({ branches, bookings, onCreated }) {
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button disabled={busy} type="submit" className="bg-[#0B2545] hover:bg-[#13315C] text-white font-bold h-11 px-6"><ArrowRightLeft className="h-4 w-4 mr-2"/>{busy ? 'Creating...' : 'Create Transfer'}</Button>
+          <Button disabled={busy} type="submit" className="bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold h-11 px-6"><ArrowRightLeft className="h-4 w-4 mr-2"/>{busy ? 'Creating...' : 'Create Transfer'}</Button>
         </div>
       </form>
     </CardContent></Card>
@@ -522,7 +525,7 @@ function ReceiveTransferModal({ transfer, onClose, onSaved }) {
   return (
     <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}><CardContent className="p-6">
-        <div className="font-bold text-[#0B2545] flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600"/>Receive Transfer</div>
+        <div className="font-bold text-[#0F3D91] flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600"/>Receive Transfer</div>
         <div className="text-xs text-slate-500 mt-1 font-mono">{transfer.transferId} · LR {transfer.lrNumber}</div>
         <div className="mt-3 text-sm p-3 rounded bg-slate-50 border border-slate-200">
           <div><b>Route:</b> {transfer.fromBranch} → {transfer.toBranch}</div>
@@ -545,7 +548,7 @@ function HistoryModal({ lr, items, onClose }) {
       <Card className="w-full max-w-2xl my-8" onClick={e=>e.stopPropagation()}><CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>
-            <div className="font-bold text-[#0B2545] flex items-center gap-2"><History className="h-4 w-4 text-agc-gold"/>Movement History</div>
+            <div className="font-bold text-[#0F3D91] flex items-center gap-2"><History className="h-4 w-4 text-agc-gold"/>Movement History</div>
             <div className="text-xs text-slate-500 mt-1 font-mono">{lr}</div>
           </div>
           <a href={`/track/${lr}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline">Open Tracking →</Button></a>
@@ -559,7 +562,7 @@ function HistoryModal({ lr, items, onClose }) {
                 <ArrowRightLeft className="h-2.5 w-2.5 text-white"/>
               </div>
               <div className="ml-2">
-                <div className="font-bold text-[#0B2545] text-sm">{t.fromBranch} <ChevronRight className="h-3 w-3 inline"/> {t.toBranch} <span className="font-mono text-xs text-slate-500 ml-2">{t.transferId}</span></div>
+                <div className="font-bold text-[#0F3D91] text-sm">{t.fromBranch} <ChevronRight className="h-3 w-3 inline"/> {t.toBranch} <span className="font-mono text-xs text-slate-500 ml-2">{t.transferId}</span></div>
                 <div className="text-xs text-slate-500">Dispatched {new Date(t.transferredAt).toLocaleString('en-IN')} by {t.transferredBy}{t.vehicleNumber?` · Vehicle ${t.vehicleNumber}`:''}{t.driverName?` · Driver ${t.driverName}`:''}</div>
                 {t.remarks && <div className="text-xs text-slate-600 mt-1">📝 {t.remarks}</div>}
                 {t.status==='RECEIVED' ? (
@@ -595,19 +598,19 @@ function LabelSizesModule() {
   return (
     <div className="space-y-4">
       <Card><CardContent className="p-5">
-        <div className="font-bold text-[#0B2545] mb-1 flex items-center gap-2"><Tag className="h-4 w-4 text-agc-gold"/>Add Custom Label Size</div>
+        <div className="font-bold text-[#0F3D91] mb-1 flex items-center gap-2"><Tag className="h-4 w-4 text-agc-gold"/>Add Custom Label Size</div>
         <div className="text-xs text-slate-500 mb-4">Any thermal / A4 printer (TSC, Zebra, TVS, XPrinter) will use these sizes via the browser print dialog. Content auto-scales.</div>
         <form onSubmit={add} className="grid md:grid-cols-4 gap-3 items-end">
           <div><Label className="text-xs">Label Name (optional)</Label><Input value={f.name} onChange={e=>setF(x=>({...x, name: e.target.value}))} placeholder='e.g. "Small Address Label"' className="mt-1"/></div>
           <div><Label className="text-xs">Width (mm)</Label><Input type="number" min="10" max="300" value={f.width} onChange={e=>setF(x=>({...x, width: e.target.value}))} placeholder="e.g. 100" className="mt-1"/></div>
           <div><Label className="text-xs">Height (mm)</Label><Input type="number" min="10" max="300" value={f.height} onChange={e=>setF(x=>({...x, height: e.target.value}))} placeholder="e.g. 150" className="mt-1"/></div>
-          <div><Button className="bg-[#0B2545] text-white font-bold w-full"><Plus className="h-4 w-4 mr-2"/>Add Label Size</Button></div>
+          <div><Button className="bg-[#0F3D91] text-white font-bold w-full"><Plus className="h-4 w-4 mr-2"/>Add Label Size</Button></div>
         </form>
       </CardContent></Card>
 
       <Card><CardContent className="p-0">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-          <div className="font-bold text-[#0B2545]">Saved Label Sizes ({items.length})</div>
+          <div className="font-bold text-[#0F3D91]">Saved Label Sizes ({items.length})</div>
           <div className="text-xs text-slate-500">★ = default preset (cannot be deleted)</div>
         </div>
         <div className="overflow-x-auto">
@@ -617,13 +620,13 @@ function LabelSizesModule() {
               {items.length === 0 && <tr><td colSpan="7" className="p-8 text-center text-slate-400">Loading...</td></tr>}
               {items.map(s => (
                 <tr key={s.id} className="border-t border-slate-100">
-                  <Td><b className="text-[#0B2545]">{s.isDefault ? '★ ' : ''}{s.name}</b></Td>
+                  <Td><b className="text-[#0F3D91]">{s.isDefault ? '★ ' : ''}{s.name}</b></Td>
                   <Td>{s.width} mm</Td>
                   <Td>{s.height} mm</Td>
                   <Td className="text-xs text-slate-600">{s.width > s.height * 1.4 ? 'Landscape' : s.height > s.width * 1.4 ? 'Portrait' : 'Square-ish'}</Td>
-                  <Td>{s.isDefault ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200">Default</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">Custom</span>}</Td>
+                  <Td>{s.isDefault ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200">Default</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0F3D91]">Custom</span>}</Td>
                   <Td>
-                    <div style={{ width: `${Math.min(s.width, 40)}px`, height: `${Math.min(s.height, 40) * (s.height/s.width) || 20}px`, background:'#0B2545', borderRadius:2 }}/>
+                    <div style={{ width: `${Math.min(s.width, 40)}px`, height: `${Math.min(s.height, 40) * (s.height/s.width) || 20}px`, background:'#0F3D91', borderRadius:2 }}/>
                   </Td>
                   <Td>{!s.isDefault && <Button size="sm" variant="outline" onClick={()=>del(s.id)}><Trash2 className="h-3 w-3"/></Button>}</Td>
                 </tr>
@@ -635,6 +638,79 @@ function LabelSizesModule() {
 
       <div className="text-xs text-slate-600 p-3 rounded-lg bg-slate-50 border border-slate-200">
         <b>How to use:</b> Open any booking → click the <b>Box Stickers</b> button → choose your label size from the dropdown → click <b>Print Labels</b>. The system will auto-generate one label per package (1/N to N/N) and scale the content to fit the selected size perfectly. Works on TSC, Zebra, TVS, XPrinter and any Windows thermal printer via the standard browser print dialog.
+      </div>
+    </div>
+  )
+}
+
+
+// -------------- COMPANY SETTINGS (SUPER ADMIN) ------------------
+function CompanySettingsModule() {
+  const [s, setS] = useState(null)
+  const [saving, setSaving] = useState(false)
+  const load = () => fetch('/api/settings').then(r=>r.json()).then(d => setS(d.settings || {}))
+  useEffect(()=>{ load() }, [])
+  const set = (k, v) => setS(x => ({ ...x, [k]: v }))
+  const save = async () => {
+    setSaving(true)
+    try {
+      const token = localStorage.getItem('agc_token')
+      const r = await fetch('/api/settings', { method:'PUT', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify(s) })
+      const d = await r.json(); if (d.ok) { toast.success('Company settings updated'); load() } else toast.error(d.error || 'Failed')
+    } catch { toast.error('Network error') }
+    setSaving(false)
+  }
+  if (!s) return <div className="p-8 text-center text-slate-400">Loading company settings…</div>
+  return (
+    <div className="space-y-4">
+      <div className="p-3 rounded-lg bg-blue-50 border border-blue-200 text-xs text-blue-900">
+        <b>Super Admin:</b> Change any company detail here — the update propagates instantly across LR / Sticker / Manifest / Reports and the Homepage footer.
+      </div>
+      <Card><CardContent className="p-5">
+        <div className="font-bold text-[#0F3D91] mb-4">Company Identity</div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div><Label className="text-xs">Company Name</Label><Input value={s.companyName||''} onChange={e=>set('companyName', e.target.value)} className="mt-1"/></div>
+          <div><Label className="text-xs">Tagline</Label><Input value={s.tagline||''} onChange={e=>set('tagline', e.target.value)} className="mt-1"/></div>
+          <div><Label className="text-xs">GST Number</Label><Input value={s.gstNumber||''} onChange={e=>set('gstNumber', e.target.value)} className="mt-1"/></div>
+          <div><Label className="text-xs">Website</Label><Input value={s.website||''} onChange={e=>set('website', e.target.value)} className="mt-1"/></div>
+          <div className="md:col-span-2"><Label className="text-xs">Registered Address</Label><Input value={s.address||''} onChange={e=>set('address', e.target.value)} className="mt-1"/></div>
+        </div>
+      </CardContent></Card>
+      <Card><CardContent className="p-5">
+        <div className="font-bold text-[#0F3D91] mb-4">Contact</div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div><Label className="text-xs">Primary Phone</Label><Input value={s.phone||''} onChange={e=>set('phone', e.target.value)} className="mt-1"/></div>
+          <div><Label className="text-xs">WhatsApp</Label><Input value={s.whatsapp||''} onChange={e=>set('whatsapp', e.target.value)} className="mt-1"/></div>
+          <div><Label className="text-xs">Email</Label><Input value={s.email||''} onChange={e=>set('email', e.target.value)} className="mt-1"/></div>
+        </div>
+      </CardContent></Card>
+      <Card><CardContent className="p-5">
+        <div className="font-bold text-[#0F3D91] mb-4">Bank Details (for invoicing)</div>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div><Label className="text-xs">Bank Name</Label><Input value={s.bankName||''} onChange={e=>set('bankName', e.target.value)} className="mt-1"/></div>
+          <div><Label className="text-xs">Account Number</Label><Input value={s.bankAccount||''} onChange={e=>set('bankAccount', e.target.value)} className="mt-1"/></div>
+          <div><Label className="text-xs">IFSC Code</Label><Input value={s.bankIfsc||''} onChange={e=>set('bankIfsc', e.target.value.toUpperCase())} className="mt-1"/></div>
+          <div><Label className="text-xs">Branch</Label><Input value={s.bankBranch||''} onChange={e=>set('bankBranch', e.target.value)} className="mt-1"/></div>
+        </div>
+      </CardContent></Card>
+      <Card><CardContent className="p-5">
+        <div className="font-bold text-[#0F3D91] mb-4">Number Series & Print Settings</div>
+        <div className="grid md:grid-cols-4 gap-4">
+          <div><Label className="text-xs">LR Number Prefix</Label><Input value={s.lrPrefix||''} onChange={e=>set('lrPrefix', e.target.value.toUpperCase())} className="mt-1"/></div>
+          <div><Label className="text-xs">Transfer Prefix</Label><Input value={s.transferPrefix||''} onChange={e=>set('transferPrefix', e.target.value.toUpperCase())} className="mt-1"/></div>
+          <div><Label className="text-xs">GST % (default)</Label><Input type="number" value={s.gstPercent||18} onChange={e=>set('gstPercent', Number(e.target.value))} className="mt-1"/></div>
+          <div><Label className="text-xs">Session Timeout (min)</Label><Input type="number" value={s.sessionTimeoutMinutes||60} onChange={e=>set('sessionTimeoutMinutes', Number(e.target.value))} className="mt-1"/></div>
+        </div>
+      </CardContent></Card>
+      <Card><CardContent className="p-5">
+        <div className="font-bold text-[#0F3D91] mb-4">Logo</div>
+        <div className="grid md:grid-cols-3 gap-4 items-end">
+          <div className="md:col-span-2"><Label className="text-xs">Logo URL (SVG / PNG)</Label><Input value={s.logoUrl||''} onChange={e=>set('logoUrl', e.target.value)} placeholder="https://... (leave blank for default AGC logo)" className="mt-1"/></div>
+          <div className="text-xs text-slate-500">Default AGC logo will be used if this is blank.</div>
+        </div>
+      </CardContent></Card>
+      <div className="flex justify-end">
+        <Button disabled={saving} onClick={save} className="h-11 px-8 bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold">{saving ? 'Saving…' : 'Save All Settings'}</Button>
       </div>
     </div>
   )

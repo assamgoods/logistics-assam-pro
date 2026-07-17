@@ -1,4 +1,5 @@
 'use client'
+import { LogoMark } from '@/components/Logo'
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,11 +34,11 @@ export default function DriverPortal() {
       <div className="min-h-screen gradient-navy grid place-items-center p-4">
         <Card className="w-full max-w-md border-0 shadow-2xl">
           <CardContent className="p-8">
-            <div className="flex items-center gap-3"><div className="h-11 w-11 rounded-lg gradient-gold grid place-items-center"><Truck className="h-5 w-5 text-[#0B2545]"/></div><div><div className="font-black text-[#0B2545]">Driver App</div><div className="text-[10px] tracking-[0.2em] text-agc-gold uppercase">Delivery Portal</div></div></div>
+            <div className="flex items-center gap-3"><LogoMark size={44}/><div><div className="font-black text-[#0F3D91]">Driver App</div><div className="text-[10px] tracking-[0.2em] text-agc-gold uppercase">Delivery Portal</div></div></div>
             <form onSubmit={login} className="mt-6 space-y-3">
               <div><Label className="text-xs">Phone</Label><Input value={phone} onChange={e=>setPhone(e.target.value.replace(/\D/g,''))} maxLength={10} className="h-11 mt-1"/></div>
               <div><Label className="text-xs">Password</Label><Input type="password" value={pw} onChange={e=>setPw(e.target.value)} className="h-11 mt-1"/></div>
-              <Button className="w-full h-11 bg-[#0B2545] font-bold">Login</Button>
+              <Button className="w-full h-11 bg-[#0F3D91] font-bold">Login</Button>
             </form>
           </CardContent>
         </Card>
@@ -63,12 +64,12 @@ function DriverDashboard({ session, onLogout }) {
     <div className="min-h-screen bg-slate-100">
       <div className="gradient-navy text-white">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3"><div className="h-10 w-10 rounded-lg gradient-gold grid place-items-center"><Truck className="h-5 w-5 text-[#0B2545]"/></div><div><div className="font-black leading-tight">Driver: {session.name}</div><div className="text-[10px] tracking-[0.2em] text-agc-gold uppercase">{session.phone}</div></div></div>
+          <div className="flex items-center gap-3"><LogoMark size={44}/><div><div className="font-black leading-tight">Driver: {session.name}</div><div className="text-[10px] tracking-[0.2em] text-agc-gold uppercase">{session.phone}</div></div></div>
           <div className="flex gap-2"><Button onClick={load} variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10"><RefreshCw className="h-4 w-4"/></Button><Button onClick={onLogout} variant="outline" className="bg-transparent border-white/20 text-white hover:bg-white/10"><LogOut className="h-4 w-4"/></Button></div>
         </div>
       </div>
       <div className="container mx-auto px-4 py-6">
-        <div className="font-bold text-[#0B2545] mb-4">Assigned Deliveries ({bookings.length})</div>
+        <div className="font-bold text-[#0F3D91] mb-4">Assigned Deliveries ({bookings.length})</div>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {bookings.length === 0 && <div className="col-span-full text-center text-slate-400 py-16">No pending deliveries.</div>}
           {bookings.map(b => (
@@ -79,7 +80,7 @@ function DriverDashboard({ session, onLogout }) {
                     <div><span className="tracking-number">{b.lrNumber}</span></div>
                     <div className="text-xs text-slate-500">{b.date}</div>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">{b.status}</span>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0F3D91]">{b.status}</span>
                 </div>
                 <div className="mt-3 text-sm space-y-1">
                   <div><b>To:</b> {b.receiver?.name}</div>
@@ -87,7 +88,7 @@ function DriverDashboard({ session, onLogout }) {
                   <div className="text-xs"><b>Phone:</b> <a href={`tel:${b.receiver?.phone}`} className="text-blue-600">{b.receiver?.phone}</a></div>
                   <div className="text-xs"><b>Packages:</b> {b.packages} • <b>Weight:</b> {b.chargeableWeight}kg</div>
                 </div>
-                <div className="mt-3"><Button onClick={()=>setActive(b)} className="w-full bg-[#0B2545] text-white h-9"><CheckCircle2 className="h-4 w-4 mr-2"/>Complete Delivery / POD</Button></div>
+                <div className="mt-3"><Button onClick={()=>setActive(b)} className="w-full bg-[#0F3D91] text-white h-9"><CheckCircle2 className="h-4 w-4 mr-2"/>Complete Delivery / POD</Button></div>
               </CardContent>
             </Card>
           ))}
@@ -108,7 +109,7 @@ function PODModal({ booking, onClose, onSaved }) {
 
   useEffect(() => {
     const c = canvasRef.current; if (!c) return
-    const ctx = c.getContext('2d'); ctx.strokeStyle = '#0B2545'; ctx.lineWidth = 2; ctx.lineCap = 'round'
+    const ctx = c.getContext('2d'); ctx.strokeStyle = '#0F3D91'; ctx.lineWidth = 2; ctx.lineCap = 'round'
     const pos = e => { const r = c.getBoundingClientRect(); const t = e.touches?.[0]; return { x: (t?.clientX||e.clientX)-r.left, y:(t?.clientY||e.clientY)-r.top } }
     const start = e => { e.preventDefault(); const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); setDrawing(true) }
     const move = e => { if (!drawing) return; e.preventDefault(); const p = pos(e); ctx.lineTo(p.x,p.y); ctx.stroke() }
@@ -138,7 +139,7 @@ function PODModal({ booking, onClose, onSaved }) {
     <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-lg my-8" onClick={e=>e.stopPropagation()}>
         <CardContent className="p-6">
-          <div className="font-bold text-[#0B2545]">Proof of Delivery</div>
+          <div className="font-bold text-[#0F3D91]">Proof of Delivery</div>
           <div className="text-xs text-slate-500 mt-1 font-mono">{booking.lrNumber}</div>
           <div className="mt-4 space-y-3">
             <Input value={receiverName} onChange={e=>setReceiverName(e.target.value)} placeholder="Receiver name"/>

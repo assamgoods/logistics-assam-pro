@@ -1,4 +1,5 @@
 'use client'
+import { LogoMark } from '@/components/Logo'
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -42,13 +43,13 @@ export default function BranchPortal() {
         <Card className="w-full max-w-md border-0 shadow-2xl">
           <CardContent className="p-8">
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-lg gradient-gold grid place-items-center"><Building2 className="h-5 w-5 text-[#0B2545]"/></div>
-              <div><div className="font-black text-[#0B2545]">Branch Portal</div><div className="text-[10px] tracking-[0.2em] text-agc-gold font-semibold uppercase">AGC Branch Login</div></div>
+              <LogoMark size={44}/>
+              <div><div className="font-black text-[#0F3D91]">Branch Portal</div><div className="text-[10px] tracking-[0.2em] text-agc-gold font-semibold uppercase">AGC Branch Login</div></div>
             </div>
             <form onSubmit={login} className="mt-6 space-y-3">
               <div><Label className="text-xs">Branch Code</Label><Input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder="e.g. GHY01" className="h-11 mt-1"/></div>
               <div><Label className="text-xs">Password</Label><Input type="password" value={pw} onChange={e=>setPw(e.target.value)} className="h-11 mt-1"/></div>
-              <Button className="w-full h-11 bg-[#0B2545] font-bold">Login</Button>
+              <Button className="w-full h-11 bg-[#0F3D91] font-bold">Login</Button>
               <div className="text-xs text-slate-500 text-center">Branch users are created by Admin</div>
             </form>
           </CardContent>
@@ -79,7 +80,7 @@ function BranchDashboard({ session, onLogout }) {
       <div className="gradient-navy text-white">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-lg gradient-gold grid place-items-center"><Building2 className="h-5 w-5 text-[#0B2545]"/></div>
+            <LogoMark size={44}/>
             <div><div className="font-black leading-tight">Branch: {session.code}</div><div className="text-[10px] tracking-[0.2em] text-agc-gold uppercase">{session.name}</div></div>
           </div>
           <div className="flex gap-2">
@@ -107,7 +108,7 @@ function BranchDashboard({ session, onLogout }) {
                       <tr key={b.lrNumber} className="border-t border-slate-100 hover:bg-slate-50">
                         <Td><span className="tracking-number">{b.lrNumber}</span></Td>
                         <Td>{b.date}</Td><Td>{b.receiver?.name}</Td><Td>{b.destination}</Td>
-                        <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">{b.status}</span></Td>
+                        <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0F3D91]">{b.status}</span></Td>
                         <Td>
                           <div className="flex gap-1">
                             <Button size="sm" onClick={()=>setSelected(b)} variant="outline" className="h-8">Update</Button>
@@ -154,14 +155,14 @@ function BranchTransfers({ session, bookings }) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <div className="text-sm text-slate-600">Manage transfers from and to your branch <b className="font-mono text-[#0B2545]">{session.code}</b></div>
-        <Button onClick={()=>setShowForm(true)} className="bg-[#0B2545] text-white font-bold"><ArrowRightLeft className="h-4 w-4 mr-2"/>New Transfer</Button>
+        <div className="text-sm text-slate-600">Manage transfers from and to your branch <b className="font-mono text-[#0F3D91]">{session.code}</b></div>
+        <Button onClick={()=>setShowForm(true)} className="bg-[#0F3D91] text-white font-bold"><ArrowRightLeft className="h-4 w-4 mr-2"/>New Transfer</Button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4">
-            <div className="font-bold text-[#0B2545] flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600"/>Incoming ({incoming.length})</div>
+            <div className="font-bold text-[#0F3D91] flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600"/>Incoming ({incoming.length})</div>
             <div className="mt-3 space-y-2">
               {incoming.length===0 && <div className="text-xs text-slate-400 py-4">No incoming transfers.</div>}
               {incoming.map(t => (
@@ -179,7 +180,7 @@ function BranchTransfers({ session, bookings }) {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="font-bold text-[#0B2545] flex items-center gap-2"><ArrowRightLeft className="h-4 w-4 text-agc-gold"/>Outgoing ({outgoing.length})</div>
+            <div className="font-bold text-[#0F3D91] flex items-center gap-2"><ArrowRightLeft className="h-4 w-4 text-agc-gold"/>Outgoing ({outgoing.length})</div>
             <div className="mt-3 space-y-2">
               {outgoing.length===0 && <div className="text-xs text-slate-400 py-4">No outgoing transfers.</div>}
               {outgoing.map(t => (
@@ -219,7 +220,7 @@ function BranchNewTransfer({ session, branches, bookings, onClose, onCreated }) 
   return (
     <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-lg my-8" onClick={e=>e.stopPropagation()}><CardContent className="p-6">
-        <div className="font-bold text-[#0B2545] flex items-center gap-2"><ArrowRightLeft className="h-4 w-4"/>New Transfer from {session.code}</div>
+        <div className="font-bold text-[#0F3D91] flex items-center gap-2"><ArrowRightLeft className="h-4 w-4"/>New Transfer from {session.code}</div>
         <form onSubmit={submit} className="mt-4 space-y-3">
           <div><Label className="text-xs">LR / Bilty Number</Label>
             <Select value={f.lrNumber || 'NONE'} onValueChange={v=>set('lrNumber', v==='NONE'?'':v)}>
@@ -238,7 +239,7 @@ function BranchNewTransfer({ session, branches, bookings, onClose, onCreated }) 
             <div><Label className="text-xs">Driver</Label><Input value={f.driverName} onChange={e=>set('driverName', e.target.value)} className="mt-1"/></div>
           </div>
           <div><Label className="text-xs">Remarks</Label><Input value={f.remarks} onChange={e=>set('remarks', e.target.value)} className="mt-1"/></div>
-          <div className="flex gap-2 justify-end pt-2"><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy} className="bg-[#0B2545] text-white font-bold">{busy?'Creating...':'Create Transfer'}</Button></div>
+          <div className="flex gap-2 justify-end pt-2"><Button type="button" variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy} className="bg-[#0F3D91] text-white font-bold">{busy?'Creating...':'Create Transfer'}</Button></div>
         </form>
       </CardContent></Card>
     </div>
@@ -260,7 +261,7 @@ function BranchReceiveModal({ transfer, session, onClose, onSaved }) {
   return (
     <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}><CardContent className="p-6">
-        <div className="font-bold text-[#0B2545] flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600"/>Receive Transfer</div>
+        <div className="font-bold text-[#0F3D91] flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600"/>Receive Transfer</div>
         <div className="text-xs text-slate-500 mt-1 font-mono">{transfer.transferId} · LR {transfer.lrNumber}</div>
         <div className="mt-3 text-sm p-3 rounded bg-slate-50 border border-slate-200">
           <div>{transfer.fromBranch} → <b>{transfer.toBranch}</b></div>
@@ -288,14 +289,14 @@ function StatusUpdater({ booking, onClose, onSaved }) {
     <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}>
         <CardContent className="p-6">
-          <div className="font-bold text-[#0B2545]">Update Status</div>
+          <div className="font-bold text-[#0F3D91]">Update Status</div>
           <div className="text-xs text-slate-500 mt-1 font-mono">{booking.lrNumber}</div>
           <div className="mt-4 space-y-3">
             <Select value={status} onValueChange={setStatus}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{STAGES.map(s=><SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}</SelectContent></Select>
             <Input value={location} onChange={e=>setLocation(e.target.value)} placeholder="Location"/>
             <Input value={note} onChange={e=>setNote(e.target.value)} placeholder="Note"/>
           </div>
-          <div className="mt-5 flex gap-2 justify-end"><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={save} className="bg-[#0B2545] text-white font-bold">Save</Button></div>
+          <div className="mt-5 flex gap-2 justify-end"><Button variant="outline" onClick={onClose}>Cancel</Button><Button onClick={save} className="bg-[#0F3D91] text-white font-bold">Save</Button></div>
         </CardContent>
       </Card>
     </div>
