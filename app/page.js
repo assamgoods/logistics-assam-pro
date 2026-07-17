@@ -34,11 +34,13 @@ function Navbar() {
     <header className="absolute top-0 inset-x-0 z-30">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between text-white">
         <Logo />
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+        <nav className="hidden md:flex items-center gap-6 text-sm font-medium">
           <a href="#track" className="hover:text-agc-gold transition">Track</a>
           <a href="#services" className="hover:text-agc-gold transition">Services</a>
           <a href="#coverage" className="hover:text-agc-gold transition">Coverage</a>
-          <a href="#contact" className="hover:text-agc-gold transition">Contact</a>
+          <a href="/customer" className="hover:text-agc-gold transition">Customer</a>
+          <a href="/branch" className="hover:text-agc-gold transition">Branch</a>
+          <a href="/driver" className="hover:text-agc-gold transition">Driver</a>
           <a href="/admin" className="hover:text-agc-gold transition">Admin</a>
         </nav>
         <div className="flex items-center gap-2">
@@ -284,8 +286,9 @@ function Footer() {
           <div className="font-bold text-agc-gold">Quick Links</div>
           <div className="mt-3 text-sm text-white/80 space-y-2">
             <div><a href="#track" className="hover:text-agc-gold">Track Shipment</a></div>
-            <div><a href="#services" className="hover:text-agc-gold">Services</a></div>
-            <div><a href="#coverage" className="hover:text-agc-gold">Coverage</a></div>
+            <div><a href="/customer" className="hover:text-agc-gold">Customer Portal</a></div>
+            <div><a href="/branch" className="hover:text-agc-gold">Branch Login</a></div>
+            <div><a href="/driver" className="hover:text-agc-gold">Driver App</a></div>
             <div><a href="/admin" className="hover:text-agc-gold">Admin Login</a></div>
           </div>
         </div>
