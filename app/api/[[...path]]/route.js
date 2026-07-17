@@ -198,6 +198,38 @@ async function handle(request, ctx) {
       return json({ ok: true, booking: sanitize(val) })
     }
 
+    // -------- LABEL SIZES ---------
+    if (route === '/label-sizes' && method === 'GET') {
+      let items = await db.collection('label_sizes').find({}).sort({ createdAt: 1 }).toArray()
+      if (items.length === 0) {
+        // Seed defaults
+        const defaults = [
+          { name: '100 × 150 mm (4×6)', width: 100, height: 150, isDefault: true },
+          { name: '100 × 100 mm (4×4)', width: 100, height: 100, isDefault: true },
+          { name: '100 × 75 mm (4×3)',  width: 100, height: 75,  isDefault: true },
+          { name: '100 × 50 mm (4×2)',  width: 100, height: 50,  isDefault: true },
+          { name: '75 × 50 mm (3×2)',   width: 75,  height: 50,  isDefault: true },
+          { name: '50 × 25 mm (2×1)',   width: 50,  height: 25,  isDefault: true },
+        ].map(x => ({ id: uuidv4(), ...x, createdAt: new Date() }))
+        await db.collection('label_sizes').insertMany(defaults)
+        items = defaults
+      }
+      return json({ items: items.map(sanitize) })
+    }
+    if (route === '/label-sizes' && method === 'POST') {
+      const b = await request.json()
+      const w = Number(b.width); const h = Number(b.height)
+      if (!w || !h || w < 10 || h < 10 || w > 300 || h > 300) return json({ ok:false, error:'Enter valid width & height in mm (10-300)' }, 400)
+      const name = b.name || `${w} × ${h} mm`
+      const doc = { id: uuidv4(), name, width: w, height: h, isDefault: false, createdAt: new Date() }
+      await db.collection('label_sizes').insertOne(doc)
+      return json({ ok: true, size: sanitize(doc) })
+    }
+    if (parts[0] === 'label-sizes' && parts.length === 2 && method === 'DELETE') {
+      await db.collection('label_sizes').deleteOne({ id: parts[1], isDefault: { $ne: true } })
+      return json({ ok: true })
+    }
+
     // -------- BRANCH TRANSFERS ---------
     if (route === '/transfers' && method === 'GET') {
       const filter = {}

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, LayoutDashboard, Plus, Truck, IndianRupee, PackageCheck, PackageX, Timer, Wallet, LogOut, Printer, RefreshCw, Search, Bell, ClipboardList, Users, Building2, FileSpreadsheet, DollarSign, Trash2, Download, ArrowRightLeft, CheckCircle2, History, ChevronRight } from 'lucide-react'
+import { Lock, LayoutDashboard, Plus, Truck, IndianRupee, PackageCheck, PackageX, Timer, Wallet, LogOut, Printer, RefreshCw, Search, Bell, ClipboardList, Users, Building2, FileSpreadsheet, DollarSign, Trash2, Download, ArrowRightLeft, CheckCircle2, History, ChevronRight, Tag } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -75,6 +75,7 @@ function Dashboard({ onLogout }) {
     { k:'branches', l:'Branches', i: Building2 },
     { k:'transfers', l:'Branch Transfers', i: ArrowRightLeft },
     { k:'users', l:'Users & Roles', i: Users },
+    { k:'labels', l:'Label Settings', i: Tag },
     { k:'reports', l:'Reports', i: FileSpreadsheet },
     { k:'activity', l:'Activity Log', i: ClipboardList },
     { k:'notifications', l:'Notifications', i: Bell },
@@ -110,6 +111,7 @@ function Dashboard({ onLogout }) {
           {tab === 'branches' && <BranchesModule/>}
           {tab === 'transfers' && <TransfersModule/>}
           {tab === 'users' && <UsersModule/>}
+          {tab === 'labels' && <LabelSizesModule/>}
           {tab === 'reports' && <ReportsModule/>}
           {tab === 'activity' && <ActivityModule/>}
           {tab === 'notifications' && <NotificationsModule/>}
@@ -226,7 +228,7 @@ function RatesModule() {
 function BranchesModule() {
   const [items, setItems] = useState([]); const [f, setF] = useState({ code:'', name:'', city:'', state:'Assam', phone:'', address:'' })
   const load = () => fetch('/api/branches').then(r=>r.json()).then(d=>setItems(d.items||[]))
-  useEffect(()=>load(), [])
+  useEffect(()=>{ load() }, [])
   const add = async (e) => { e.preventDefault(); const r = await fetch('/api/branches', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)}); if((await r.json()).ok){toast.success('Branch added'); setF({ code:'', name:'', city:'', state:'Assam', phone:'', address:'' }); load()} }
   const del = async (id) => { await fetch(`/api/branches/${id}`, { method:'DELETE' }); load() }
   return (<div className="space-y-4">
@@ -247,7 +249,7 @@ function BranchesModule() {
 function UsersModule() {
   const [items, setItems] = useState([]); const [f, setF] = useState({ name:'', role:'branch', code:'', phone:'', password:'' })
   const load = () => fetch('/api/users').then(r=>r.json()).then(d=>setItems(d.items||[]))
-  useEffect(()=>load(), [])
+  useEffect(()=>{ load() }, [])
   const add = async (e) => { e.preventDefault(); const r = await fetch('/api/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)}); if((await r.json()).ok){toast.success('User created'); setF({ name:'', role:'branch', code:'', phone:'', password:'' }); load()} }
   const del = async (id) => { await fetch(`/api/users/${id}`, { method:'DELETE' }); load() }
   return (<div className="space-y-4">
@@ -571,6 +573,69 @@ function HistoryModal({ lr, items, onClose }) {
         </div>
         <div className="mt-4 flex justify-end"><Button variant="outline" onClick={onClose}>Close</Button></div>
       </CardContent></Card>
+    </div>
+  )
+}
+
+
+// -------------- LABEL SIZE SETTINGS ------------------
+function LabelSizesModule() {
+  const [items, setItems] = useState([])
+  const [f, setF] = useState({ name:'', width:'', height:'' })
+  const load = () => fetch('/api/label-sizes').then(r=>r.json()).then(d=>setItems(d.items||[]))
+  useEffect(()=>{ load() }, [])
+  const add = async (e) => {
+    e.preventDefault()
+    const w = Number(f.width); const h = Number(f.height)
+    if (!w || !h) return toast.error('Enter width & height in mm')
+    const r = await fetch('/api/label-sizes', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: f.name || `${w} × ${h} mm`, width: w, height: h })})
+    const d = await r.json(); if (d.ok) { toast.success('Label size added'); setF({ name:'', width:'', height:'' }); load() } else toast.error(d.error)
+  }
+  const del = async (id) => { await fetch(`/api/label-sizes/${id}`, { method:'DELETE' }); load() }
+  return (
+    <div className="space-y-4">
+      <Card><CardContent className="p-5">
+        <div className="font-bold text-[#0B2545] mb-1 flex items-center gap-2"><Tag className="h-4 w-4 text-agc-gold"/>Add Custom Label Size</div>
+        <div className="text-xs text-slate-500 mb-4">Any thermal / A4 printer (TSC, Zebra, TVS, XPrinter) will use these sizes via the browser print dialog. Content auto-scales.</div>
+        <form onSubmit={add} className="grid md:grid-cols-4 gap-3 items-end">
+          <div><Label className="text-xs">Label Name (optional)</Label><Input value={f.name} onChange={e=>setF(x=>({...x, name: e.target.value}))} placeholder='e.g. "Small Address Label"' className="mt-1"/></div>
+          <div><Label className="text-xs">Width (mm)</Label><Input type="number" min="10" max="300" value={f.width} onChange={e=>setF(x=>({...x, width: e.target.value}))} placeholder="e.g. 100" className="mt-1"/></div>
+          <div><Label className="text-xs">Height (mm)</Label><Input type="number" min="10" max="300" value={f.height} onChange={e=>setF(x=>({...x, height: e.target.value}))} placeholder="e.g. 150" className="mt-1"/></div>
+          <div><Button className="bg-[#0B2545] text-white font-bold w-full"><Plus className="h-4 w-4 mr-2"/>Add Label Size</Button></div>
+        </form>
+      </CardContent></Card>
+
+      <Card><CardContent className="p-0">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+          <div className="font-bold text-[#0B2545]">Saved Label Sizes ({items.length})</div>
+          <div className="text-xs text-slate-500">★ = default preset (cannot be deleted)</div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"><tr><Th>Name</Th><Th>Width</Th><Th>Height</Th><Th>Aspect</Th><Th>Type</Th><Th>Preview</Th><Th></Th></tr></thead>
+            <tbody>
+              {items.length === 0 && <tr><td colSpan="7" className="p-8 text-center text-slate-400">Loading...</td></tr>}
+              {items.map(s => (
+                <tr key={s.id} className="border-t border-slate-100">
+                  <Td><b className="text-[#0B2545]">{s.isDefault ? '★ ' : ''}{s.name}</b></Td>
+                  <Td>{s.width} mm</Td>
+                  <Td>{s.height} mm</Td>
+                  <Td className="text-xs text-slate-600">{s.width > s.height * 1.4 ? 'Landscape' : s.height > s.width * 1.4 ? 'Portrait' : 'Square-ish'}</Td>
+                  <Td>{s.isDefault ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200">Default</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">Custom</span>}</Td>
+                  <Td>
+                    <div style={{ width: `${Math.min(s.width, 40)}px`, height: `${Math.min(s.height, 40) * (s.height/s.width) || 20}px`, background:'#0B2545', borderRadius:2 }}/>
+                  </Td>
+                  <Td>{!s.isDefault && <Button size="sm" variant="outline" onClick={()=>del(s.id)}><Trash2 className="h-3 w-3"/></Button>}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent></Card>
+
+      <div className="text-xs text-slate-600 p-3 rounded-lg bg-slate-50 border border-slate-200">
+        <b>How to use:</b> Open any booking → click the <b>Box Stickers</b> button → choose your label size from the dropdown → click <b>Print Labels</b>. The system will auto-generate one label per package (1/N to N/N) and scale the content to fit the selected size perfectly. Works on TSC, Zebra, TVS, XPrinter and any Windows thermal printer via the standard browser print dialog.
+      </div>
     </div>
   )
 }
