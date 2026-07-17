@@ -27,7 +27,7 @@ export default function PrintLR() {
 
   return (
     <div className="min-h-screen bg-slate-200 py-6 print:py-0 print:bg-white">
-      <div className="no-print max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-3 mb-4 px-4">
+      <div className="no-print print-toolbar sticky top-0 max-w-5xl mx-auto flex flex-wrap justify-between items-center gap-3 mb-4 px-4 py-3 rounded-b-xl border-b border-slate-200 bg-white" style={{ zIndex: 100 }}>
         <div className="flex items-center gap-2">
           <a href={`/admin`} className="text-sm text-slate-600 hover:text-[#0B2545]">← Back to Admin</a>
         </div>
@@ -46,7 +46,7 @@ export default function PrintLR() {
         </div>
       </div>
 
-      <div className={`max-w-[210mm] mx-auto bg-white shadow-xl print:shadow-none ${preview ? 'ring-2 ring-agc-gold' : ''}`}>
+      <div className={`max-w-[210mm] mx-auto bg-white shadow-xl print:shadow-none print-canvas ${preview ? 'ring-2 ring-agc-gold' : ''}`}>
         {copiesArr.map(i => (<LRCopy key={i} b={b} copyIndex={i} totalCopies={copies}/>))}
       </div>
 

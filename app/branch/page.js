@@ -105,7 +105,7 @@ function BranchDashboard({ session, onLogout }) {
                     {filtered.length===0 && <tr><td colSpan="6" className="p-8 text-center text-slate-400">No shipments for this branch.</td></tr>}
                     {filtered.map(b => (
                       <tr key={b.lrNumber} className="border-t border-slate-100 hover:bg-slate-50">
-                        <Td><span className="font-mono font-bold text-[#0B2545]">{b.lrNumber}</span></Td>
+                        <Td><span className="tracking-number">{b.lrNumber}</span></Td>
                         <Td>{b.date}</Td><Td>{b.receiver?.name}</Td><Td>{b.destination}</Td>
                         <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">{b.status}</span></Td>
                         <Td>
@@ -167,7 +167,7 @@ function BranchTransfers({ session, bookings }) {
               {incoming.map(t => (
                 <div key={t.transferId} className="p-3 rounded-lg border border-slate-200 hover:border-agc-gold text-sm">
                   <div className="flex items-center justify-between">
-                    <div className="font-mono font-bold text-[#0B2545]">{t.transferId}</div>
+                    <div><span className="tracking-number">{t.transferId}</span></div>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${t.status==='RECEIVED'?'bg-emerald-200 text-emerald-800':'bg-amber-200 text-amber-900'}`}>{t.status}</span>
                   </div>
                   <div className="text-xs text-slate-500 mt-1">LR: <b className="font-mono text-slate-700">{t.lrNumber}</b> · From <b>{t.fromBranch}</b> · {new Date(t.transferredAt).toLocaleString('en-IN')}</div>
@@ -185,7 +185,7 @@ function BranchTransfers({ session, bookings }) {
               {outgoing.map(t => (
                 <div key={t.transferId} className="p-3 rounded-lg border border-slate-200 text-sm">
                   <div className="flex items-center justify-between">
-                    <div className="font-mono font-bold text-[#0B2545]">{t.transferId}</div>
+                    <div><span className="tracking-number">{t.transferId}</span></div>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${t.status==='RECEIVED'?'bg-emerald-200 text-emerald-800':'bg-amber-200 text-amber-900'}`}>{t.status}</span>
                   </div>
                   <div className="text-xs text-slate-500 mt-1">LR: <b className="font-mono text-slate-700">{t.lrNumber}</b> → <b>{t.toBranch}</b> · {new Date(t.transferredAt).toLocaleString('en-IN')}</div>
@@ -217,7 +217,7 @@ function BranchNewTransfer({ session, branches, bookings, onClose, onCreated }) 
     setBusy(false)
   }
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
+    <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-lg my-8" onClick={e=>e.stopPropagation()}><CardContent className="p-6">
         <div className="font-bold text-[#0B2545] flex items-center gap-2"><ArrowRightLeft className="h-4 w-4"/>New Transfer from {session.code}</div>
         <form onSubmit={submit} className="mt-4 space-y-3">
@@ -258,7 +258,7 @@ function BranchReceiveModal({ transfer, session, onClose, onSaved }) {
     setBusy(false)
   }
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4" onClick={onClose}>
+    <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}><CardContent className="p-6">
         <div className="font-bold text-[#0B2545] flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600"/>Receive Transfer</div>
         <div className="text-xs text-slate-500 mt-1 font-mono">{transfer.transferId} · LR {transfer.lrNumber}</div>
@@ -285,7 +285,7 @@ function StatusUpdater({ booking, onClose, onSaved }) {
     const d = await r.json(); if (d.ok) { toast.success('Updated'); onSaved() } else toast.error(d.error)
   }
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4" onClick={onClose}>
+    <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}>
         <CardContent className="p-6">
           <div className="font-bold text-[#0B2545]">Update Status</div>

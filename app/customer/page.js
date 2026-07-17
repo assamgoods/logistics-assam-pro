@@ -94,7 +94,7 @@ export default function CustomerPortal() {
                   {bookings.length === 0 && <tr><td colSpan="6" className="p-8 text-center text-slate-400">No bookings found for this phone number.</td></tr>}
                   {bookings.map(b => (
                     <tr key={b.lrNumber} className="border-t border-slate-100 hover:bg-slate-50">
-                      <Td><span className="font-mono font-bold text-[#0B2545]">{b.lrNumber}</span></Td>
+                      <Td><span className="tracking-number">{b.lrNumber}</span></Td>
                       <Td>{b.date}</Td>
                       <Td>{b.origin} → {b.destination}</Td>
                       <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">{b.status}</span></Td>

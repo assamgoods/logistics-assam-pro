@@ -29,7 +29,7 @@ export default function ManifestPage() {
 
   return (
     <div className="min-h-screen bg-slate-200 py-6 print:py-0 print:bg-white">
-      <div className="no-print max-w-5xl mx-auto px-4 mb-4 space-y-3">
+      <div className="no-print print-toolbar sticky top-0 max-w-5xl mx-auto px-4 pt-3 pb-4 mb-4 space-y-3 rounded-b-xl border-b border-slate-200 bg-slate-50" style={{ zIndex: 100 }}>
         <div className="flex justify-between items-center">
           <a href="/admin" className="text-sm text-slate-600 hover:text-[#0B2545]">← Back to Admin</a>
           <div className="flex gap-2">
@@ -50,14 +50,14 @@ export default function ManifestPage() {
         <Card><CardContent className="p-0"><div className="max-h-64 overflow-y-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-100 sticky top-0 text-slate-600 uppercase text-[10px] tracking-widest"><tr><th className="px-3 py-2 text-left">Select</th><th className="px-3 py-2 text-left">LR</th><th className="px-3 py-2 text-left">Date</th><th className="px-3 py-2 text-left">Route</th><th className="px-3 py-2 text-left">Pkgs</th><th className="px-3 py-2 text-left">Weight</th><th className="px-3 py-2 text-right">Freight</th></tr></thead>
-            <tbody>{bookings.slice(0,80).map(b => (<tr key={b.lrNumber} className="border-t border-slate-100 hover:bg-slate-50"><td className="px-3 py-2"><input type="checkbox" checked={lrs.includes(b.lrNumber)} onChange={()=>toggle(b.lrNumber)}/></td><td className="px-3 py-2 font-mono font-bold text-[#0B2545]">{b.lrNumber}</td><td className="px-3 py-2">{b.date}</td><td className="px-3 py-2">{b.origin} → {b.destination}</td><td className="px-3 py-2">{b.packages}</td><td className="px-3 py-2">{b.chargeableWeight||b.actualWeight}kg</td><td className="px-3 py-2 text-right">₹{Number(b.totalAmount||0).toLocaleString('en-IN')}</td></tr>))}</tbody>
+            <tbody>{bookings.slice(0,80).map(b => (<tr key={b.lrNumber} className="border-t border-slate-100 hover:bg-slate-50"><td className="px-3 py-2"><input type="checkbox" checked={lrs.includes(b.lrNumber)} onChange={()=>toggle(b.lrNumber)}/></td><td className="px-3 py-2"><span className="tracking-number">{b.lrNumber}</span></td><td className="px-3 py-2">{b.date}</td><td className="px-3 py-2">{b.origin} → {b.destination}</td><td className="px-3 py-2">{b.packages}</td><td className="px-3 py-2">{b.chargeableWeight||b.actualWeight}kg</td><td className="px-3 py-2 text-right">₹{Number(b.totalAmount||0).toLocaleString('en-IN')}</td></tr>))}</tbody>
           </table>
         </div></CardContent></Card>
         <div className="text-xs text-slate-600">Selected: <b>{selected.length}</b> LRs • Total pkgs: <b>{totals.packages}</b> • Total weight: <b>{totals.weight} kg</b> • Total freight: <b>₹{totals.freight.toLocaleString('en-IN')}</b></div>
       </div>
 
       {/* PRINTABLE MANIFEST */}
-      <div className="max-w-[210mm] mx-auto bg-white shadow-xl print:shadow-none" style={{ padding:'10mm', boxSizing:'border-box', minHeight:'297mm' }}>
+      <div className="max-w-[210mm] mx-auto bg-white shadow-xl print:shadow-none print-canvas" style={{ padding:'10mm', boxSizing:'border-box', minHeight:'297mm' }}>
         <div className="flex items-start justify-between border-b-[3px] border-agc-gold pb-3">
           <div className="flex items-center gap-3">
             <div className="h-14 w-14 rounded-lg gradient-gold grid place-items-center"><Truck className="h-7 w-7 text-[#0B2545]" strokeWidth={2.5}/></div>

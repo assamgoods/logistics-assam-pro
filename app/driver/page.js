@@ -76,7 +76,7 @@ function DriverDashboard({ session, onLogout }) {
               <CardContent className="p-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <div className="font-mono font-bold text-[#0B2545]">{b.lrNumber}</div>
+                    <div><span className="tracking-number">{b.lrNumber}</span></div>
                     <div className="text-xs text-slate-500">{b.date}</div>
                   </div>
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">{b.status}</span>
@@ -135,7 +135,7 @@ function PODModal({ booking, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
+    <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-lg my-8" onClick={e=>e.stopPropagation()}>
         <CardContent className="p-6">
           <div className="font-bold text-[#0B2545]">Proof of Delivery</div>

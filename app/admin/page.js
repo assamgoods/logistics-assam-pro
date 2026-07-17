@@ -155,7 +155,7 @@ function BookingsList({ bookings, q, setQ, reload }) {
           <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"><tr><Th>LR Number</Th><Th>Date</Th><Th>Sender</Th><Th>Receiver</Th><Th>Route</Th><Th>Amount</Th><Th>Status</Th><Th></Th></tr></thead>
           <tbody>
             {bookings.length === 0 && (<tr><td colSpan="8" className="p-8 text-center text-slate-400">No bookings yet. Create your first booking!</td></tr>)}
-            {bookings.map(b => (<tr key={b.lrNumber} className="border-t border-slate-100 hover:bg-slate-50"><Td><span className="font-mono font-bold text-[#0B2545]">{b.lrNumber}</span></Td><Td>{b.date}</Td><Td>{b.sender?.name}</Td><Td>{b.receiver?.name}</Td><Td>{b.origin} → {b.destination}</Td><Td>₹{Number(b.totalAmount||0).toLocaleString('en-IN')}</Td><Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">{b.status}</span></Td><Td><div className="flex gap-1"><Button onClick={()=>setSelected(b)} size="sm" variant="outline" className="h-8">Update</Button><a href={`/print/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="h-8" title="Print LR"><Printer className="h-3 w-3"/></Button></a><a href={`/sticker/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="h-8" title="Box Stickers"><PackageCheck className="h-3 w-3"/></Button></a></div></Td></tr>))}
+            {bookings.map(b => (<tr key={b.lrNumber} className="border-t border-slate-100 hover:bg-slate-50"><Td><span className="tracking-number">{b.lrNumber}</span></Td><Td>{b.date}</Td><Td>{b.sender?.name}</Td><Td>{b.receiver?.name}</Td><Td>{b.origin} → {b.destination}</Td><Td>₹{Number(b.totalAmount||0).toLocaleString('en-IN')}</Td><Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0B2545]">{b.status}</span></Td><Td><div className="flex gap-1"><Button onClick={()=>setSelected(b)} size="sm" variant="outline" className="h-8">Update</Button><a href={`/print/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="h-8" title="Print LR"><Printer className="h-3 w-3"/></Button></a><a href={`/sticker/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer"><Button size="sm" variant="outline" className="h-8" title="Box Stickers"><PackageCheck className="h-3 w-3"/></Button></a></div></Td></tr>))}
           </tbody></table></div></CardContent></Card>
       {selected && <StatusUpdater booking={selected} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null); reload()}}/>}
     </div>
@@ -165,7 +165,7 @@ function BookingsList({ bookings, q, setQ, reload }) {
 function StatusUpdater({ booking, onClose, onSaved }) {
   const [status, setStatus] = useState(booking.status); const [location, setLocation] = useState(booking.currentLocation || ''); const [note, setNote] = useState(''); const [busy, setBusy] = useState(false)
   const save = async () => { setBusy(true); try { const r = await fetch(`/api/bookings/${encodeURIComponent(booking.lrNumber)}/status`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ status, location, note })}); const d = await r.json(); if (d.ok) { toast.success('Status updated'); onSaved() } else toast.error(d.error || 'Failed') } catch { toast.error('Network error') } setBusy(false) }
-  return (<div className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4" onClick={onClose}><Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}><CardContent className="p-6"><div className="font-bold text-[#0B2545]">Update Shipment Status</div><div className="text-xs text-slate-500 mt-1">{booking.lrNumber}</div><div className="mt-4 space-y-3"><div><Label className="text-xs">Status</Label><Select value={status} onValueChange={setStatus}><SelectTrigger className="mt-1"><SelectValue/></SelectTrigger><SelectContent>{STAGES.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}</SelectContent></Select></div><div><Label className="text-xs">Current Location</Label><Input value={location} onChange={e=>setLocation(e.target.value)} placeholder="e.g. Guwahati Hub" className="mt-1"/></div><div><Label className="text-xs">Note</Label><Input value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional note" className="mt-1"/></div></div><div className="mt-5 flex gap-2 justify-end"><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy} onClick={save} className="bg-[#0B2545] text-white font-bold">{busy?'Saving...':'Save Update'}</Button></div></CardContent></Card></div>)
+  return (<div className="agc-modal-backdrop" onClick={onClose}><Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}><CardContent className="p-6"><div className="font-bold text-[#0B2545]">Update Shipment Status</div><div className="text-xs text-slate-500 mt-1">{booking.lrNumber}</div><div className="mt-4 space-y-3"><div><Label className="text-xs">Status</Label><Select value={status} onValueChange={setStatus}><SelectTrigger className="mt-1"><SelectValue/></SelectTrigger><SelectContent>{STAGES.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}</SelectContent></Select></div><div><Label className="text-xs">Current Location</Label><Input value={location} onChange={e=>setLocation(e.target.value)} placeholder="e.g. Guwahati Hub" className="mt-1"/></div><div><Label className="text-xs">Note</Label><Input value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional note" className="mt-1"/></div></div><div className="mt-5 flex gap-2 justify-end"><Button variant="outline" onClick={onClose}>Cancel</Button><Button disabled={busy} onClick={save} className="bg-[#0B2545] text-white font-bold">{busy?'Saving...':'Save Update'}</Button></div></CardContent></Card></div>)
 }
 
 function NewBooking({ onCreated }) {
@@ -407,8 +407,8 @@ function TransfersModule() {
                 {transfers.length===0 && <tr><td colSpan="7" className="p-8 text-center text-slate-400">No transfers yet. Create your first transfer!</td></tr>}
                 {transfers.map(t => (
                   <tr key={t.transferId} className="border-t border-slate-100 hover:bg-slate-50">
-                    <Td><span className="font-mono font-bold text-[#0B2545]">{t.transferId}</span></Td>
-                    <Td><button onClick={()=>openHistory(t.lrNumber)} className="font-mono font-bold text-blue-600 hover:underline">{t.lrNumber}</button></Td>
+                    <Td><span className="tracking-number">{t.transferId}</span></Td>
+                    <Td><button onClick={()=>openHistory(t.lrNumber)} className="tracking-number" style={{color:"#2563eb",cursor:"pointer",background:"#fff"}}>{t.lrNumber}</button></Td>
                     <Td><span className="font-semibold text-[#0B2545]">{t.fromBranch}</span> <ChevronRight className="h-3 w-3 inline mx-1"/> <span className="font-semibold text-[#0B2545]">{t.toBranch}</span></Td>
                     <Td>{new Date(t.transferredAt).toLocaleString('en-IN')}<div className="text-[10px] text-slate-500">by {t.transferredBy}</div></Td>
                     <Td>{t.receivedAt ? <div>{new Date(t.receivedAt).toLocaleString('en-IN')}<div className="text-[10px] text-slate-500">by {t.receivedBy}</div></div> : <span className="text-slate-400">—</span>}</Td>
@@ -467,7 +467,7 @@ function NewTransferForm({ branches, bookings, onCreated }) {
               {filteredBookings.length===0 && <div className="p-2 text-xs text-slate-400">No bookings match</div>}
               {filteredBookings.map(b => (
                 <button type="button" key={b.lrNumber} onClick={()=>{ set('lrNumber', b.lrNumber); setLrSearch(''); set('fromBranch', b.branchCode || b.currentLocation || '') }} className="w-full text-left px-3 py-2 hover:bg-slate-50 border-b border-slate-100 text-sm">
-                  <span className="font-mono font-bold text-[#0B2545]">{b.lrNumber}</span> — {b.sender?.name} → {b.receiver?.name} <span className="text-slate-500 text-xs">({b.origin}→{b.destination}, at {b.currentLocation})</span>
+                  <span className="tracking-number">{b.lrNumber}</span> — {b.sender?.name} → {b.receiver?.name} <span className="text-slate-500 text-xs">({b.origin}→{b.destination}, at {b.currentLocation})</span>
                 </button>
               ))}
             </div>
@@ -520,7 +520,7 @@ function ReceiveTransferModal({ transfer, onClose, onSaved }) {
     setBusy(false)
   }
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 grid place-items-center p-4" onClick={onClose}>
+    <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}><CardContent className="p-6">
         <div className="font-bold text-[#0B2545] flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-600"/>Receive Transfer</div>
         <div className="text-xs text-slate-500 mt-1 font-mono">{transfer.transferId} · LR {transfer.lrNumber}</div>
@@ -541,7 +541,7 @@ function ReceiveTransferModal({ transfer, onClose, onSaved }) {
 
 function HistoryModal({ lr, items, onClose }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 grid place-items-center p-4 overflow-y-auto" onClick={onClose}>
+    <div className="agc-modal-backdrop" onClick={onClose}>
       <Card className="w-full max-w-2xl my-8" onClick={e=>e.stopPropagation()}><CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div>

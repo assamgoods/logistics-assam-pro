@@ -32,7 +32,7 @@ export default function StickerPage() {
 
   return (
     <div className={`min-h-screen ${preview ? 'bg-slate-800' : 'bg-slate-200'} py-6 print:py-0 print:bg-white`}>
-      <div className="no-print max-w-6xl mx-auto px-4 mb-4 space-y-3">
+      <div className="no-print print-toolbar sticky top-0 max-w-6xl mx-auto px-4 pt-4 pb-4 mb-4 space-y-3 rounded-b-xl border-b border-slate-200" style={{ zIndex: 100 }}>
         <div className="flex flex-wrap justify-between items-center gap-3">
           <a href={`/print/${lr}`} className="text-sm text-slate-600 hover:text-[#0B2545]">← Back to LR</a>
           <div className="flex flex-wrap items-center gap-2">
@@ -74,7 +74,7 @@ export default function StickerPage() {
         </CardContent></Card>
       </div>
 
-      <div className={`max-w-6xl mx-auto grid gap-3 print:gap-0 ${preview ? 'p-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} justify-items-center`}>
+      <div className={`max-w-6xl mx-auto grid gap-3 print:gap-0 ${preview ? 'p-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'} justify-items-center print-canvas`}>
         {stickers.map(n => (<Sticker key={n} b={b} pkgNo={n} total={stickers.length} size={selected}/>))}
       </div>
 

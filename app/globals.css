@@ -49,6 +49,168 @@ html, body { font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, Sego
   animation: dash-move 0.8s linear infinite;
 }
 
+/* ============================================================ */
+/*  GLOBAL FIX: OPAQUE DROPDOWNS, POPOVERS, DIALOGS & MENUS     */
+/*  Ensures all Radix / shadcn popups are fully solid,          */
+/*  readable, and stacked above every page element.             */
+/* ============================================================ */
+
+/* Radix popper wrapper (SelectContent, DropdownMenuContent, PopoverContent) */
+[data-radix-popper-content-wrapper] {
+  z-index: 10000 !important;
+}
+
+/* All popup surfaces */
+[role="listbox"],
+[role="menu"],
+[role="dialog"],
+[role="tooltip"],
+[data-radix-select-content],
+[data-radix-dropdown-menu-content],
+[data-radix-popover-content],
+[data-radix-hover-card-content],
+[data-radix-context-menu-content],
+[data-radix-menubar-content],
+[data-radix-tooltip-content] {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 8px !important;
+  box-shadow: 0 12px 28px -6px rgba(0,0,0,0.20), 0 6px 12px -4px rgba(0,0,0,0.10) !important;
+  backdrop-filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Individual items inside dropdowns/menus */
+[role="option"],
+[role="menuitem"],
+[role="menuitemradio"],
+[role="menuitemcheckbox"] {
+  background-color: transparent;
+  color: #111827 !important;
+  opacity: 1 !important;
+}
+[role="option"][data-highlighted],
+[role="option"][aria-selected="true"],
+[role="menuitem"][data-highlighted],
+[role="menuitem"]:hover {
+  background-color: #F3F4F6 !important;
+  color: #0B2545 !important;
+}
+
+/* Dialog / Modal overlay & content (Radix Dialog / Alert Dialog) */
+[data-radix-dialog-overlay],
+[data-radix-alert-dialog-overlay] {
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  backdrop-filter: blur(2px);
+  z-index: 9998 !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+[data-radix-dialog-content],
+[data-radix-alert-dialog-content] {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  z-index: 9999 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35) !important;
+  opacity: 1 !important;
+}
+
+/* Toast notifications above everything */
+[data-sonner-toaster],
+[data-sonner-toast] { z-index: 10001 !important; }
+
+/* Custom modal overlays (our own fixed-inset-0 wrappers) — force solid backdrop */
+.agc-modal-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  background-color: rgba(0, 0, 0, 0.55) !important;
+  z-index: 9998 !important;
+  display: grid !important;
+  place-items: center !important;
+  padding: 1rem !important;
+  overflow-y: auto !important;
+}
+.agc-modal-backdrop > * {
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  z-index: 9999 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.35) !important;
+  position: relative !important;
+  opacity: 1 !important;
+  border: 1px solid #e5e7eb !important;
+}
+.agc-modal-backdrop > * > * {
+  background-color: transparent;
+}
+
+/* Ensure body scroll doesn't cause overlay bleed-through */
+[data-radix-select-viewport],
+[data-radix-popover-content] > * {
+  background-color: transparent;
+}
+
+/* Fix Select trigger to have crisp white background */
+[data-radix-select-trigger] {
+  background-color: #ffffff !important;
+  border: 1px solid #d1d5db !important;
+}
+
+/* Print previews: dropdowns must stay on top even over document canvas */
+.print-canvas { position: relative; z-index: 1; }
+.print-toolbar { position: relative; z-index: 100; background-color: #ffffff; }
+
+/* ============================================================ */
+/*  TRACKING / LR / BILTY NUMBER — ALWAYS READABLE              */
+/*  Ensures LR is dark, bold, on white bg, never invisible.     */
+/* ============================================================ */
+.tracking-number,
+.lr-number,
+[data-lr] {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 16px !important;
+  font-family: 'JetBrains Mono', 'Courier New', ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  letter-spacing: 0.02em !important;
+  padding: 2px 8px !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  display: inline-block !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+}
+/* Large tracking-number (hero display on Track page etc.) */
+.tracking-number-lg {
+  color: #111827 !important;
+  background-color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 24px !important;
+  font-family: 'JetBrains Mono', 'Courier New', ui-monospace, monospace !important;
+  letter-spacing: 0.03em !important;
+  padding: 4px 12px !important;
+  border: 2px solid #C9A227 !important;
+  border-radius: 8px !important;
+  display: inline-block !important;
+  opacity: 1 !important;
+}
+/* When inside a table cell that already has row hover, keep bg white */
+table .tracking-number,
+table .tracking-number-lg { background-color: #ffffff !important; }
+/* Print-safe */
+@media print {
+  .tracking-number, .tracking-number-lg {
+    color: #0B2545 !important;
+    background-color: #ffffff !important;
+    border-color: #0B2545 !important;
+  }
+}
+
+
 @media print {
   .no-print { display: none !important; }
   body { background: white !important; }

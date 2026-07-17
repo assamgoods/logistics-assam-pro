@@ -65,7 +65,7 @@ export default function TrackPage() {
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div>
                     <div className="text-xs uppercase tracking-widest text-slate-500">LR / Bilty Number</div>
-                    <div className="text-2xl font-black text-[#0B2545]">{data.lrNumber}</div>
+                    <div className="mt-1"><span className="tracking-number-lg">{data.lrNumber}</span></div>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-agc-gold text-[#0B2545]">{(data.stages.find(s=>s.key===data.status)?.label) || data.status}</span>
