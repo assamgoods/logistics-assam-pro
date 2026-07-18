@@ -18,7 +18,13 @@ const STAGES = [
 export default function BranchPortal() {
   const [authed, setAuthed] = useState(false)
   const [session, setSession] = useState(null)
-  const [code, setCode] = useState(''); const [pw, setPw] = useState('')
+  const [mode, setMode] = useState('login')  // login | forgot | otp | reset
+  const [email, setEmail] = useState('')
+  const [pw, setPw] = useState('')
+  const [otp, setOtp] = useState('')
+  const [resetToken, setResetToken] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [busy, setBusy] = useState(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -27,13 +33,44 @@ export default function BranchPortal() {
   }, [])
 
   const login = async (e) => {
-    e.preventDefault()
-    const r = await fetch('/api/branch/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ code, password: pw })})
-    const d = await r.json()
-    if (!d.ok) return toast.error(d.error || 'Login failed')
-    localStorage.setItem('agc_branch_token', d.token)
-    localStorage.setItem('agc_branch_session', JSON.stringify(d))
-    setSession(d); setAuthed(true); toast.success(`Welcome, ${d.name}`)
+    e.preventDefault(); setBusy(true)
+    try {
+      const r = await fetch('/api/branch/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, password: pw })})
+      const d = await r.json()
+      if (!d.ok) { toast.error(d.error || 'Login failed'); setBusy(false); return }
+      localStorage.setItem('agc_branch_token', d.token)
+      localStorage.setItem('agc_branch_session', JSON.stringify(d))
+      setSession(d); setAuthed(true); toast.success(`Welcome, ${d.name}`)
+      if (d.mustChangePassword) toast.warning('Please change your password from settings.')
+    } catch { toast.error('Network error') }
+    setBusy(false)
+  }
+  const forgot = async (e) => {
+    e.preventDefault(); setBusy(true)
+    try {
+      const r = await fetch('/api/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email })})
+      const d = await r.json()
+      if (d.ok) { toast.success(d.message || 'OTP sent'); setMode('otp') } else toast.error(d.error)
+    } catch { toast.error('Network error') }
+    setBusy(false)
+  }
+  const verifyOtp = async (e) => {
+    e.preventDefault(); setBusy(true)
+    try {
+      const r = await fetch('/api/auth/verify-otp', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, otp })})
+      const d = await r.json()
+      if (d.ok) { setResetToken(d.resetToken); setMode('reset'); toast.success('OTP verified') } else toast.error(d.error)
+    } catch { toast.error('Network error') }
+    setBusy(false)
+  }
+  const doReset = async (e) => {
+    e.preventDefault(); setBusy(true)
+    try {
+      const r = await fetch('/api/auth/reset-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ resetToken, newPassword: newPw })})
+      const d = await r.json()
+      if (d.ok) { toast.success('Password reset. Please login.'); setMode('login'); setPw(newPw); setOtp(''); setResetToken(''); setNewPw('') } else toast.error(d.error)
+    } catch { toast.error('Network error') }
+    setBusy(false)
   }
   const logout = () => { localStorage.removeItem('agc_branch_token'); localStorage.removeItem('agc_branch_session'); setAuthed(false); setSession(null) }
 
@@ -44,14 +81,35 @@ export default function BranchPortal() {
           <CardContent className="p-8">
             <div className="flex items-center gap-3">
               <LogoMark size={44}/>
-              <div><div className="font-black text-[#0F3D91]">Branch Portal</div><div className="text-[10px] tracking-[0.2em] text-agc-gold font-semibold uppercase">AGC Branch Login</div></div>
+              <div><div className="font-black text-[#0F3D91]">Branch Portal</div><div className="text-[10px] tracking-[0.2em] text-agc-orange font-semibold uppercase">AGC Branch Login</div></div>
             </div>
-            <form onSubmit={login} className="mt-6 space-y-3">
-              <div><Label className="text-xs">Branch Code</Label><Input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder="e.g. GHY01" className="h-11 mt-1"/></div>
-              <div><Label className="text-xs">Password</Label><Input type="password" value={pw} onChange={e=>setPw(e.target.value)} className="h-11 mt-1"/></div>
-              <Button className="w-full h-11 bg-[#0F3D91] font-bold">Login</Button>
-              <div className="text-xs text-slate-500 text-center">Branch users are created by Admin</div>
-            </form>
+
+            {mode === 'login' && (<form onSubmit={login} className="mt-6 space-y-3">
+              <div><Label className="text-xs">Registered Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value.toLowerCase())} placeholder="you@company.com" className="h-11 mt-1" required/></div>
+              <div><Label className="text-xs">Password</Label><Input type="password" value={pw} onChange={e=>setPw(e.target.value)} className="h-11 mt-1" required/></div>
+              <Button disabled={busy} className="w-full h-11 bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold">{busy?'Signing in…':'Login'}</Button>
+              <div className="text-center"><button type="button" onClick={()=>setMode('forgot')} className="text-xs text-[#0F3D91] hover:text-agc-orange font-semibold hover:underline">Forgot Password?</button></div>
+            </form>)}
+
+            {mode === 'forgot' && (<form onSubmit={forgot} className="mt-6 space-y-3">
+              <div className="text-sm text-slate-600">Enter your registered email and we'll send you an OTP to reset your password.</div>
+              <div><Label className="text-xs">Registered Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value.toLowerCase())} className="h-11 mt-1" required/></div>
+              <Button disabled={busy} className="w-full h-11 bg-[#0F3D91] text-white font-bold">{busy?'Sending…':'Send OTP'}</Button>
+              <div className="text-center"><button type="button" onClick={()=>setMode('login')} className="text-xs text-slate-600 hover:text-[#0F3D91]">← Back to Login</button></div>
+            </form>)}
+
+            {mode === 'otp' && (<form onSubmit={verifyOtp} className="mt-6 space-y-3">
+              <div className="text-sm text-slate-600">Enter the 6-digit OTP sent to <b>{email}</b>. It expires in 15 minutes.</div>
+              <div><Label className="text-xs">OTP</Label><Input value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder="6-digit code" className="h-11 mt-1 text-center text-xl tracking-[0.4em] font-black" maxLength={6} required/></div>
+              <Button disabled={busy || otp.length!==6} className="w-full h-11 bg-[#0F3D91] text-white font-bold">{busy?'Verifying…':'Verify OTP'}</Button>
+              <div className="flex justify-between text-xs"><button type="button" onClick={()=>setMode('forgot')} className="text-slate-600">← Resend</button><button type="button" onClick={()=>setMode('login')} className="text-slate-600">Back to Login</button></div>
+            </form>)}
+
+            {mode === 'reset' && (<form onSubmit={doReset} className="mt-6 space-y-3">
+              <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">✓ OTP verified. Set your new password below.</div>
+              <div><Label className="text-xs">New Password</Label><Input type="password" value={newPw} onChange={e=>setNewPw(e.target.value)} placeholder="At least 6 characters" className="h-11 mt-1" minLength={6} required/></div>
+              <Button disabled={busy || newPw.length<6} className="w-full h-11 bg-[#0F3D91] text-white font-bold">{busy?'Saving…':'Set New Password'}</Button>
+            </form>)}
           </CardContent>
         </Card>
       </div>

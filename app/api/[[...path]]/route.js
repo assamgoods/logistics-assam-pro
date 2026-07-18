@@ -58,25 +58,34 @@ async function handle(request, ctx) {
     // -------- AUTH ---------
     if (route === '/admin/login' && method === 'POST') {
       const body = await request.json().catch(() => ({}))
-      if (body?.password === ADMIN_PASSWORD) {
-        const token = await createSession('admin', 'admin-root', { name: 'Super Admin' })
+      const settings = await db.collection('settings').findOne({ _id: 'company' })
+      const bcrypt = (await import('bcryptjs')).default
+      let ok = false
+      if (settings?.adminPasswordHash) {
+        ok = await bcrypt.compare(body?.password || '', settings.adminPasswordHash)
+      } else {
+        ok = body?.password === ADMIN_PASSWORD
+      }
+      if (ok) {
+        const token = await createSession('admin', 'admin-root', { name: 'Super Admin', email: settings?.email })
         await logActivity(db, { actor: 'admin-root', role: 'admin', action: 'LOGIN', target: 'admin' })
-        return json({ ok: true, token, role: 'admin', name: 'Super Admin', permissions: ROLE_PERMISSIONS.admin })
+        return json({ ok: true, token, role: 'admin', name: 'Super Admin', email: settings?.email, permissions: ROLE_PERMISSIONS.admin })
       }
       return json({ ok: false, error: 'Invalid password' }, 401)
     }
     if (route === '/branch/login' && method === 'POST') {
-      const { code, password } = await request.json()
-      const user = await db.collection('users').findOne({ role: 'branch', code, active: { $ne: false } })
+      const { code, email, password } = await request.json()
+      const q = email ? { role: 'branch', email, active: { $ne: false } } : { role: 'branch', code, active: { $ne: false } }
+      const user = await db.collection('users').findOne(q)
       if (!user) return json({ ok: false, error: 'Invalid credentials' }, 401)
       const bcrypt = (await import('bcryptjs')).default
       const isHashed = String(user.password || '').startsWith('$2')
       const ok = isHashed ? await bcrypt.compare(password||'', user.password) : (user.password === password)
       if (!ok) return json({ ok: false, error: 'Invalid credentials' }, 401)
-      const token = await createSession('branch', user.id, { name: user.name, code: user.code, branchId: user.branchId })
+      const token = await createSession('branch', user.id, { name: user.name, code: user.code, branchId: user.branchId, email: user.email })
       await db.collection('users').updateOne({ id: user.id }, { $set: { lastLoginAt: new Date(), lastLoginIp: request.headers.get('x-forwarded-for') || 'local', lastLoginUa: request.headers.get('user-agent') || '' } })
       await logActivity(db, { actor: user.id, role: 'branch', action: 'LOGIN', target: user.code })
-      return json({ ok: true, token, role: 'branch', name: user.name, code: user.code, permissions: ROLE_PERMISSIONS.branch, mustChangePassword: !!user.mustChangePassword })
+      return json({ ok: true, token, role: 'branch', name: user.name, code: user.code, email: user.email, permissions: ROLE_PERMISSIONS.branch, mustChangePassword: !!user.mustChangePassword })
     }
     if (route === '/driver/login' && method === 'POST') {
       const { phone, password } = await request.json()
@@ -243,7 +252,7 @@ async function handle(request, ctx) {
       const s = await getSession(request)
       if (!s || s.role !== 'admin') return json({ ok: false, error: 'Super Admin only' }, 403)
       const body = await request.json()
-      const allow = ['companyName','tagline','gstNumber','address','phone','whatsapp','email','website','bankName','bankAccount','bankIfsc','bankBranch','logoUrl','lrPrefix','transferPrefix','gstPercent','sessionTimeoutMinutes','theme']
+      const allow = ['companyName','tagline','gstNumber','address','phone','whatsapp','email','website','bankName','bankAccount','bankIfsc','bankBranch','logoUrl','lrPrefix','transferPrefix','gstPercent','sessionTimeoutMinutes','theme','smtp']
       const set = { updatedAt: new Date() }
       for (const k of allow) if (body[k] !== undefined) set[k] = body[k]
       await db.collection('settings').updateOne({ _id: 'company' }, { $set: set }, { upsert: true })
@@ -260,17 +269,111 @@ async function handle(request, ctx) {
       const { oldPassword, newPassword } = await request.json()
       if (!newPassword || newPassword.length < 6) return json({ ok:false, error:'New password must be at least 6 characters' }, 400)
       const user = await db.collection('users').findOne({ id: s.userId })
-      if (!user && s.role !== 'admin') return json({ ok:false, error:'User not found' }, 404)
-      // Verify old password (plain or hashed for backwards compat)
+      const bcrypt = (await import('bcryptjs')).default
       if (user) {
-        const bcrypt = (await import('bcryptjs')).default
         const isHashed = String(user.password || '').startsWith('$2')
         const match = isHashed ? await bcrypt.compare(oldPassword||'', user.password) : (user.password === oldPassword)
         if (!match) return json({ ok:false, error:'Old password incorrect' }, 400)
         const hashed = await bcrypt.hash(newPassword, 10)
-        await db.collection('users').updateOne({ id: s.userId }, { $set: { password: hashed, mustChangePassword: false, passwordChangedAt: new Date() } })
+        await db.collection('users').updateOne({ id: s.userId }, { $set: { password: hashed, mustChangePassword: false, passwordChangedAt: new Date() }, $unset: { plainInitialPassword: '' } })
+      } else if (s.role === 'admin') {
+        // Admin root can change its "password" stored in settings
+        const hashed = await bcrypt.hash(newPassword, 10)
+        await db.collection('settings').updateOne({ _id: 'company' }, { $set: { adminPasswordHash: hashed, adminPasswordChangedAt: new Date() } }, { upsert: true })
       }
       await logActivity(db, { actor: s.userId, role: s.role, action: 'PASSWORD_CHANGED', target: s.userId })
+      return json({ ok:true })
+    }
+
+    // -------- FORGOT / RESET PASSWORD (Email OTP) ---------
+    if (route === '/auth/forgot-password' && method === 'POST') {
+      const { email } = await request.json()
+      if (!email) return json({ ok:false, error:'Email is required' }, 400)
+      // Simple rate limit: max 3 per email per 15min
+      const since = new Date(Date.now() - 15*60*1000)
+      const recent = await db.collection('otp_tokens').countDocuments({ email, createdAt: { $gte: since } })
+      if (recent >= 3) return json({ ok:false, error:'Too many reset requests. Please try again in 15 minutes.' }, 429)
+      // Locate user by email in users OR in settings (admin)
+      const user = await db.collection('users').findOne({ email })
+      const settings = await db.collection('settings').findOne({ _id: 'company' })
+      const isAdmin = !user && settings && settings.email === email
+      if (!user && !isAdmin) {
+        // Do not reveal existence; still respond ok
+        return json({ ok: true, message: 'If the email is registered, an OTP has been sent.' })
+      }
+      const otp = String(Math.floor(100000 + Math.random()*900000))
+      const bcrypt = (await import('bcryptjs')).default
+      const otpHash = await bcrypt.hash(otp, 10)
+      const resetToken = uuidv4()
+      const expiresAt = new Date(Date.now() + 15*60*1000) // 15 min
+      const doc = { id: uuidv4(), email, otpHash, resetToken, userId: user?.id || 'admin-root', role: user?.role || (isAdmin ? 'admin' : 'user'), used: false, expiresAt, createdAt: new Date() }
+      await db.collection('otp_tokens').insertOne(doc)
+      // Send email via SMTP if configured; else log to activity for admin retrieval
+      const smtp = settings?.smtp || {}
+      let mailed = false
+      if (smtp.host && smtp.user && smtp.pass) {
+        try {
+          const nodemailer = (await import('nodemailer')).default
+          const transporter = nodemailer.createTransport({ host: smtp.host, port: Number(smtp.port||587), secure: !!smtp.secure, auth: { user: smtp.user, pass: smtp.pass } })
+          const from = smtp.from || `${settings.companyName || 'Assam Goods Carrier'} <${smtp.user}>`
+          const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/reset-password?token=${resetToken}`
+          await transporter.sendMail({
+            from, to: email, subject: `${settings.companyName || 'AGC'} \u2014 Password Reset OTP`,
+            html: `<div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:auto;padding:24px;border:1px solid #E5E7EB;border-radius:12px">
+              <div style="font-size:22px;font-weight:900;color:#0F3D91">${settings.companyName || 'ASSAM GOODS CARRIER'}</div>
+              <div style="color:#F97316;font-size:11px;letter-spacing:3px;font-weight:700">SAFE \u2022 FAST \u2022 RELIABLE</div>
+              <hr style="border:none;border-top:2px solid #F97316;margin:16px 0"/>
+              <h2 style="color:#0F3D91;margin:0 0 8px">Password Reset Request</h2>
+              <p style="color:#374151">Use the following OTP to reset your password. It expires in <b>15 minutes</b>.</p>
+              <div style="font-size:36px;font-weight:900;letter-spacing:8px;color:#0F3D91;background:#F3F4F6;padding:16px;text-align:center;border-radius:10px">${otp}</div>
+              <p style="color:#6B7280;font-size:13px;margin-top:16px">Or click the link below to open the reset page:</p>
+              <a href="${resetLink}" style="display:inline-block;background:#0F3D91;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700">Reset Password</a>
+              <p style="color:#9CA3AF;font-size:11px;margin-top:24px">If you did not request this, please ignore this email.</p>
+            </div>`,
+          })
+          mailed = true
+        } catch (e) { console.error('SMTP send failed', e) }
+      }
+      await logActivity(db, { actor: user?.id || 'system', role: user?.role || 'anon', action: 'PASSWORD_RESET_REQUESTED', target: email, meta: { mailed, mock_otp: mailed ? undefined : otp } })
+      return json({ ok:true, message: mailed ? 'OTP sent to your email.' : 'OTP generated (SMTP not configured — check Activity Log for OTP).', mailed })
+    }
+    if (route === '/auth/verify-otp' && method === 'POST') {
+      const { email, otp } = await request.json()
+      if (!email || !otp) return json({ ok:false, error:'Email and OTP required' }, 400)
+      const now = new Date()
+      const tokens = await db.collection('otp_tokens').find({ email, used: false, expiresAt: { $gt: now } }).sort({ createdAt: -1 }).limit(3).toArray()
+      const bcrypt = (await import('bcryptjs')).default
+      for (const t of tokens) {
+        if (await bcrypt.compare(otp, t.otpHash)) {
+          return json({ ok:true, resetToken: t.resetToken })
+        }
+      }
+      return json({ ok:false, error:'Invalid or expired OTP' }, 400)
+    }
+    if (route === '/auth/reset-password' && method === 'POST') {
+      const { resetToken, newPassword, otp, email } = await request.json()
+      if (!newPassword || newPassword.length < 6) return json({ ok:false, error:'Password must be at least 6 characters' }, 400)
+      const now = new Date()
+      let tokenDoc = null
+      if (resetToken) {
+        tokenDoc = await db.collection('otp_tokens').findOne({ resetToken, used: false, expiresAt: { $gt: now } })
+      } else if (email && otp) {
+        const bcrypt = (await import('bcryptjs')).default
+        const tokens = await db.collection('otp_tokens').find({ email, used: false, expiresAt: { $gt: now } }).sort({ createdAt: -1 }).limit(3).toArray()
+        for (const t of tokens) if (await bcrypt.compare(otp, t.otpHash)) { tokenDoc = t; break }
+      }
+      if (!tokenDoc) return json({ ok:false, error:'Invalid or expired reset token / OTP' }, 400)
+      const bcrypt = (await import('bcryptjs')).default
+      const hashed = await bcrypt.hash(newPassword, 10)
+      if (tokenDoc.role === 'admin' && tokenDoc.userId === 'admin-root') {
+        await db.collection('settings').updateOne({ _id: 'company' }, { $set: { adminPasswordHash: hashed, adminPasswordChangedAt: new Date() } }, { upsert: true })
+      } else {
+        await db.collection('users').updateOne({ id: tokenDoc.userId }, { $set: { password: hashed, mustChangePassword: false, passwordChangedAt: new Date() }, $unset: { plainInitialPassword: '' } })
+      }
+      await db.collection('otp_tokens').updateOne({ id: tokenDoc.id }, { $set: { used: true, usedAt: new Date() } })
+      // Invalidate other tokens for same email
+      await db.collection('otp_tokens').updateMany({ email: tokenDoc.email, used: false, id: { $ne: tokenDoc.id } }, { $set: { used: true } })
+      await logActivity(db, { actor: tokenDoc.userId, role: tokenDoc.role, action: 'PASSWORD_RESET_COMPLETED', target: tokenDoc.email })
       return json({ ok:true })
     }
     if (parts[0] === 'users' && parts[2] === 'reset-password' && method === 'POST') {
@@ -430,11 +533,26 @@ async function handle(request, ctx) {
     if (route === '/users' && method === 'GET') { const items = await db.collection('users').find({}).toArray(); return json({ items: items.map(sanitize) }) }
     if (route === '/users' && method === 'POST') {
       const b = await request.json()
+      if (!b.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(b.email)) return json({ ok:false, error:'A valid email address is required' }, 400)
+      const existing = await db.collection('users').findOne({ email: b.email })
+      if (existing) return json({ ok:false, error:'A user with this email already exists' }, 400)
       const bcrypt = (await import('bcryptjs')).default
       const rawPw = b.password || Math.random().toString(36).slice(2, 10)
       const hashed = await bcrypt.hash(rawPw, 10)
-      const doc = { id: uuidv4(), name: b.name, role: b.role, phone: b.phone || '', code: b.code || '', branchId: b.branchId || null, password: hashed, plainInitialPassword: rawPw, mustChangePassword: true, active: true, createdAt: new Date() }
+      const doc = { id: uuidv4(), name: b.name, role: b.role, email: b.email.toLowerCase(), phone: b.phone || '', code: b.code || '', branchId: b.branchId || null, password: hashed, plainInitialPassword: rawPw, mustChangePassword: true, active: true, createdAt: new Date() }
       await db.collection('users').insertOne(doc); return json({ ok: true, user: sanitize(doc) })
+    }
+    if (parts[0] === 'users' && parts.length === 2 && method === 'PATCH') {
+      const s = await getSession(request)
+      if (!s || s.role !== 'admin') return json({ ok:false, error:'Super Admin only' }, 403)
+      const body = await request.json()
+      const allow = ['name','email','phone','code','active','branchId']
+      const set = {}; for (const k of allow) if (body[k] !== undefined) set[k] = body[k]
+      if (set.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(set.email)) return json({ ok:false, error:'Invalid email' }, 400)
+      if (set.email) set.email = set.email.toLowerCase()
+      await db.collection('users').updateOne({ id: parts[1] }, { $set: set })
+      await logActivity(db, { actor: s.userId, role: s.role, action: 'USER_UPDATED', target: parts[1], meta: Object.keys(set) })
+      return json({ ok:true })
     }
     if (parts[0] === 'users' && parts.length === 2 && method === 'DELETE') { await db.collection('users').deleteOne({ id: parts[1] }); return json({ ok: true }) }
 

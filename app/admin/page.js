@@ -23,6 +23,11 @@ export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
   const [pw, setPw] = useState('')
   const [loading, setLoading] = useState(false)
+  const [mode, setMode] = useState('login')
+  const [email, setEmail] = useState('')
+  const [otp, setOtp] = useState('')
+  const [resetToken, setResetToken] = useState('')
+  const [newPw, setNewPw] = useState('')
 
   useEffect(() => { if (typeof window !== 'undefined' && localStorage.getItem('agc_token')) setAuthed(true) }, [])
 
@@ -36,19 +41,65 @@ export default function AdminPage() {
     } catch { toast.error('Network error') }
     setLoading(false)
   }
+  const forgot = async (e) => {
+    e.preventDefault(); setLoading(true)
+    try {
+      const r = await fetch('/api/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email })})
+      const d = await r.json()
+      if (d.ok) { toast.success(d.message); setMode('otp') } else toast.error(d.error)
+    } catch { toast.error('Network error') }
+    setLoading(false)
+  }
+  const verifyOtp = async (e) => {
+    e.preventDefault(); setLoading(true)
+    try {
+      const r = await fetch('/api/auth/verify-otp', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, otp })})
+      const d = await r.json()
+      if (d.ok) { setResetToken(d.resetToken); setMode('reset'); toast.success('OTP verified') } else toast.error(d.error)
+    } catch { toast.error('Network error') }
+    setLoading(false)
+  }
+  const doReset = async (e) => {
+    e.preventDefault(); setLoading(true)
+    try {
+      const r = await fetch('/api/auth/reset-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ resetToken, newPassword: newPw })})
+      const d = await r.json()
+      if (d.ok) { toast.success('Password reset. Please login.'); setMode('login'); setPw(newPw); setOtp(''); setResetToken(''); setNewPw('') } else toast.error(d.error)
+    } catch { toast.error('Network error') }
+    setLoading(false)
+  }
   const logout = () => { localStorage.removeItem('agc_token'); setAuthed(false) }
 
   if (!authed) return (
     <div className="min-h-screen gradient-navy grid place-items-center p-4">
       <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} className="w-full max-w-md">
         <Card className="border-0 shadow-2xl shadow-black/40"><CardContent className="p-8">
-          <div className="flex items-center gap-3"><LogoMark size={44}/><div><div className="font-black text-[#0F3D91]">ASSAM GOODS CARRIER</div><div className="text-[10px] uppercase tracking-[0.2em] text-agc-gold font-semibold">Admin Portal</div></div></div>
-          <div className="mt-6 font-bold text-[#0F3D91] flex items-center gap-2"><Lock className="h-4 w-4"/> Secure Login</div>
-          <form onSubmit={login} className="mt-4 space-y-3">
-            <div><Label className="text-xs">Admin Password</Label><Input type="password" value={pw} onChange={e=>setPw(e.target.value)} className="mt-1 h-11"/></div>
-            <Button disabled={loading} className="w-full h-11 bg-[#0F3D91] hover:bg-[#1E4FB8] font-bold">{loading ? 'Signing in...' : 'Sign In'}</Button>
-            <div className="text-xs text-slate-500 text-center">Default password: <b>assam123</b></div>
-          </form>
+          <div className="flex items-center gap-3"><LogoMark size={44}/><div><div className="font-black text-[#0F3D91]">ASSAM GOODS CARRIER</div><div className="text-[10px] uppercase tracking-[0.2em] text-agc-orange font-semibold">Admin Portal</div></div></div>
+
+          {mode === 'login' && (<>
+            <div className="mt-6 font-bold text-[#0F3D91] flex items-center gap-2"><Lock className="h-4 w-4"/> Super Admin Login</div>
+            <form onSubmit={login} className="mt-4 space-y-3">
+              <div><Label className="text-xs">Admin Password</Label><Input type="password" value={pw} onChange={e=>setPw(e.target.value)} className="mt-1 h-11" required/></div>
+              <Button disabled={loading} className="w-full h-11 bg-[#0F3D91] hover:bg-[#1E4FB8] font-bold">{loading ? 'Signing in...' : 'Sign In'}</Button>
+              <div className="text-center"><button type="button" onClick={()=>setMode('forgot')} className="text-xs text-[#0F3D91] hover:text-agc-orange font-semibold hover:underline">Forgot Admin Password?</button></div>
+            </form>
+          </>)}
+          {mode === 'forgot' && (<form onSubmit={forgot} className="mt-6 space-y-3">
+            <div className="text-sm text-slate-600">Enter the admin email (configured in Company Settings) to receive an OTP.</div>
+            <div><Label className="text-xs">Admin Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value.toLowerCase())} className="h-11 mt-1" required/></div>
+            <Button disabled={loading} className="w-full h-11 bg-[#0F3D91] text-white font-bold">{loading?'Sending…':'Send OTP'}</Button>
+            <div className="text-center"><button type="button" onClick={()=>setMode('login')} className="text-xs text-slate-600">← Back</button></div>
+          </form>)}
+          {mode === 'otp' && (<form onSubmit={verifyOtp} className="mt-6 space-y-3">
+            <div className="text-sm text-slate-600">Enter the 6-digit OTP sent to <b>{email}</b>. Expires in 15 min.</div>
+            <Input value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder="6-digit code" className="h-11 mt-1 text-center text-xl tracking-[0.4em] font-black" maxLength={6}/>
+            <Button disabled={loading || otp.length!==6} className="w-full h-11 bg-[#0F3D91] text-white font-bold">{loading?'Verifying…':'Verify OTP'}</Button>
+          </form>)}
+          {mode === 'reset' && (<form onSubmit={doReset} className="mt-6 space-y-3">
+            <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">✓ OTP verified. Set your new password.</div>
+            <div><Label className="text-xs">New Admin Password</Label><Input type="password" value={newPw} onChange={e=>setNewPw(e.target.value)} className="h-11 mt-1" minLength={6} required/></div>
+            <Button disabled={loading || newPw.length<6} className="w-full h-11 bg-[#0F3D91] text-white font-bold">{loading?'Saving…':'Set New Password'}</Button>
+          </form>)}
         </CardContent></Card>
       </motion.div>
     </div>
@@ -250,21 +301,37 @@ function BranchesModule() {
 
 // -------------- USERS ------------------
 function UsersModule() {
-  const [items, setItems] = useState([]); const [f, setF] = useState({ name:'', role:'branch', code:'', phone:'', password:'' })
+  const [items, setItems] = useState([]); const [f, setF] = useState({ name:'', role:'branch', code:'', email:'', phone:'', password:'' })
   const load = () => fetch('/api/users').then(r=>r.json()).then(d=>setItems(d.items||[]))
   useEffect(()=>{ load() }, [])
-  const add = async (e) => { e.preventDefault(); const r = await fetch('/api/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)}); if((await r.json()).ok){toast.success('User created'); setF({ name:'', role:'branch', code:'', phone:'', password:'' }); load()} }
+  const add = async (e) => { e.preventDefault(); const r = await fetch('/api/users', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)}); const d = await r.json(); if(d.ok){toast.success('User created'); setF({ name:'', role:'branch', code:'', email:'', phone:'', password:'' }); load()} else toast.error(d.error) }
   const del = async (id) => { await fetch(`/api/users/${id}`, { method:'DELETE' }); load() }
+  const resetPw = async (id) => {
+    const np = prompt('Enter new password for this user (min 6 chars):')
+    if (!np || np.length < 6) return
+    const token = localStorage.getItem('agc_token')
+    const r = await fetch(`/api/users/${id}/reset-password`, { method:'POST', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`}, body: JSON.stringify({ newPassword: np })})
+    const d = await r.json(); if (d.ok) toast.success('Password reset. User must change on next login.'); else toast.error(d.error)
+  }
+  const toggle = async (id) => {
+    const token = localStorage.getItem('agc_token')
+    const r = await fetch(`/api/users/${id}/toggle-active`, { method:'POST', headers:{'Authorization':`Bearer ${token}`}})
+    const d = await r.json(); if (d.ok) { toast.success(`User ${d.active?'activated':'deactivated'}`); load() } else toast.error(d.error)
+  }
   return (<div className="space-y-4">
-    <Card><CardContent className="p-5"><div className="font-bold text-[#0F3D91] mb-4">Create User</div><form onSubmit={add} className="grid md:grid-cols-5 gap-3">
+    <Card><CardContent className="p-5"><div className="font-bold text-[#0F3D91] mb-4">Create User</div><form onSubmit={add} className="grid md:grid-cols-6 gap-3">
       <Input value={f.name} onChange={e=>setF(x=>({...x,name:e.target.value}))} placeholder="Full Name" required/>
-      <Select value={f.role} onValueChange={v=>setF(x=>({...x,role:v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="branch">Branch Staff</SelectItem><SelectItem value="driver">Driver</SelectItem><SelectItem value="admin">Admin</SelectItem></SelectContent></Select>
-      <Input value={f.code} onChange={e=>setF(x=>({...x,code:e.target.value.toUpperCase()}))} placeholder="Branch Code (for branch)"/>
-      <Input value={f.phone} onChange={e=>setF(x=>({...x,phone:e.target.value}))} placeholder="Phone (for driver)"/>
-      <Input value={f.password} onChange={e=>setF(x=>({...x,password:e.target.value}))} placeholder="Password" required/>
-      <div className="md:col-span-5 flex justify-end"><Button className="bg-[#0F3D91] text-white font-bold">Create User</Button></div>
+      <Select value={f.role} onValueChange={v=>setF(x=>({...x,role:v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="branch">Branch Staff</SelectItem><SelectItem value="driver">Driver</SelectItem></SelectContent></Select>
+      <Input type="email" value={f.email} onChange={e=>setF(x=>({...x,email:e.target.value.toLowerCase()}))} placeholder="Email (required)" required/>
+      <Input value={f.code} onChange={e=>setF(x=>({...x,code:e.target.value.toUpperCase()}))} placeholder="Branch Code"/>
+      <Input value={f.phone} onChange={e=>setF(x=>({...x,phone:e.target.value}))} placeholder="Phone"/>
+      <Input value={f.password} onChange={e=>setF(x=>({...x,password:e.target.value}))} placeholder="Initial Password" required/>
+      <div className="md:col-span-6 flex justify-end"><Button className="bg-[#0F3D91] text-white font-bold">Create User</Button></div>
     </form></CardContent></Card>
-    <Card><CardContent className="p-0"><table className="w-full text-sm"><thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"><tr><Th>Name</Th><Th>Role</Th><Th>Login</Th><Th>Password</Th><Th></Th></tr></thead><tbody>{items.length===0 && <tr><td colSpan="5" className="p-8 text-center text-slate-400">No users yet.</td></tr>}{items.map(u => (<tr key={u.id} className="border-t border-slate-100"><Td>{u.name}</Td><Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200">{u.role}</span></Td><Td>{u.role==='branch' ? u.code : u.phone}</Td><Td className="font-mono">{u.password}</Td><Td><Button size="sm" variant="outline" onClick={()=>del(u.id)}><Trash2 className="h-3 w-3"/></Button></Td></tr>))}</tbody></table></CardContent></Card>
+    <Card><CardContent className="p-0"><div className="overflow-x-auto"><table className="w-full text-sm">
+      <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"><tr><Th>Name</Th><Th>Role</Th><Th>Email</Th><Th>Code / Phone</Th><Th>Status</Th><Th>Last Login</Th><Th>Actions</Th></tr></thead>
+      <tbody>{items.length===0 && <tr><td colSpan="7" className="p-8 text-center text-slate-400">No users yet.</td></tr>}{items.map(u => (<tr key={u.id} className="border-t border-slate-100"><Td>{u.name}</Td><Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-200">{u.role}</span></Td><Td className="text-xs">{u.email || '—'}</Td><Td>{u.role==='branch' ? u.code : u.phone}</Td><Td>{u.active===false ? <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800">Inactive</span> : <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Active</span>}</Td><Td className="text-xs">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleString('en-IN') : '—'}<div className="text-[10px] text-slate-400">{u.lastLoginIp || ''}</div></Td><Td><div className="flex gap-1"><Button size="sm" variant="outline" onClick={()=>resetPw(u.id)} title="Reset Password">🔑</Button><Button size="sm" variant="outline" onClick={()=>toggle(u.id)} title="Toggle Active">{u.active===false?'✓':'⏸'}</Button><Button size="sm" variant="outline" onClick={()=>del(u.id)}><Trash2 className="h-3 w-3"/></Button></div></Td></tr>))}</tbody>
+    </table></div></CardContent></Card>
   </div>)
 }
 
@@ -707,6 +774,18 @@ function CompanySettingsModule() {
         <div className="grid md:grid-cols-3 gap-4 items-end">
           <div className="md:col-span-2"><Label className="text-xs">Logo URL (SVG / PNG)</Label><Input value={s.logoUrl||''} onChange={e=>set('logoUrl', e.target.value)} placeholder="https://... (leave blank for default AGC logo)" className="mt-1"/></div>
           <div className="text-xs text-slate-500">Default AGC logo will be used if this is blank.</div>
+        </div>
+      </CardContent></Card>
+      <Card><CardContent className="p-5">
+        <div className="font-bold text-[#0F3D91] mb-1">SMTP / Email Delivery</div>
+        <div className="text-xs text-slate-500 mb-4">Used to send password-reset OTP emails. Leave blank to fall back to activity-log OTP delivery.</div>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div><Label className="text-xs">SMTP Host</Label><Input value={s.smtp?.host||''} onChange={e=>set('smtp', { ...(s.smtp||{}), host: e.target.value })} placeholder="e.g. smtp.gmail.com" className="mt-1"/></div>
+          <div><Label className="text-xs">Port</Label><Input type="number" value={s.smtp?.port||587} onChange={e=>set('smtp', { ...(s.smtp||{}), port: Number(e.target.value) })} className="mt-1"/></div>
+          <div><Label className="text-xs">Secure (SSL)</Label><Select value={String(!!s.smtp?.secure)} onValueChange={v=>set('smtp', { ...(s.smtp||{}), secure: v==='true' })}><SelectTrigger className="mt-1"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="false">STARTTLS (port 587)</SelectItem><SelectItem value="true">SSL (port 465)</SelectItem></SelectContent></Select></div>
+          <div><Label className="text-xs">SMTP Username</Label><Input value={s.smtp?.user||''} onChange={e=>set('smtp', { ...(s.smtp||{}), user: e.target.value })} className="mt-1"/></div>
+          <div><Label className="text-xs">SMTP Password</Label><Input type="password" value={s.smtp?.pass||''} onChange={e=>set('smtp', { ...(s.smtp||{}), pass: e.target.value })} placeholder="App password" className="mt-1"/></div>
+          <div><Label className="text-xs">From Address</Label><Input value={s.smtp?.from||''} onChange={e=>set('smtp', { ...(s.smtp||{}), from: e.target.value })} placeholder='"AGC" <no-reply@agc.in>' className="mt-1"/></div>
         </div>
       </CardContent></Card>
       <div className="flex justify-end">

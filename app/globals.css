@@ -252,7 +252,10 @@ select:focus:not(.dark-input) {
   box-shadow: 0 0 0 3px rgba(15,61,145,0.15) !important;
   outline: none !important;
 }
-/* Explicit override for inputs inside dark cards that opt into dark-form */
+/* Login/portal cards should always be solid white */
+.gradient-navy [class*="Card"],
+.gradient-navy > .grid > * > [class*="card"] { background-color: #ffffff !important; }
+[data-slot="card"] { background-color: #ffffff !important; color: #111827 !important; }
 .dark-form input,
 .dark-form textarea {
   background-color: rgba(255,255,255,0.12) !important;
