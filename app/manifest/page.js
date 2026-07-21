@@ -18,7 +18,9 @@ export default function ManifestPage() {
   const [driver, setDriver] = useState("")
   const [route, setRoute] = useState("")
  const [date, setDate] = useState(new Date().toISOString().slice(0,10))
-  const [manifestNo, setManifestNo] = useState(sp.get('manifestNo') || `MAN-${new Date().toISOString().slice(2,10).replace(/-/g,'')}-${String(Math.floor(Math.random()*1000)).padStart(3,'0')}`)
+ const [manifestNo, setManifestNo] = useState(
+  `MAN-${new Date().toISOString().slice(2,10).replace(/-/g,'')}-${String(Math.floor(Math.random()*1000)).padStart(3,'0')}`
+)
 
   useEffect(() => { fetch('/api/bookings').then(r=>r.json()).then(d=>setBookings(d.items||[])) }, [])
 
