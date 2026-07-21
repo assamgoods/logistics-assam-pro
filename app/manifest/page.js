@@ -1,7 +1,7 @@
 'use client'
 import { LogoMark } from '@/components/Logo'
 import { useEffect, useState } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -11,14 +11,13 @@ import { Printer, Truck, Download, ListChecks } from 'lucide-react'
 const COMPANY = { name: 'ASSAM GOODS CARRIER', tagline: 'SAFE • FAST • RELIABLE', mobile: '8847428801', gst: '18AABCA1234A1Z5', address: 'G.S. Road, Guwahati, Assam - 781005' }
 
 export default function ManifestPage() {
-  const sp = useSearchParams()
   const router = useRouter()
   const [bookings, setBookings] = useState([])
-  const [lrs, setLrs] = useState((sp.get('lrs')||'').split(',').filter(Boolean))
-  const [vehicle, setVehicle] = useState(sp.get('vehicle')||'')
-  const [driver, setDriver] = useState(sp.get('driver')||'')
-  const [route, setRoute] = useState(sp.get('route')||'')
-  const [date, setDate] = useState(sp.get('date') || new Date().toISOString().slice(0,10))
+ const [lrs, setLrs] = useState([])
+  const [vehicle, setVehicle] = useState("")
+  const [driver, setDriver] = useState("")
+  const [route, setRoute] = useState("")
+ const [date, setDate] = useState(new Date().toISOString().slice(0,10))
   const [manifestNo, setManifestNo] = useState(sp.get('manifestNo') || `MAN-${new Date().toISOString().slice(2,10).replace(/-/g,'')}-${String(Math.floor(Math.random()*1000)).padStart(3,'0')}`)
 
   useEffect(() => { fetch('/api/bookings').then(r=>r.json()).then(d=>setBookings(d.items||[])) }, [])
