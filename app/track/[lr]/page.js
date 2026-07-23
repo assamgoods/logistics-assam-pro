@@ -70,19 +70,20 @@ export default function TrackPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-agc-gold text-[#0F3D91]">{(data.stages.find(s=>s.key===data.status)?.label) || data.status}</span>
-                    <a href={`/print/${encodeURIComponent(data.lrNumber)}`} target="_blank" rel="noreferrer"><Button variant="outline" className="h-9"><Printer className="h-4 w-4 mr-2"/>LR Copy</Button></a>
+                   <a href={`/print/${encodeURIComponent(data.lrNumber)}`} target="_blank" rel="noreferrer">
+  <Button variant="outline" className="h-9">
+    <Printer className="h-4 w-4 mr-2"/>
+    LR Copy
+  </Button>
+</a>
                   </div>
                 </div>
 
                 <div className="mt-5 grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Info label="Origin" value={data.origin || '—'}/>
-                  <Info label="Destination" value={data.destination || '—'}/>
-                  <Info label="Current Location" value={data.currentLocation || '—'}/>
-                  <Info label="ETA" value={data.eta || 'Calculating'}/>
+                <Info label="Booking Branch" value={data.origin || '—'} />
                   <Info label="Sender" value={data.sender?.name || '—'}/>
                   <Info label="Receiver" value={data.receiver?.name || '—'}/>
                   <Info label="Packages" value={String(data.packages || 0)}/>
-                  <Info label="Chargeable Wt" value={`${data.chargeableWeight || 0} kg`}/>
                 </div>
 
                 <div className="mt-8">
