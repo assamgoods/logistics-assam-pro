@@ -70,12 +70,6 @@ export default function TrackPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-agc-gold text-[#0F3D91]">{(data.stages.find(s=>s.key===data.status)?.label) || data.status}</span>
-                   <a href={`/print/${encodeURIComponent(data.lrNumber)}`} target="_blank" rel="noreferrer">
-  <Button variant="outline" className="h-9">
-    <Printer className="h-4 w-4 mr-2"/>
-    LR Copy
-  </Button>
-</a>
                   </div>
                 </div>
 
@@ -103,11 +97,11 @@ export default function TrackPage() {
                             {stg.label}
                           </div>
                           {evt && (
-                            <div className="ml-2 text-xs text-slate-500 mt-0.5">
-                              {new Date(evt.at).toLocaleString('en-IN')} {evt.location && `• ${evt.location}`} {evt.note && `• ${evt.note}`}
-                            </div>
-                          )}
-                        </div>
+  <div className="ml-2 text-xs text-slate-500 mt-0.5">
+    {new Date(evt.at).toLocaleString('en-IN')} {evt.location && ` • ${evt.location} Branch`}
+  </div>
+         )}                      
+                 </div>
                       )
                     })}
                   </div>
