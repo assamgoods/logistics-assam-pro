@@ -9,8 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import QRCode from 'qrcode'
 import JsBarcode from 'jsbarcode'
 
-const COMPANY = { name: 'ASSAM GOODS CARRIER', tagline: 'SAFE • FAST • RELIABLE', mobile: '8847428801', gst: '18AABCA1234A1Z5', address: 'Head Office: G.S. Road, Guwahati, Assam - 781005', email: 'bookings@assamgoodscarrier.in' }
-
+const COMPANY = {
+  name: 'ASSAM GOODS CARRIER',
+  tagline: 'SAFE • FAST • RELIABLE',
+  mobile: '8847428801',
+  gst: '18AABCA1234A1Z5',
+  address: 'Head Office: Plot No. 5A,\n Industrial Area, Phase-2, \nPanchkula, Haryana - 134113',
+  email: 'info@assamgoodscarrier.com'
+}
 export default function PrintLR() {
   const { lr } = useParams()
   const searchParams = useSearchParams()
