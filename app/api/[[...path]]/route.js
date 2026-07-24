@@ -135,7 +135,26 @@ async function handle(request, ctx) {
       ])
       return json({ totalBookings: total, todaysBookings: today, deliveredShipments: delivered, inTransitShipments: inTransit, pendingDeliveries: pending, cancelledShipments: cancelled, totalRevenue: revenueAgg[0]?.total || 0, outstandingPayments: outstandingAgg[0]?.total || 0 })
     }
+    // -------- CUSTOMERS SEARCH --------
+if (route === '/customers' && method === 'GET') {
+  const q = (url.searchParams.get('q') || '').trim()
 
+  if (!q) return json({ items: [] })
+
+  const items = await db.collection('customers')
+    .find({
+      $or: [
+        { name: { $regex: q, $options: 'i' } },
+        { phone: { $regex: q, $options: 'i' } }
+      ]
+    })
+    .limit(10)
+    .toArray()
+
+  return json({
+    items: items.map(sanitize)
+  })
+}
     // -------- BOOKINGS ---------
     if (route === '/bookings' && method === 'GET') {
       const filter = {}
