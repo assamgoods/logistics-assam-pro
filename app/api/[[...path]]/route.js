@@ -171,6 +171,57 @@ async function handle(request, ctx) {
         createdAt: now, updatedAt: now,
       }
       await db.collection('bookings').insertOne(doc)
+      // ================= AUTO SAVE CUSTOMERS =================
+
+// Sender
+if (doc.sender.name || doc.sender.phone) {
+  await db.collection("customers").updateOne(
+    {
+      type: "sender",
+      phone: doc.sender.phone || "",
+    },
+    {
+      $set: {
+        type: "sender",
+        name: doc.sender.name,
+        phone: doc.sender.phone,
+        address: doc.sender.address,
+        gst: doc.sender.gst,
+        updatedAt: new Date(),
+      },
+      $setOnInsert: {
+        createdAt: new Date(),
+      },
+    },
+    { upsert: true }
+  );
+}
+
+// Receiver
+if (doc.receiver.name || doc.receiver.phone) {
+  await db.collection("customers").updateOne(
+    {
+      type: "receiver",
+      phone: doc.receiver.phone || "",
+    },
+    {
+      $set: {
+        type: "receiver",
+        name: doc.receiver.name,
+        phone: doc.receiver.phone,
+        address: doc.receiver.address,
+        gst: doc.receiver.gst,
+        updatedAt: new Date(),
+      },
+      $setOnInsert: {
+        createdAt: new Date(),
+      },
+    },
+    { upsert: true }
+  );
+}
+
+// ================= END =================
       await logActivity(db, { actor: s?.userId || 'admin-root', role: s?.role || 'admin', action: 'BOOKING_CREATED', target: lrNumber })
       await sendNotification({ event: 'BOOKING_CREATED', booking: doc })
       return json({ ok: true, booking: sanitize(doc) })
