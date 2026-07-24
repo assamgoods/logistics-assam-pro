@@ -298,7 +298,7 @@ async function handle(request, ctx) {
       // Locate user by email in users OR in settings (admin)
       const user = await db.collection('users').findOne({ email })
       const settings = await db.collection('settings').findOne({ _id: 'company' })
-      const isAdmin = !user && settings && settings.email === email
+      const isAdmin = settings?.email === email || process.env.SMTP_USER === email
       if (!user && !isAdmin) {
         // Do not reveal existence; still respond ok
         return json({ ok: true, message: 'If the email is registered, an OTP has been sent.' })
