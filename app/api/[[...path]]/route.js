@@ -307,7 +307,7 @@ async function handle(request, ctx) {
       const resetToken = uuidv4()
       const expiresAt = new Date(Date.now() + 15*60*1000) // 15 min
       const doc = { id: uuidv4(), email, otpHash, resetToken, userId: user?.id || 'admin-root', role: user?.role || (isAdmin ? 'admin' : 'user'), used: false, expiresAt, createdAt: new Date() }
-      await db.colnpmlection('otp_tokens').insertOne(doc)
+      await db.collection('otp_tokens').insertOne(doc)
       // Send email via SMTP if configured; else log to activity for admin retrieval
       const smtp = settings?.smtp || {}
 
