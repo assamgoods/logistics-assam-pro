@@ -1,3 +1,5 @@
+import { Resend } from 'resend'
+const resend = new Resend(process.env.RESEND_API_KEY)
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/mongo'
 import { v4 as uuidv4 } from 'uuid'
@@ -35,9 +37,9 @@ const DEFAULT_STAGES = [
 const NOTIFY_EVENTS = { BOOKED: 'BOOKING_CREATED', DISPATCHED: 'DISPATCHED', OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY', DELIVERED: 'DELIVERED' }
 
 const ROLE_PERMISSIONS = {
-  admin:    ['*'],
-  branch:   ['booking.create','booking.read','booking.status','pod.upload','rate.read'],
-  driver:   ['booking.read.own','pod.upload','booking.status.limited'],
+  admin:     ['*'],
+  branch:    ['booking.create','booking.read','booking.status','pod.upload','rate.read'],
+  driver:    ['booking.read.own','pod.upload','booking.status.limited'],
   customer: ['booking.read.own','pod.download'],
 }
 
@@ -308,33 +310,17 @@ async function handle(request, ctx) {
       const expiresAt = new Date(Date.now() + 15*60*1000) // 15 min
       const doc = { id: uuidv4(), email, otpHash, resetToken, userId: user?.id || 'admin-root', role: user?.role || (isAdmin ? 'admin' : 'user'), used: false, expiresAt, createdAt: new Date() }
       await db.collection('otp_tokens').insertOne(doc)
-      // Send email via SMTP if configured; else log to activity for admin retrieval
-      const smtp = settings?.smtp || {}
-
-console.log("SMTP SETTINGS:", smtp)
-
-let mailed = false
-      if (smtp.host && smtp.user && smtp.pass) {
-        try {
-          const nodemailer = (await import('nodemailer')).default
-         const transporter = nodemailer.createTransport({
-  host: smtp.host,
-  port: Number(smtp.port || 587),
-  secure: false,
-  auth: {
-    user: smtp.user,
-    pass: smtp.pass
-  }
-})
-await transporter.verify();
-console.log("SMTP connection successful");
-          const from = smtp.from || `${settings.companyName || 'Assam Goods Carrier'} <${smtp.user}>`
-          const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/reset-password?token=${resetToken}`
-          await transporter.sendMail({
-            from, to: email, subject: `${settings.companyName || 'AGC'} \u2014 Password Reset OTP`,
-            html: `<div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:auto;padding:24px;border:1px solid #E5E7EB;border-radius:12px">
-              <div style="font-size:22px;font-weight:900;color:#0F3D91">${settings.companyName || 'ASSAM GOODS CARRIER'}</div>
-              <div style="color:#F97316;font-size:11px;letter-spacing:3px;font-weight:700">SAFE \u2022 FAST \u2022 RELIABLE</div>
+      
+      let mailed = false
+      try {
+        const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/reset-password?token=${resetToken}`
+        await resend.emails.send({
+          from: "Assam Goods Carrier <onboarding@resend.dev>",
+          to: email,
+          subject: `${settings?.companyName || 'AGC'} — Password Reset OTP`,
+          html: `<div style="font-family:Inter,Arial,sans-serif;max-width:520px;margin:auto;padding:24px;border:1px solid #E5E7EB;border-radius:12px">
+              <div style="font-size:22px;font-weight:900;color:#0F3D91">${settings?.companyName || 'ASSAM GOODS CARRIER'}</div>
+              <div style="color:#F97316;font-size:11px;letter-spacing:3px;font-weight:700">SAFE • FAST • RELIABLE</div>
               <hr style="border:none;border-top:2px solid #F97316;margin:16px 0"/>
               <h2 style="color:#0F3D91;margin:0 0 8px">Password Reset Request</h2>
               <p style="color:#374151">Use the following OTP to reset your password. It expires in <b>15 minutes</b>.</p>
@@ -343,19 +329,14 @@ console.log("SMTP connection successful");
               <a href="${resetLink}" style="display:inline-block;background:#0F3D91;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:700">Reset Password</a>
               <p style="color:#9CA3AF;font-size:11px;margin-top:24px">If you did not request this, please ignore this email.</p>
             </div>`,
-          })
-          mailed = true
-        } catch (e) {
-  console.error("SMTP send failed:", e);
-  return json({
-    ok: false,
-    error: e.message,
-    stack: process.env.NODE_ENV !== "production" ? e.stack : undefined
-  }, 500);
+        })
+        mailed = true
+     catch (e) {
+  console.error("Resend send failed:", e);
 }
-      }
+
       await logActivity(db, { actor: user?.id || 'system', role: user?.role || 'anon', action: 'PASSWORD_RESET_REQUESTED', target: email, meta: { mailed, mock_otp: mailed ? undefined : otp } })
-      return json({ ok:true, message: mailed ? 'OTP sent to your email.' : 'OTP generated (SMTP not configured — check Activity Log for OTP).', mailed })
+      return json({ ok:true, message: mailed ? 'OTP sent to your email.' : 'OTP generated (Email delivery failed — check Activity Log for OTP).', mailed })
     }
     if (route === '/auth/verify-otp' && method === 'POST') {
       const { email, otp } = await request.json()
@@ -486,7 +467,7 @@ console.log("SMTP connection successful");
       await db.collection('bookings').updateOne(
         { lrNumber: body.lrNumber },
         { $set: { currentLocation: body.toBranch, branchCode: body.toBranch, updatedAt: now, status: 'IN_TRANSIT' },
-          $push: { timeline: { key: 'IN_TRANSIT', label: `Transferred ${body.fromBranch} \u2192 ${body.toBranch}`, at: now.toISOString(), location: body.toBranch, note: `Transfer ${transferId}. ${body.remarks || ''}`.trim(), by: s?.name || 'admin' } } }
+          $push: { timeline: { key: 'IN_TRANSIT', label: `Transferred ${body.fromBranch} → ${body.toBranch}`, at: now.toISOString(), location: body.toBranch, note: `Transfer ${transferId}. ${body.remarks || ''}`.trim(), by: s?.name || 'admin' } } }
       )
       await logActivity(db, { actor: s?.userId || 'admin-root', role: s?.role || 'admin', action: 'TRANSFER_CREATED', target: transferId, meta: { lr: body.lrNumber, from: body.fromBranch, to: body.toBranch } })
       return json({ ok: true, transfer: sanitize(doc) })
@@ -502,140 +483,33 @@ console.log("SMTP connection successful");
       const s = await getSession(request)
       const now = new Date()
       const existing = await db.collection('transfers').findOne({ transferId })
-      if (!existing) return json({ ok: false, error: 'Transfer not found' }, 404)
-      if (existing.status === 'RECEIVED') return json({ ok: false, error: 'Already received' }, 400)
-      const receivedBy = body.receivedBy || s?.name || s?.role || 'branch'
-      const update = {
-        $set: { status: 'RECEIVED', receivedBy, receivedAt: now.toISOString(), receivedRemarks: body.remarks || '', updatedAt: now },
-        $push: { timeline: { event: 'RECEIVED', at: now.toISOString(), branch: existing.toBranch, by: receivedBy, note: body.remarks || 'Received at destination branch' } },
-      }
-      const res = await db.collection('transfers').findOneAndUpdate({ transferId }, update, { returnDocument: 'after' })
+      if (!existing) return json({ ok: false, error: 'Transfer record not found' }, 404)
+      
+      const res = await db.collection('transfers').findOneAndUpdate(
+        { transferId },
+        { 
+          $set: { status: 'RECEIVED', receivedBy: s?.name || s?.role || 'admin', receivedAt: now.toISOString(), receivedRemarks: body.remarks || '', updatedAt: now },
+          $push: { timeline: { event: 'RECEIVED', at: now.toISOString(), branch: existing.toBranch, by: s?.name || 'admin', note: body.remarks || 'Received at destination branch' } }
+        },
+        { returnDocument: 'after' }
+      )
       const val = res?.value || res
-      // Push to booking timeline
       await db.collection('bookings').updateOne(
         { lrNumber: existing.lrNumber },
-        { $set: { currentLocation: existing.toBranch, updatedAt: now },
-          $push: { timeline: { key: 'ARRIVED', label: `Received at ${existing.toBranch}`, at: now.toISOString(), location: existing.toBranch, note: `Transfer ${transferId} received. ${body.remarks || ''}`.trim(), by: receivedBy } } }
+        { 
+          $set: { currentLocation: existing.toBranch, status: 'ARRIVED', updatedAt: now },
+          $push: { timeline: { key: 'ARRIVED', label: `Arrived at ${existing.toBranch}`, at: now.toISOString(), location: existing.toBranch, note: `Received from transfer ${transferId}. ${body.remarks || ''}`.trim(), by: s?.name || 'admin' } }
+        }
       )
-      await logActivity(db, { actor: s?.userId || 'branch', role: s?.role || 'branch', action: 'TRANSFER_RECEIVED', target: transferId, meta: { lr: existing.lrNumber } })
+      await logActivity(db, { actor: s?.userId || 'admin-root', role: s?.role || 'admin', action: 'TRANSFER_RECEIVED', target: transferId })
       return json({ ok: true, transfer: sanitize(val) })
     }
-    if (parts[0] === 'bookings' && parts[2] === 'transfers' && method === 'GET') {
-      const lr = decodeURIComponent(parts[1])
-      const items = await db.collection('transfers').find({ lrNumber: lr }).sort({ createdAt: 1 }).toArray()
-      return json({ items: items.map(sanitize) })
-    }
 
-    // -------- RATES ---------
-    if (route === '/rates' && method === 'GET') {
-      const items = await db.collection('rates').find({}).sort({ createdAt: -1 }).toArray()
-      return json({ items: items.map(sanitize) })
-    }
-    if (route === '/rates' && method === 'POST') {
-      const body = await request.json()
-      const doc = { id: uuidv4(), fromState: body.fromState||'', toState: body.toState||'', fromCity: body.fromCity||'', toCity: body.toCity||'', ratePerKg: Number(body.ratePerKg||0), minBilty: Number(body.minBilty||0), biltyCharge: Number(body.biltyCharge||0), doorCharge: Number(body.doorCharge||0), insurancePct: Number(body.insurancePct||0), fuelSurcharge: Number(body.fuelSurcharge||0), gst: Number(body.gst||18), createdAt: new Date() }
-      await db.collection('rates').insertOne(doc)
-      return json({ ok: true, rate: sanitize(doc) })
-    }
-    if (parts[0] === 'rates' && parts.length === 2 && method === 'DELETE') {
-      await db.collection('rates').deleteOne({ id: parts[1] }); return json({ ok: true })
-    }
-
-    // -------- BRANCHES & USERS ---------
-    if (route === '/branches' && method === 'GET') { const items = await db.collection('branches').find({}).toArray(); return json({ items: items.map(sanitize) }) }
-    if (route === '/branches' && method === 'POST') {
-      const b = await request.json()
-      const doc = { id: uuidv4(), code: b.code, name: b.name, city: b.city, state: b.state || 'Assam', phone: b.phone, address: b.address, createdAt: new Date() }
-      await db.collection('branches').insertOne(doc); return json({ ok: true, branch: sanitize(doc) })
-    }
-    if (parts[0] === 'branches' && parts.length === 2 && method === 'DELETE') { await db.collection('branches').deleteOne({ id: parts[1] }); return json({ ok: true }) }
-
-    if (route === '/users' && method === 'GET') { const items = await db.collection('users').find({}).toArray(); return json({ items: items.map(sanitize) }) }
-    if (route === '/users' && method === 'POST') {
-      const b = await request.json()
-      if (!b.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(b.email)) return json({ ok:false, error:'A valid email address is required' }, 400)
-      const existing = await db.collection('users').findOne({ email: b.email })
-      if (existing) return json({ ok:false, error:'A user with this email already exists' }, 400)
-      const bcrypt = (await import('bcryptjs')).default
-      const rawPw = b.password || Math.random().toString(36).slice(2, 10)
-      const hashed = await bcrypt.hash(rawPw, 10)
-      const doc = { id: uuidv4(), name: b.name, role: b.role, email: b.email.toLowerCase(), phone: b.phone || '', code: b.code || '', branchId: b.branchId || null, password: hashed, plainInitialPassword: rawPw, mustChangePassword: true, active: true, createdAt: new Date() }
-      await db.collection('users').insertOne(doc); return json({ ok: true, user: sanitize(doc) })
-    }
-    if (parts[0] === 'users' && parts.length === 2 && method === 'PATCH') {
-      const s = await getSession(request)
-      if (!s || s.role !== 'admin') return json({ ok:false, error:'Super Admin only' }, 403)
-      const body = await request.json()
-      const allow = ['name','email','phone','code','active','branchId']
-      const set = {}; for (const k of allow) if (body[k] !== undefined) set[k] = body[k]
-      if (set.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(set.email)) return json({ ok:false, error:'Invalid email' }, 400)
-      if (set.email) set.email = set.email.toLowerCase()
-      await db.collection('users').updateOne({ id: parts[1] }, { $set: set })
-      await logActivity(db, { actor: s.userId, role: s.role, action: 'USER_UPDATED', target: parts[1], meta: Object.keys(set) })
-      return json({ ok:true })
-    }
-    if (parts[0] === 'users' && parts.length === 2 && method === 'DELETE') { await db.collection('users').deleteOne({ id: parts[1] }); return json({ ok: true }) }
-
-    // -------- REPORTS ---------
-    if (route === '/reports/daily' && method === 'GET') {
-      const day = url.searchParams.get('date') || new Date().toISOString().slice(0,10)
-      const start = new Date(day + 'T00:00:00'); const end = new Date(day + 'T23:59:59')
-      const items = await db.collection('bookings').find({ createdAt: { $gte: start, $lte: end } }).toArray()
-      const total = items.reduce((a,b)=>a+Number(b.totalAmount||0),0)
-      return json({ date: day, count: items.length, total, items: items.map(sanitize) })
-    }
-    if (route === '/reports/monthly' && method === 'GET') {
-      const ym = url.searchParams.get('ym') || new Date().toISOString().slice(0,7)
-      const [y,m] = ym.split('-').map(Number)
-      const start = new Date(y, m-1, 1); const end = new Date(y, m, 0, 23, 59, 59)
-      const items = await db.collection('bookings').find({ createdAt: { $gte: start, $lte: end } }).toArray()
-      const total = items.reduce((a,b)=>a+Number(b.totalAmount||0),0)
-      return json({ ym, count: items.length, total, items: items.map(sanitize) })
-    }
-    if (route === '/reports/outstanding' && method === 'GET') {
-      const items = await db.collection('bookings').find({ paymentStatus: { $ne: 'PAID' } }).toArray()
-      const total = items.reduce((a,b)=>a+Number(b.totalAmount||0),0)
-      return json({ count: items.length, total, items: items.map(sanitize) })
-    }
-    if (route === '/reports/branch' && method === 'GET') {
-      const agg = await db.collection('bookings').aggregate([{ $group: { _id: '$branchCode', count: { $sum: 1 }, total: { $sum: '$totalAmount' }, delivered: { $sum: { $cond: [{ $eq: ['$status','DELIVERED'] }, 1, 0] } } } }, { $sort: { total: -1 } }]).toArray()
-      return json({ items: agg })
-    }
-    if (route === '/reports/customer' && method === 'GET') {
-      const agg = await db.collection('bookings').aggregate([{ $group: { _id: { name: '$sender.name', phone: '$sender.phone' }, count: { $sum: 1 }, total: { $sum: '$totalAmount' } } }, { $sort: { total: -1 } }, { $limit: 100 }]).toArray()
-      return json({ items: agg.map(x => ({ name: x._id.name, phone: x._id.phone, count: x.count, total: x.total })) })
-    }
-
-    // -------- ACTIVITY & NOTIFICATIONS ---------
-    if (route === '/activity' && method === 'GET') {
-      const items = await db.collection('activity').find({}).sort({ at: -1 }).limit(200).toArray()
-      return json({ items: items.map(sanitize) })
-    }
-    if (route === '/notifications' && method === 'GET') {
-      const items = await db.collection('notifications').find({}).sort({ createdAt: -1 }).limit(200).toArray()
-      return json({ items: items.map(sanitize) })
-    }
-
-    // -------- ENQUIRIES ---------
-    if (route === '/enquiries' && method === 'POST') { const body = await request.json(); await db.collection('enquiries').insertOne({ id: uuidv4(), ...body, createdAt: new Date() }); return json({ ok: true }) }
-    if (route === '/enquiries' && method === 'GET') { const items = await db.collection('enquiries').find({}).sort({ createdAt: -1 }).toArray(); return json({ items: items.map(sanitize) }) }
-
-    // -------- CUSTOMER (public) ---------
-    if (route === '/customer/bookings' && method === 'GET') {
-      const phone = url.searchParams.get('phone'); if (!phone) return json({ items: [] })
-      const items = await db.collection('bookings').find({ $or: [{ 'sender.phone': phone }, { 'receiver.phone': phone }] }).sort({ createdAt: -1 }).toArray()
-      return json({ items: items.map(sanitize) })
-    }
-
-    return json({ ok: false, error: 'Route not found', route, method }, 404)
-  } catch (e) {
-    console.error('API error', e)
-    return json({ ok: false, error: e.message || 'Server error' }, 500)
+    return json({ ok: false, error: 'Route not found' }, 404)
+  } catch (err) {
+    console.error('API Error:', err)
+    return json({ ok: false, error: err.message || 'Server error' }, 500)
   }
 }
 
-export const GET = handle
-export const POST = handle
-export const PUT = handle
-export const DELETE = handle
-export const PATCH = handle
+export { handle as GET, handle as POST, handle as PUT, handle as DELETE, handle as PATCH }
