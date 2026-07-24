@@ -224,15 +224,68 @@ function StatusUpdater({ booking, onClose, onSaved }) {
 
 function NewBooking({ onCreated }) {
   const [f, setF] = useState({ date: new Date().toISOString().slice(0,10), senderName:'', senderPhone:'', senderGst:'', pickupAddress:'', origin:'Guwahati', receiverName:'', receiverPhone:'', receiverGst:'', deliveryAddress:'', destination:'', invoiceNumber:'', eWayBill:'', remarks:'', packages:1, actualWeight:0, volumetricWeight:0, chargeableWeight:0, freightRate:18, biltyCharge:100, doorDeliveryCharge:0, insurance:0, loadingUnloading:0, hamali:0, otherCharges:0, paymentStatus:'PENDING', paymentMode:'CASH', eta:'', branchCode:'HO' })
-  const set = (k,v)=>setF(x=>({...x,[k]:v})); const [busy, setBusy] = useState(false)
+  const set = (k,v)=>setF(x=>({...x,[k]:v}));
+
+const [customerList, setCustomerList] = useState([]);
+
+const [busy, setBusy] = useState(false);
   const weight = Number(f.chargeableWeight || f.actualWeight || 0)
   const freight = weight * Number(f.freightRate || 0)
   const subtotal = freight + Number(f.biltyCharge||0) + Number(f.doorDeliveryCharge||0) + Number(f.insurance||0) + Number(f.loadingUnloading||0) + Number(f.hamali||0) + Number(f.otherCharges||0)
   const gst = Math.round(subtotal * 0.18); const total = subtotal + gst
+  const searchCustomer = async (q) => {
+  if (!q) {
+    setCustomerList([]);
+    return;
+  }
+
+  try {
+    const r = await fetch(`/api/customers?q=${encodeURIComponent(q)}`);
+    const d = await r.json();
+
+    setCustomerList(d.items || []);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const fillSender = (c) => {
+  set("senderName", c.name || "");
+  set("senderPhone", c.phone || "");
+  set("senderGst", c.gst || "");
+  set("pickupAddress", c.address || "");
+  setCustomerList([]);
+};
   const submit = async (e) => { e.preventDefault(); setBusy(true); try { const r = await fetch('/api/bookings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ...f, totalAmount: total })}); const d = await r.json(); if (d.ok) { toast.success(`Booking created — ${d.booking.lrNumber}`); onCreated() } else toast.error(d.error || 'Failed') } catch { toast.error('Network error') } setBusy(false) }
   return (<form onSubmit={submit} className="space-y-6">
     <Section title="Consignment"><Field label="Booking Date"><Input type="date" value={f.date} onChange={e=>set('date',e.target.value)}/></Field><Field label="Invoice Number"><Input value={f.invoiceNumber} onChange={e=>set('invoiceNumber',e.target.value)}/></Field><Field label="E-Way Bill No."><Input value={f.eWayBill} onChange={e=>set('eWayBill',e.target.value)}/></Field><Field label="Origin City"><Input value={f.origin} onChange={e=>set('origin',e.target.value)}/></Field><Field label="Destination City"><Input value={f.destination} onChange={e=>set('destination',e.target.value)}/></Field><Field label="Remarks" wide><Input value={f.remarks} onChange={e=>set('remarks',e.target.value)} placeholder="Any special instructions"/></Field></Section>
-    <Section title="Sender"><Field label="Name"><Input value={f.senderName} onChange={e=>set('senderName',e.target.value)} required/></Field><Field label="Phone"><Input value={f.senderPhone} onChange={e=>set('senderPhone',e.target.value)}/></Field><Field label="GST"><Input value={f.senderGst} onChange={e=>set('senderGst',e.target.value)}/></Field><Field label="Pickup Address" wide><Input value={f.pickupAddress} onChange={e=>set('pickupAddress',e.target.value)}/></Field></Section>
+    <Field label="Name">
+  <div className="relative">
+    <Input
+      value={f.senderName}
+      onChange={(e) => {
+        set("senderName", e.target.value);
+        searchCustomer(e.target.value);
+      }}
+      required
+    />
+
+    {customerList.length > 0 && (
+      <div className="absolute z-50 w-full bg-white border rounded shadow max-h-48 overflow-auto">
+        {customerList.map((c) => (
+          <div
+            key={c.id}
+            className="p-2 cursor-pointer hover:bg-gray-100"
+            onClick={() => fillSender(c)}
+          >
+            <div className="font-semibold">{c.name}</div>
+            <div className="text-xs text-gray-500">{c.phone}</div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</Field>
     <Section title="Receiver"><Field label="Name"><Input value={f.receiverName} onChange={e=>set('receiverName',e.target.value)} required/></Field><Field label="Phone"><Input value={f.receiverPhone} onChange={e=>set('receiverPhone',e.target.value)}/></Field><Field label="GST"><Input value={f.receiverGst} onChange={e=>set('receiverGst',e.target.value)}/></Field><Field label="Delivery Address" wide><Input value={f.deliveryAddress} onChange={e=>set('deliveryAddress',e.target.value)}/></Field></Section>
     <Section title="Packages & Weight"><Field label="Packages"><Input type="number" value={f.packages} onChange={e=>set('packages',e.target.value)}/></Field><Field label="Actual Wt (kg)"><Input type="number" value={f.actualWeight} onChange={e=>set('actualWeight',e.target.value)}/></Field><Field label="Volumetric Wt (kg)"><Input type="number" value={f.volumetricWeight} onChange={e=>set('volumetricWeight',e.target.value)}/></Field><Field label="Chargeable Wt (kg)"><Input type="number" value={f.chargeableWeight} onChange={e=>set('chargeableWeight',e.target.value)}/></Field></Section>
     <Section title="Charges"><Field label="Freight Rate (₹/kg)"><Input type="number" value={f.freightRate} onChange={e=>set('freightRate',e.target.value)}/></Field><Field label="Bilty Charge"><Input type="number" value={f.biltyCharge} onChange={e=>set('biltyCharge',e.target.value)}/></Field><Field label="Door Delivery"><Input type="number" value={f.doorDeliveryCharge} onChange={e=>set('doorDeliveryCharge',e.target.value)}/></Field><Field label="Insurance"><Input type="number" value={f.insurance} onChange={e=>set('insurance',e.target.value)}/></Field><Field label="Hamali (Labor)"><Input type="number" value={f.hamali} onChange={e=>set('hamali',e.target.value)}/></Field><Field label="Load/Unload"><Input type="number" value={f.loadingUnloading} onChange={e=>set('loadingUnloading',e.target.value)}/></Field><Field label="Other Charges"><Input type="number" value={f.otherCharges} onChange={e=>set('otherCharges',e.target.value)}/></Field></Section>
