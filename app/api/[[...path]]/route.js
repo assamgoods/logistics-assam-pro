@@ -307,10 +307,13 @@ async function handle(request, ctx) {
       const resetToken = uuidv4()
       const expiresAt = new Date(Date.now() + 15*60*1000) // 15 min
       const doc = { id: uuidv4(), email, otpHash, resetToken, userId: user?.id || 'admin-root', role: user?.role || (isAdmin ? 'admin' : 'user'), used: false, expiresAt, createdAt: new Date() }
-      await db.collection('otp_tokens').insertOne(doc)
+      await db.colnpmlection('otp_tokens').insertOne(doc)
       // Send email via SMTP if configured; else log to activity for admin retrieval
       const smtp = settings?.smtp || {}
-      let mailed = false
+
+console.log("SMTP SETTINGS:", smtp)
+
+let mailed = false
       if (smtp.host && smtp.user && smtp.pass) {
         try {
           const nodemailer = (await import('nodemailer')).default
