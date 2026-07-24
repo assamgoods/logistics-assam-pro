@@ -317,7 +317,17 @@ let mailed = false
       if (smtp.host && smtp.user && smtp.pass) {
         try {
           const nodemailer = (await import('nodemailer')).default
-          const transporter = nodemailer.createTransport({ host: smtp.host, port: Number(smtp.port||587), secure: !!smtp.secure, auth: { user: smtp.user, pass: smtp.pass } })
+         const transporter = nodemailer.createTransport({
+  host: smtp.host,
+  port: Number(smtp.port || 587),
+  secure: false,
+  auth: {
+    user: smtp.user,
+    pass: smtp.pass
+  }
+})
+await transporter.verify();
+console.log("SMTP connection successful");
           const from = smtp.from || `${settings.companyName || 'Assam Goods Carrier'} <${smtp.user}>`
           const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/reset-password?token=${resetToken}`
           await transporter.sendMail({
@@ -335,7 +345,14 @@ let mailed = false
             </div>`,
           })
           mailed = true
-        } catch (e) { console.error('SMTP send failed', e) }
+        } catch (e) {
+  console.error("SMTP send failed:", e);
+  return json({
+    ok: false,
+    error: e.message,
+    stack: process.env.NODE_ENV !== "production" ? e.stack : undefined
+  }, 500);
+}
       }
       await logActivity(db, { actor: user?.id || 'system', role: user?.role || 'anon', action: 'PASSWORD_RESET_REQUESTED', target: email, meta: { mailed, mock_otp: mailed ? undefined : otp } })
       return json({ ok:true, message: mailed ? 'OTP sent to your email.' : 'OTP generated (SMTP not configured — check Activity Log for OTP).', mailed })
