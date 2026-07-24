@@ -330,8 +330,8 @@ async function handle(request, ctx) {
               <p style="color:#9CA3AF;font-size:11px;margin-top:24px">If you did not request this, please ignore this email.</p>
             </div>`,
         })
-        mailed = true
-     catch (e) {
+mailed = true
+} catch (e) {
   console.error("Resend send failed:", e);
 }
 
