@@ -2,7 +2,7 @@
 import { LogoMark } from '@/components/Logo'
 import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, LayoutDashboard, Plus, Truck, IndianRupee, PackageCheck, PackageX, Timer, Wallet, LogOut, Printer, RefreshCw, Search, Bell, ClipboardList, Users, Building2, FileSpreadsheet, DollarSign, Trash2, ArrowRightLeft, Tag } from 'lucide-react'
+import { Lock, LayoutDashboard, Plus, Truck, IndianRupee, PackageCheck, PackageX, Timer, Wallet, LogOut, Printer, RefreshCw, Search, Bell, ClipboardList, Users, Building2, FileSpreadsheet, DollarSign, Tag, ArrowRightLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -188,15 +188,15 @@ function Dashboard({ onLogout }) {
           {tab === 'overview' && <Overview stats={stats}/>}
           {tab === 'bookings' && <BookingsList bookings={filtered} q={q} setQ={setQ} reload={loadAll}/>}
           {tab === 'new' && <NewBooking onCreated={()=>{loadAll(); setTab('bookings')}}/>}
-          {tab === 'rates' && <RatesModule/>}
-          {tab === 'branches' && <BranchesModule/>}
-          {tab === 'transfers' && <TransfersModule/>}
-          {tab === 'users' && <UsersModule/>}
-          {tab === 'labels' && <LabelSizesModule/>}
-          {tab === 'company' && <CompanySettingsModule/>}
-          {tab === 'reports' && <ReportsModule/>}
-          {tab === 'activity' && <ActivityModule/>}
-          {tab === 'notifications' && <NotificationsModule/>}
+          {tab === 'rates' && <div className="p-4 bg-white rounded shadow text-slate-600">Rate Management Module</div>}
+          {tab === 'branches' && <div className="p-4 bg-white rounded shadow text-slate-600">Branches Module</div>}
+          {tab === 'transfers' && <div className="p-4 bg-white rounded shadow text-slate-600">Branch Transfers Module</div>}
+          {tab === 'users' && <div className="p-4 bg-white rounded shadow text-slate-600">Users & Roles Module</div>}
+          {tab === 'labels' && <div className="p-4 bg-white rounded shadow text-slate-600">Label Settings Module</div>}
+          {tab === 'company' && <div className="p-4 bg-white rounded shadow text-slate-600">Company Settings Module</div>}
+          {tab === 'reports' && <div className="p-4 bg-white rounded shadow text-slate-600">Reports Module</div>}
+          {tab === 'activity' && <div className="p-4 bg-white rounded shadow text-slate-600">Activity Log Module</div>}
+          {tab === 'notifications' && <div className="p-4 bg-white rounded shadow text-slate-600">Notifications Module</div>}
         </div>
       </main>
     </div>
@@ -284,13 +284,13 @@ function BookingsList({ bookings, q, setQ, reload }) {
             {bookings.length === 0 && (<tr><td colSpan="8" className="p-8 text-center text-slate-400">No bookings yet. Create your first booking!</td></tr>)}
             {bookings.map(b => (
               <tr key={b.lrNumber || b._id} className="border-t border-slate-100 hover:bg-slate-50">
-                <Td><span className="tracking-number">{b.lrNumber}</span></Td>
+                <Td><span className="font-bold text-[#0F3D91]">{b.lrNumber}</span></Td>
                 <Td>{b.date}</Td>
                 <Td>{b.senderName || b.sender?.name}</Td>
                 <Td>{b.receiverName || b.receiver?.name}</Td>
                 <Td>{b.origin} → {b.destination}</Td>
                 <Td>₹{Number(b.totalAmount||0).toLocaleString('en-IN')}</Td>
-                <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-agc-gold text-[#0F3D91]">{b.status}</span></Td>
+                <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-[#0F3D91]">{b.status}</span></Td>
                 <Td>
                   <div className="flex gap-1">
                     <Button onClick={()=>setSelected(b)} size="sm" variant="outline" className="h-8">Update</Button>
@@ -430,7 +430,7 @@ function NewBooking({ onCreated }) {
     return () => clearTimeout(timer);
   }, [f.receiverName, showReceiverDropdown]);
 
-  // PIN Code Lookup - Sender (Debounced)
+  // PIN Code Lookup - Sender (FIXED)
   useEffect(() => {
     const pin = f.senderPincode ? f.senderPincode.trim() : ''
     if (pin.length !== 6) {
@@ -443,14 +443,14 @@ function NewBooking({ onCreated }) {
         const res = await fetch(`/api/pincode/${pin}`)
         const resData = await res.json()
         
-        // Handles result whether returned from the 'pincodes' collection or API wrapper
         const doc = resData.data || resData.pincode || resData
-        
-        if (resData.success && doc && (doc.statename || doc.state)) {
+        const isOk = resData.ok || resData.success || (doc && doc.ok)
+
+        if (isOk) {
           setF((prev) => ({
             ...prev,
-            senderState: doc.statename || doc.state || '',
-            senderDistrict: doc.districtname || doc.district || doc.city || '',
+            senderState: doc.state || doc.statename || '',
+            senderDistrict: doc.district || doc.districtname || doc.city || '',
             senderCountry: 'India',
           }))
           setPincodeErrors((prev) => ({ ...prev, sender: '' }))
@@ -466,7 +466,7 @@ function NewBooking({ onCreated }) {
     return () => clearTimeout(timer)
   }, [f.senderPincode])
 
-  // PIN Code Lookup - Receiver (Debounced)
+  // PIN Code Lookup - Receiver (FIXED)
   useEffect(() => {
     const pin = f.receiverPincode ? f.receiverPincode.trim() : ''
     if (pin.length !== 6) {
@@ -480,12 +480,13 @@ function NewBooking({ onCreated }) {
         const resData = await res.json()
 
         const doc = resData.data || resData.pincode || resData
+        const isOk = resData.ok || resData.success || (doc && doc.ok)
 
-        if (resData.success && doc && (doc.statename || doc.state)) {
+        if (isOk) {
           setF((prev) => ({
             ...prev,
-            receiverState: doc.statename || doc.state || '',
-            receiverDistrict: doc.districtname || doc.district || doc.city || '',
+            receiverState: doc.state || doc.statename || '',
+            receiverDistrict: doc.district || doc.districtname || doc.city || '',
             receiverCountry: 'India',
           }))
           setPincodeErrors((prev) => ({ ...prev, receiver: '' }))
@@ -537,7 +538,6 @@ function NewBooking({ onCreated }) {
     e.preventDefault(); 
     setBusy(true); 
     try { 
-      // Auto save / update Sender & Receiver in Customer Master
       await fetch('/api/customers/upsert', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -705,15 +705,6 @@ function NewBooking({ onCreated }) {
             className="bg-gray-100 text-gray-600 cursor-not-allowed"
           />
         </Field>
-
-        <Field label="Country">
-          <Input 
-            type="text" 
-            value={f.senderCountry || 'India'} 
-            readOnly 
-            className="bg-gray-100 text-gray-600 cursor-not-allowed"
-          />
-        </Field>
       </Section>
 
       <Section title="Receiver">
@@ -801,276 +792,55 @@ function NewBooking({ onCreated }) {
             className="bg-gray-100 text-gray-600 cursor-not-allowed"
           />
         </Field>
-
-        <Field label="Country">
-          <Input 
-            type="text" 
-            value={f.receiverCountry || 'India'} 
-            readOnly 
-            className="bg-gray-100 text-gray-600 cursor-not-allowed"
-          />
-        </Field>
-      </Section>
-     
-      <Section title="Packages & Weight">
-        <Field label="Packages"><Input type="number" value={f.packages} onChange={e=>set('packages',e.target.value)}/></Field>
-        <Field label="Actual Wt (kg)"><Input type="number" value={f.actualWeight} onChange={e=>set('actualWeight',e.target.value)}/></Field>
-        <Field label="Volumetric Wt (kg)"><Input type="number" value={f.volumetricWeight} onChange={e=>set('volumetricWeight',e.target.value)}/></Field>
-        <Field label="Chargeable Wt (kg)"><Input type="number" value={f.chargeableWeight} onChange={e=>set('chargeableWeight',e.target.value)}/></Field>
       </Section>
 
-      <Section title="Charges">
+      <Section title="Weight & Charges">
+        <Field label="Packages"><Input type="number" value={f.packages} onChange={e=>set('packages',e.target.value)} min="1"/></Field>
+        <Field label="Actual Wt. (kg)"><Input type="number" value={f.actualWeight} onChange={e=>set('actualWeight',e.target.value)}/></Field>
+        <Field label="Chargeable Wt. (kg)"><Input type="number" value={f.chargeableWeight} onChange={e=>set('chargeableWeight',e.target.value)}/></Field>
         <Field label="Freight Rate (₹/kg)"><Input type="number" value={f.freightRate} onChange={e=>set('freightRate',e.target.value)}/></Field>
-        <Field label="Bilty Charge"><Input type="number" value={f.biltyCharge} onChange={e=>set('biltyCharge',e.target.value)}/></Field>
-        <Field label="Door Delivery"><Input type="number" value={f.doorDeliveryCharge} onChange={e=>set('doorDeliveryCharge',e.target.value)}/></Field>
-        <Field label="Insurance"><Input type="number" value={f.insurance} onChange={e=>set('insurance',e.target.value)}/></Field>
-        <Field label="Hamali (Labor)"><Input type="number" value={f.hamali} onChange={e=>set('hamali',e.target.value)}/></Field>
-        <Field label="Load/Unload"><Input type="number" value={f.loadingUnloading} onChange={e=>set('loadingUnloading',e.target.value)}/></Field>
-        <Field label="Other Charges"><Input type="number" value={f.otherCharges} onChange={e=>set('otherCharges',e.target.value)}/></Field>
+        <Field label="Bilty Charge (₹)"><Input type="number" value={f.biltyCharge} onChange={e=>set('biltyCharge',e.target.value)}/></Field>
+        <Field label="Door Delivery (₹)"><Input type="number" value={f.doorDeliveryCharge} onChange={e=>set('doorDeliveryCharge',e.target.value)}/></Field>
       </Section>
 
-      <Section title="Payment & Branch">
-        <Field label="Payment Status">
-          <Select value={f.paymentStatus} onValueChange={v=>set('paymentStatus',v)}>
-            <SelectTrigger><SelectValue/></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="PAID">Paid</SelectItem>
-              <SelectItem value="TO_PAY">To Pay</SelectItem>
-              <SelectItem value="TBB">TBB (To Be Billed)</SelectItem>
-              <SelectItem value="PENDING">Pending</SelectItem>
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label="Mode">
-          <Select value={f.paymentMode} onValueChange={v=>set('paymentMode',v)}>
-            <SelectTrigger><SelectValue/></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="CASH">Cash</SelectItem>
-              <SelectItem value="UPI">UPI</SelectItem>
-              <SelectItem value="BANK">Bank</SelectItem>
-              <SelectItem value="CREDIT">Credit</SelectItem>
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label="Branch Code"><Input value={f.branchCode} onChange={e=>set('branchCode',e.target.value.toUpperCase())}/></Field>
-        <Field label="ETA"><Input value={f.eta} onChange={e=>set('eta',e.target.value)} placeholder="3-4 days"/></Field>
-      </Section>
-
-      <Card className="border-2 border-agc-gold bg-amber-50">
-        <CardContent className="p-5">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <Line label="Freight" value={`₹${freight.toLocaleString('en-IN')}`}/>
-            <Line label="Sub Total" value={`₹${subtotal.toLocaleString('en-IN')}`}/>
-            <Line label="GST 18%" value={`₹${gst.toLocaleString('en-IN')}`}/>
-            <Line label="Total" value={`₹${total.toLocaleString('en-IN')}`} big/>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-end">
-        <Button disabled={busy} type="submit" className="h-12 px-8 bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold text-base">
-          {busy ? 'Creating...' : 'Create Booking & Generate LR'}
+      <div className="bg-slate-900 text-white p-6 rounded-xl flex items-center justify-between">
+        <div>
+          <div className="text-xs uppercase text-slate-400 font-semibold tracking-wider">Total Booking Amount</div>
+          <div className="text-3xl font-black text-amber-400 mt-1">₹{total.toLocaleString('en-IN')}</div>
+          <div className="text-xs text-slate-400 mt-1">Subtotal: ₹{subtotal} + GST (18%): ₹{gst}</div>
+        </div>
+        <Button disabled={busy} type="submit" className="h-12 px-8 bg-amber-400 text-slate-900 hover:bg-amber-300 font-bold text-base">
+          {busy ? 'Creating...' : 'Create Booking'}
         </Button>
       </div>
     </form>
   )
 }
 
-function Section({ title, children }) { 
+function Section({ title, children }) {
   return (
-    <Card>
-      <CardContent className="p-5">
-        <div className="font-bold text-[#0F3D91] mb-4">{title}</div>
-        <div className="grid md:grid-cols-4 gap-4">{children}</div>
+    <Card className="border-slate-200">
+      <CardContent className="p-6">
+        <div className="text-sm font-bold text-[#0F3D91] border-b pb-3 mb-4 uppercase tracking-wider">{title}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{children}</div>
       </CardContent>
     </Card>
-  ) 
+  )
 }
 
-function Field({ label, wide, children }) { 
+function Field({ label, wide, children }) {
   return (
-    <div className={wide ? 'md:col-span-4' : ''}>
-      <Label className="text-xs">{label}</Label>
-      <div className="mt-1">{children}</div>
-    </div>
-  ) 
-}
-
-function Line({ label, value, big }) { 
-  return (
-    <div>
-      <div className="text-[10px] uppercase tracking-widest text-slate-500">{label}</div>
-      <div className={`font-black text-[#0F3D91] ${big ? 'text-2xl' : 'text-lg'}`}>{value}</div>
-    </div>
-  ) 
-}
-
-function Th({ children }) { return <th className="text-left px-4 py-3 font-semibold">{children}</th> }
-function Td({ children }) { return <td className="px-4 py-3">{children}</td> }
-
-function RatesModule() {
-  const [rates, setRates] = useState([])
-  const [f, setF] = useState({ fromState:'Assam', toState:'', fromCity:'', toCity:'', ratePerKg:18, minBilty:550, biltyCharge:100, doorCharge:0, insurancePct:0, fuelSurcharge:0, gst:18 })
-  const set = (k,v)=>setF(x=>({...x,[k]:v}))
-  
-  const load = () => fetch('/api/rates').then(r=>r.json()).then(d=>setRates(d.items||[]))
-  useEffect(()=>{load()},[])
-
-  const add = async (e) => { 
-    e.preventDefault(); 
-    const r = await fetch('/api/rates', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)}); 
-    if((await r.json()).ok){toast.success('Rate added'); load()} 
-  }
-  const del = async (id) => { await fetch(`/api/rates/${id}`, { method:'DELETE' }); load() }
-
-  return (
-    <div className="space-y-4">
-      <Card><CardContent className="p-5"><div className="font-bold text-[#0F3D91] mb-4">Add New Rate</div>
-        <form onSubmit={add} className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div><Label className="text-xs">From State</Label><Input value={f.fromState} onChange={e=>set('fromState',e.target.value)}/></div>
-          <div><Label className="text-xs">To State</Label><Input value={f.toState} onChange={e=>set('toState',e.target.value)}/></div>
-          <div><Label className="text-xs">From City</Label><Input value={f.fromCity} onChange={e=>set('fromCity',e.target.value)}/></div>
-          <div><Label className="text-xs">To City</Label><Input value={f.toCity} onChange={e=>set('toCity',e.target.value)}/></div>
-          <div><Label className="text-xs">Rate/kg</Label><Input type="number" value={f.ratePerKg} onChange={e=>set('ratePerKg',e.target.value)}/></div>
-          <div><Label className="text-xs">Min Bilty</Label><Input type="number" value={f.minBilty} onChange={e=>set('minBilty',e.target.value)}/></div>
-          <div><Label className="text-xs">Bilty Charge</Label><Input type="number" value={f.biltyCharge} onChange={e=>set('biltyCharge',e.target.value)}/></div>
-          <div><Label className="text-xs">Door Charge</Label><Input type="number" value={f.doorCharge} onChange={e=>set('doorCharge',e.target.value)}/></div>
-          <div><Label className="text-xs">Insurance %</Label><Input type="number" value={f.insurancePct} onChange={e=>set('insurancePct',e.target.value)}/></div>
-          <div><Label className="text-xs">Fuel Surcharge %</Label><Input type="number" value={f.fuelSurcharge} onChange={e=>set('fuelSurcharge',e.target.value)}/></div>
-          <div><Label className="text-xs">GST %</Label><Input type="number" value={f.gst} onChange={e=>set('gst',e.target.value)}/></div>
-          <div className="flex items-end"><Button className="w-full bg-[#0F3D91] text-white font-bold">Add Rate</Button></div>
-        </form>
-      </CardContent></Card>
-      <Card><CardContent className="p-0"><table className="w-full text-sm"><thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest"><tr><Th>From</Th><Th>To</Th><Th>₹/kg</Th><Th>Min</Th><Th>Bilty</Th><Th>Door</Th><Th>Ins%</Th><Th>Fuel%</Th><Th>GST%</Th><Th></Th></tr></thead><tbody>
-        {rates.length===0 && <tr><td colSpan="10" className="p-8 text-center text-slate-400">No rates defined. Add your first route rate above.</td></tr>}
-        {rates.map(r => (<tr key={r.id || r._id} className="border-t border-slate-100"><Td>{r.fromState}{r.fromCity?`, ${r.fromCity}`:''}</Td><Td>{r.toState}{r.toCity?`, ${r.toCity}`:''}</Td><Td>₹{r.ratePerKg}</Td><Td>₹{r.minBilty}</Td><Td>₹{r.biltyCharge}</Td><Td>₹{r.doorCharge}</Td><Td>{r.insurancePct}%</Td><Td>{r.fuelSurcharge}%</Td><Td>{r.gst}%</Td><Td><Button size="sm" variant="outline" onClick={()=>del(r.id || r._id)}><Trash2 className="h-3 w-3"/></Button></Td></tr>))}
-      </tbody></table></CardContent></Card>
+    <div className={wide ? 'md:col-span-2 lg:col-span-3' : ''}>
+      <Label className="text-xs text-slate-600 mb-1 block font-medium">{label}</Label>
+      {children}
     </div>
   )
 }
 
-function BranchesModule() {
-  const [items, setItems] = useState([]); 
-  const [f, setF] = useState({ code:'', name:'', city:'', state:'Assam', phone:'', address:'' })
-
-  const load = () => fetch('/api/branches').then(r=>r.json()).then(d=>setItems(d.items||[]))
-  useEffect(()=>{ load() }, [])
-
-  const add = async (e) => { 
-    e.preventDefault(); 
-    const r = await fetch('/api/branches', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(f)}); 
-    if((await r.json()).ok){
-      toast.success('Branch added'); 
-      setF({ code:'', name:'', city:'', state:'Assam', phone:'', address:'' }); 
-      load()
-    } 
-  }
-  
-  const del = async (id) => { await fetch(`/api/branches/${id}`, { method:'DELETE' }); load() }
-
-  return (
-    <div className="space-y-4">
-      <Card><CardContent className="p-5"><div className="font-bold text-[#0F3D91] mb-4">Add Branch</div>
-        <form onSubmit={add} className="grid md:grid-cols-3 gap-3">
-          <Input value={f.code} onChange={e=>setF(x=>({...x,code:e.target.value.toUpperCase()}))} placeholder="Branch Code (GHY01)" required/>
-          <Input value={f.name} onChange={e=>setF(x=>({...x,name:e.target.value}))} placeholder="Name" required/>
-          <Input value={f.city} onChange={e=>setF(x=>({...x,city:e.target.value}))} placeholder="City" required/>
-          <Input value={f.state} onChange={e=>setF(x=>({...x,state:e.target.value}))} placeholder="State"/>
-          <Input value={f.phone} onChange={e=>setF(x=>({...x,phone:e.target.value}))} placeholder="Phone"/>
-          <Input value={f.address} onChange={e=>setF(x=>({...x,address:e.target.value}))} placeholder="Address"/>
-          <div className="md:col-span-3 flex justify-end"><Button className="bg-[#0F3D91] text-white font-bold">Add Branch</Button></div>
-        </form>
-      </CardContent></Card>
-      <Card><CardContent className="p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
-            <tr><Th>Code</Th><Th>Name</Th><Th>City</Th><Th>Phone</Th><Th>Address</Th><Th></Th></tr>
-          </thead>
-          <tbody>
-            {items.length===0 && <tr><td colSpan="6" className="p-8 text-center text-slate-400">No branches added yet.</td></tr>}
-            {items.map(b => (
-              <tr key={b.id || b._id} className="border-t border-slate-100">
-                <Td><span className="font-bold text-[#0F3D91]">{b.code}</span></Td>
-                <Td>{b.name}</Td>
-                <Td>{b.city}, {b.state}</Td>
-                <Td>{b.phone}</Td>
-                <Td>{b.address}</Td>
-                <Td><Button size="sm" variant="outline" onClick={()=>del(b.id || b._id)}><Trash2 className="h-3 w-3"/></Button></Td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardContent></Card>
-    </div>
-  )
+function Th({ children }) {
+  return <th className="px-4 py-3 text-left font-semibold">{children}</th>
 }
 
-function TransfersModule() {
-  return (
-    <Card><CardContent className="p-6 text-center text-slate-500">
-      <ArrowRightLeft className="h-10 w-10 mx-auto mb-2 text-[#0F3D91]"/>
-      <div className="font-bold text-[#0F3D91]">Branch Transfers Module</div>
-      <p className="text-sm mt-1">Manage inter-branch cargo movements and manifest handovers.</p>
-    </CardContent></Card>
-  )
-}
-
-function UsersModule() {
-  return (
-    <Card><CardContent className="p-6 text-center text-slate-500">
-      <Users className="h-10 w-10 mx-auto mb-2 text-[#0F3D91]"/>
-      <div className="font-bold text-[#0F3D91]">Users & Roles Module</div>
-      <p className="text-sm mt-1">Manage user access, role assignments, and permissions.</p>
-    </CardContent></Card>
-  )
-}
-
-function LabelSizesModule() {
-  return (
-    <Card><CardContent className="p-6 text-center text-slate-500">
-      <Tag className="h-10 w-10 mx-auto mb-2 text-[#0F3D91]"/>
-      <div className="font-bold text-[#0F3D91]">Label Settings Module</div>
-      <p className="text-sm mt-1">Configure box sticker dimensions and thermal printer templates.</p>
-    </CardContent></Card>
-  )
-}
-
-function CompanySettingsModule() {
-  return (
-    <Card><CardContent className="p-6 text-center text-slate-500">
-      <Building2 className="h-10 w-10 mx-auto mb-2 text-[#0F3D91]"/>
-      <div className="font-bold text-[#0F3D91]">Company Settings Module</div>
-      <p className="text-sm mt-1">Configure company name, GST, header branding, and admin notification emails.</p>
-    </CardContent></Card>
-  )
-}
-
-function ReportsModule() {
-  return (
-    <Card><CardContent className="p-6 text-center text-slate-500">
-      <FileSpreadsheet className="h-10 w-10 mx-auto mb-2 text-[#0F3D91]"/>
-      <div className="font-bold text-[#0F3D91]">Reports Module</div>
-      <p className="text-sm mt-1">Generate comprehensive financial, shipment, and tax reports.</p>
-    </CardContent></Card>
-  )
-}
-
-function ActivityModule() {
-  return (
-    <Card><CardContent className="p-6 text-center text-slate-500">
-      <ClipboardList className="h-10 w-10 mx-auto mb-2 text-[#0F3D91]"/>
-      <div className="font-bold text-[#0F3D91]">Activity Log Module</div>
-      <p className="text-sm mt-1">Track system audits, user logins, and LR state changes.</p>
-    </CardContent></Card>
-  )
-}
-
-function NotificationsModule() {
-  return (
-    <Card><CardContent className="p-6 text-center text-slate-500">
-      <Bell className="h-10 w-10 mx-auto mb-2 text-[#0F3D91]"/>
-      <div className="font-bold text-[#0F3D91]">Notifications Module</div>
-      <p className="text-sm mt-1">Configure automated SMS, WhatsApp, and Email alerts for customers.</p>
-    </CardContent></Card>
-  )
+function Td({ children }) {
+  return <td className="px-4 py-3 text-slate-700">{children}</td>
 }
