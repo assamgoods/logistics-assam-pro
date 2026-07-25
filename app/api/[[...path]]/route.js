@@ -75,7 +75,6 @@ async function handle(request, ctx) {
     let officeName = ''
     let found = false
 
-    // Try 1: MongoDB Database Lookup
     try {
       const db = await getDb()
       const numericCode = Number(code)
@@ -99,7 +98,6 @@ async function handle(request, ctx) {
       console.error("Pincode DB fetch failed, falling back to API:", dbErr)
     }
 
-    // Try 2: Postal API Fallback
     if (!found) {
       try {
         const postRes = await fetch(`https://api.postalpincode.in/pincode/${code}`)
@@ -219,15 +217,16 @@ async function handle(request, ctx) {
       return json({ totalBookings: total, todaysBookings: today, deliveredShipments: delivered, inTransitShipments: inTransit, pendingDeliveries: pending, cancelledShipments: cancelled, totalRevenue: revenueAgg[0]?.total || 0, outstandingPayments: outstandingAgg[0]?.total || 0 })
     }
 
-    // -------- CUSTOMERS SEARCH --------
+    // -------- CUSTOMERS SEARCH & AUTOFILL ---------
     if (route === '/customers' && method === 'GET') {
-      const q = (url.searchParams.get('q') || '').trim()
+      const q = (url.searchParams.get('q') || url.searchParams.get('phone') || '').trim()
 
-      if (!q) return json({ items: [] })
+      if (!q) return json({ items: [], customer: null })
 
       const items = await db.collection('customers')
         .find({
           $or: [
+            { phone: q },
             { name: { $regex: q, $options: 'i' } },
             { phone: { $regex: q, $options: 'i' } }
           ]
@@ -235,7 +234,13 @@ async function handle(request, ctx) {
         .limit(10)
         .toArray()
 
-      return json({ items: items.map(sanitize) })
+      const exactCustomer = items.find(c => c.phone === q) || items[0] || null
+
+      return json({ 
+        ok: true,
+        items: items.map(sanitize), 
+        customer: exactCustomer ? sanitize(exactCustomer) : null 
+      })
     }
 
     // -------- BOOKINGS ---------
@@ -274,24 +279,38 @@ async function handle(request, ctx) {
       }
       await db.collection('bookings').insertOne(doc)
 
-      // Sender Customer Upsert
-      if (doc.sender.name || doc.sender.phone) {
+      // AUTO-SAVE Sender Customer for next time
+      if (doc.sender.phone) {
         await db.collection("customers").updateOne(
-          { type: "sender", phone: doc.sender.phone || "" },
+          { phone: doc.sender.phone },
           {
-            $set: { type: "sender", name: doc.sender.name, phone: doc.sender.phone, address: doc.sender.address, gst: doc.sender.gst, updatedAt: new Date() },
+            $set: { 
+              type: "sender", 
+              name: doc.sender.name, 
+              phone: doc.sender.phone, 
+              address: doc.sender.address, 
+              gst: doc.sender.gst, 
+              updatedAt: new Date() 
+            },
             $setOnInsert: { createdAt: new Date() },
           },
           { upsert: true }
         );
       }
 
-      // Receiver Customer Upsert
-      if (doc.receiver.name || doc.receiver.phone) {
+      // AUTO-SAVE Receiver Customer for next time
+      if (doc.receiver.phone) {
         await db.collection("customers").updateOne(
-          { type: "receiver", phone: doc.receiver.phone || "" },
+          { phone: doc.receiver.phone },
           {
-            $set: { type: "receiver", name: doc.receiver.name, phone: doc.receiver.phone, address: doc.receiver.address, gst: doc.receiver.gst, updatedAt: new Date() },
+            $set: { 
+              type: "receiver", 
+              name: doc.receiver.name, 
+              phone: doc.receiver.phone, 
+              address: doc.receiver.address, 
+              gst: doc.receiver.gst, 
+              updatedAt: new Date() 
+            },
             $setOnInsert: { createdAt: new Date() },
           },
           { upsert: true }
@@ -299,7 +318,14 @@ async function handle(request, ctx) {
       }
 
       await logActivity(db, { actor: s?.userId || 'admin-root', role: s?.role || 'admin', action: 'BOOKING_CREATED', target: lrNumber })
-      await sendNotification({ event: 'BOOKING_CREATED', booking: doc })
+      
+      // Safe notification wrapper (so bad auth won't crash the booking)
+      try {
+        await sendNotification({ event: 'BOOKING_CREATED', booking: doc })
+      } catch (nErr) {
+        console.error("Notification Warning (Ignored):", nErr)
+      }
+
       return json({ ok: true, booking: sanitize(doc) })
     }
 
@@ -331,7 +357,16 @@ async function handle(request, ctx) {
       const val = res?.value || res
       if (!val) return json({ ok: false, error: 'Not found' }, 404)
       await logActivity(db, { actor: s?.userId || 'admin-root', role: s?.role || 'admin', action: 'STATUS_UPDATE', target: lr, meta: { status: stage.key } })
-      const notifyEvt = NOTIFY_EVENTS[stage.key]; if (notifyEvt) await sendNotification({ event: notifyEvt, booking: val })
+      
+      const notifyEvt = NOTIFY_EVENTS[stage.key]; 
+      if (notifyEvt) {
+        try {
+          await sendNotification({ event: notifyEvt, booking: val })
+        } catch (nErr) {
+          console.error("Notification Warning (Ignored):", nErr)
+        }
+      }
+
       return json({ ok: true, booking: sanitize(val) })
     }
     if (parts[0] === 'bookings' && parts[2] === 'pod' && method === 'POST') {
@@ -343,7 +378,13 @@ async function handle(request, ctx) {
       const val = res?.value || res
       if (!val) return json({ ok: false, error: 'Not found' }, 404)
       await logActivity(db, { actor: s?.userId, role: s?.role, action: 'POD_UPLOAD', target: lr })
-      await sendNotification({ event: 'DELIVERED', booking: val })
+      
+      try {
+        await sendNotification({ event: 'DELIVERED', booking: val })
+      } catch (nErr) {
+        console.error("Notification Warning (Ignored):", nErr)
+      }
+
       return json({ ok: true, booking: sanitize(val) })
     }
 
