@@ -345,9 +345,13 @@ function StatusUpdater({ booking, onClose, onSaved }) {
   const save = async () => { 
     setBusy(true); 
     try { 
+      const token = localStorage.getItem('agc_token');
       const r = await fetch(`/api/bookings/${encodeURIComponent(booking.lrNumber)}/status`, { 
         method:'POST', 
-        headers:{'Content-Type':'application/json'}, 
+        headers:{
+          'Content-Type':'application/json',
+          'Authorization': `Bearer ${token}`
+        }, 
         body: JSON.stringify({ status, location, note })
       }); 
       const d = await r.json(); 
@@ -417,12 +421,60 @@ function NewBooking({ onCreated }) {
   const gst = Math.round(subtotal * 0.18); 
   const total = subtotal + gst
 
+  // Phone number lookup function for auto-fill
+  const handlePhoneLookup = async (phone, type) => {
+    if (!phone || phone.length < 10) return;
+    try {
+      const token = localStorage.getItem('agc_token');
+      const res = await fetch(`/api/customers?phone=${phone}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (data.ok && data.customer) {
+        const c = data.customer;
+        if (type === 'sender') {
+          setF(prev => ({
+            ...prev,
+            senderName: c.name || prev.senderName,
+            senderGst: c.gst || prev.senderGst,
+            senderAddress: c.address || prev.senderAddress,
+            pickupAddress: c.address || prev.pickupAddress,
+            senderPincode: c.pincode || prev.senderPincode,
+            senderState: c.state || prev.senderState,
+            senderDistrict: c.district || prev.senderDistrict,
+          }));
+          toast.success('Sender details auto-filled!');
+        } else {
+          setF(prev => ({
+            ...prev,
+            receiverName: c.name || prev.receiverName,
+            receiverGst: c.gst || prev.receiverGst,
+            receiverAddress: c.address || prev.receiverAddress,
+            deliveryAddress: c.address || prev.deliveryAddress,
+            receiverPincode: c.pincode || prev.receiverPincode,
+            receiverState: c.state || prev.receiverState,
+            receiverDistrict: c.district || prev.receiverDistrict,
+          }));
+          toast.success('Receiver details auto-filled!');
+        }
+      }
+    } catch (err) {
+      console.error("Auto-fill error:", err);
+    }
+  };
+
   // Sender Autocomplete
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (f.senderName && f.senderName.trim().length >= 2 && showSenderDropdown) {
         try {
-          const res = await fetch(`/api/customers/search?query=${encodeURIComponent(f.senderName)}&type=Sender`);
+          const token = localStorage.getItem('agc_token');
+          const res = await fetch(`/api/customers/search?query=${encodeURIComponent(f.senderName)}&type=Sender`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
           const data = await res.json();
           if (data.success) setSenderSuggestions(data.customers || []);
         } catch (e) {
@@ -440,7 +492,10 @@ function NewBooking({ onCreated }) {
     const timer = setTimeout(async () => {
       if (f.receiverName && f.receiverName.trim().length >= 2 && showReceiverDropdown) {
         try {
-          const res = await fetch(`/api/customers/search?query=${encodeURIComponent(f.receiverName)}&type=Receiver`);
+          const token = localStorage.getItem('agc_token');
+          const res = await fetch(`/api/customers/search?query=${encodeURIComponent(f.receiverName)}&type=Receiver`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
           const data = await res.json();
           if (data.success) setReceiverSuggestions(data.customers || []);
         } catch (e) {
@@ -565,9 +620,15 @@ function NewBooking({ onCreated }) {
     e.preventDefault(); 
     setBusy(true); 
     try { 
+      const token = localStorage.getItem('agc_token');
+      const headers = { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+
       await fetch('/api/customers/upsert', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name: f.senderName,
           mobile: f.senderPhone,
@@ -583,7 +644,7 @@ function NewBooking({ onCreated }) {
 
       await fetch('/api/customers/upsert', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           name: f.receiverName,
           mobile: f.receiverPhone,
@@ -599,7 +660,7 @@ function NewBooking({ onCreated }) {
 
       const r = await fetch('/api/bookings', { 
         method:'POST', 
-        headers:{'Content-Type':'application/json'}, 
+        headers, 
         body: JSON.stringify({ 
           ...f, 
           sender: {
@@ -679,56 +740,32 @@ function NewBooking({ onCreated }) {
 
         <Field label="Sender Phone">
           <Input 
-            type="text" 
             value={f.senderPhone} 
-            onChange={e=>set('senderPhone', e.target.value)} 
+            onChange={e => set('senderPhone', e.target.value)} 
+            onBlur={e => handlePhoneLookup(e.target.value, 'sender')} 
+            placeholder="10-digit mobile" 
             required
           />
         </Field>
 
         <Field label="Sender GST">
-          <Input 
-            type="text" 
-            value={f.senderGst} 
-            onChange={e=>set('senderGst', e.target.value.toUpperCase())} 
-            className="uppercase"
-          />
+          <Input value={f.senderGst} onChange={e => set('senderGst', e.target.value)} placeholder="GSTIN"/>
         </Field>
 
-        <Field label="Pickup Address">
-          <Input 
-            type="text" 
-            value={f.pickupAddress || f.senderAddress} 
-            onChange={e=>{ set('pickupAddress', e.target.value); set('senderAddress', e.target.value); }} 
-            required
-          />
+        <Field label="Sender Address" wide>
+          <Input value={f.senderAddress} onChange={e => set('senderAddress', e.target.value)} placeholder="Full Address"/>
         </Field>
 
-        <Field label="PIN Code">
-          <Input 
-            type="text" 
-            maxLength={6} 
-            value={f.senderPincode} 
-            onChange={e=>set('senderPincode', e.target.value)} 
-            required
-          />
-          {pincodeErrors.sender && <p className="text-xs text-red-500 mt-1">{pincodeErrors.sender}</p>}
+        <Field label="Sender Pincode">
+          <Input value={f.senderPincode} onChange={e => set('senderPincode', e.target.value)} placeholder="6-digit PIN" maxLength={6}/>
         </Field>
 
-        <Field label="City / District">
-          <Input 
-            type="text" 
-            value={f.senderDistrict} 
-            onChange={e=>set('senderDistrict', e.target.value)} 
-          />
+        <Field label="Sender State">
+          <Input value={f.senderState} onChange={e => set('senderState', e.target.value)} placeholder="State"/>
         </Field>
 
-        <Field label="State">
-          <Input 
-            type="text" 
-            value={f.senderState} 
-            onChange={e=>set('senderState', e.target.value)} 
-          />
+        <Field label="Sender District">
+          <Input value={f.senderDistrict} onChange={e => set('senderDistrict', e.target.value)} placeholder="District"/>
         </Field>
       </Section>
 
@@ -764,71 +801,55 @@ function NewBooking({ onCreated }) {
 
         <Field label="Receiver Phone">
           <Input 
-            type="text" 
             value={f.receiverPhone} 
-            onChange={e=>set('receiverPhone', e.target.value)} 
+            onChange={e => set('receiverPhone', e.target.value)} 
+            onBlur={e => handlePhoneLookup(e.target.value, 'receiver')} 
+            placeholder="10-digit mobile" 
             required
           />
         </Field>
 
         <Field label="Receiver GST">
-          <Input 
-            type="text" 
-            value={f.receiverGst} 
-            onChange={e=>set('receiverGst', e.target.value.toUpperCase())} 
-            className="uppercase"
-          />
+          <Input value={f.receiverGst} onChange={e => set('receiverGst', e.target.value)} placeholder="GSTIN"/>
         </Field>
 
-        <Field label="Delivery Address">
-          <Input 
-            type="text" 
-            value={f.deliveryAddress || f.receiverAddress} 
-            onChange={e=>{ set('deliveryAddress', e.target.value); set('receiverAddress', e.target.value); }} 
-            required
-          />
+        <Field label="Receiver Address" wide>
+          <Input value={f.receiverAddress} onChange={e => set('receiverAddress', e.target.value)} placeholder="Full Address"/>
         </Field>
 
-        <Field label="PIN Code">
-          <Input 
-            type="text" 
-            maxLength={6} 
-            value={f.receiverPincode} 
-            onChange={e=>set('receiverPincode', e.target.value)} 
-            required
-          />
-          {pincodeErrors.receiver && <p className="text-xs text-red-500 mt-1">{pincodeErrors.receiver}</p>}
+        <Field label="Receiver Pincode">
+          <Input value={f.receiverPincode} onChange={e => set('receiverPincode', e.target.value)} placeholder="6-digit PIN" maxLength={6}/>
         </Field>
 
-        <Field label="City / District">
-          <Input 
-            type="text" 
-            value={f.receiverDistrict} 
-            onChange={e=>set('receiverDistrict', e.target.value)} 
-          />
+        <Field label="Receiver State">
+          <Input value={f.receiverState} onChange={e => set('receiverState', e.target.value)} placeholder="State"/>
         </Field>
 
-        <Field label="State">
-          <Input 
-            type="text" 
-            value={f.receiverState} 
-            onChange={e=>set('receiverState', e.target.value)} 
-          />
+        <Field label="Receiver District">
+          <Input value={f.receiverDistrict} onChange={e => set('receiverDistrict', e.target.value)} placeholder="District"/>
         </Field>
       </Section>
 
-      <Section title="Weight & Charges">
-        <Field label="No. of Packages"><Input type="number" min={1} value={f.packages} onChange={e=>set('packages',e.target.value)}/></Field>
-        <Field label="Actual Weight (Kg)"><Input type="number" step="0.01" value={f.actualWeight} onChange={e=>set('actualWeight',e.target.value)}/></Field>
-        <Field label="Volumetric Weight (Kg)"><Input type="number" step="0.01" value={f.volumetricWeight} onChange={e=>set('volumetricWeight',e.target.value)}/></Field>
-        <Field label="Chargeable Weight (Kg)"><Input type="number" step="0.01" value={f.chargeableWeight} onChange={e=>set('chargeableWeight',e.target.value)}/></Field>
-        <Field label="Freight Rate (₹/Kg)"><Input type="number" step="0.01" value={f.freightRate} onChange={e=>set('freightRate',e.target.value)}/></Field>
+      <Section title="Billing & Charges">
+        <Field label="Packages"><Input type="number" value={f.packages} onChange={e=>set('packages',e.target.value)}/></Field>
+        <Field label="Actual Weight (kg)"><Input type="number" value={f.actualWeight} onChange={e=>set('actualWeight',e.target.value)}/></Field>
+        <Field label="Chargeable Weight (kg)"><Input type="number" value={f.chargeableWeight} onChange={e=>set('chargeableWeight',e.target.value)}/></Field>
+        <Field label="Freight Rate (₹/kg)"><Input type="number" value={f.freightRate} onChange={e=>set('freightRate',e.target.value)}/></Field>
         <Field label="Bilty Charge (₹)"><Input type="number" value={f.biltyCharge} onChange={e=>set('biltyCharge',e.target.value)}/></Field>
-        <Field label="Door Delivery (₹)"><Input type="number" value={f.doorDeliveryCharge} onChange={e=>set('doorDeliveryCharge',e.target.value)}/></Field>
-        <Field label="Insurance Charge (₹)"><Input type="number" value={f.insurance} onChange={e=>set('insurance',e.target.value)}/></Field>
+        <Field label="Door Delivery Charge (₹)"><Input type="number" value={f.doorDeliveryCharge} onChange={e=>set('doorDeliveryCharge',e.target.value)}/></Field>
+        <Field label="Insurance (₹)"><Input type="number" value={f.insurance} onChange={e=>set('insurance',e.target.value)}/></Field>
         <Field label="Loading/Unloading (₹)"><Input type="number" value={f.loadingUnloading} onChange={e=>set('loadingUnloading',e.target.value)}/></Field>
-        <Field label="Hamali (₹)"><Input type="number" value={f.hamali} onChange={e=>set('hamali',e.target.value)}/></Field>
         <Field label="Other Charges (₹)"><Input type="number" value={f.otherCharges} onChange={e=>set('otherCharges',e.target.value)}/></Field>
+        <Field label="Payment Status">
+          <Select value={f.paymentStatus} onValueChange={v=>set('paymentStatus',v)}>
+            <SelectTrigger><SelectValue/></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="PENDING">Pending</SelectItem>
+              <SelectItem value="PAID">Paid</SelectItem>
+              <SelectItem value="TO_PAY">To Pay</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
         <Field label="Payment Mode">
           <Select value={f.paymentMode} onValueChange={v=>set('paymentMode',v)}>
             <SelectTrigger><SelectValue/></SelectTrigger>
@@ -836,20 +857,19 @@ function NewBooking({ onCreated }) {
               <SelectItem value="CASH">Cash</SelectItem>
               <SelectItem value="UPI">UPI</SelectItem>
               <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-              <SelectItem value="CREDIT">Credit / To Pay</SelectItem>
+              <SelectItem value="CREDIT">Credit</SelectItem>
             </SelectContent>
           </Select>
         </Field>
       </Section>
 
-      <div className="bg-slate-900 text-white p-6 rounded-lg flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
-          <div className="text-xs text-slate-400">Total Calculation</div>
-          <div className="text-lg font-medium">Freight: ₹{freight.toFixed(2)} | GST (18%): ₹{gst}</div>
-          <div className="text-2xl font-black text-agc-gold">Total Amount: ₹{total}</div>
+          <div className="text-xs uppercase tracking-widest text-slate-500">Calculated Total Amount (incl. 18% GST)</div>
+          <div className="text-3xl font-black text-[#0F3D91] mt-1">₹{total.toLocaleString('en-IN')}</div>
         </div>
-        <Button disabled={busy} type="submit" size="lg" className="bg-agc-orange hover:bg-amber-600 text-white font-bold w-full md:w-auto">
-          {busy ? 'Creating Booking...' : 'Create Booking'}
+        <Button disabled={busy} className="w-full md:w-auto h-12 px-8 bg-[#0F3D91] hover:bg-[#1E4FB8] font-bold text-base">
+          {busy ? 'Creating Booking...' : 'Create Booking & Print LR'}
         </Button>
       </div>
     </form>
