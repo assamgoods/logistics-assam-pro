@@ -1,5 +1,4 @@
 import { Resend } from 'resend'
-const resend = new Resend(process.env.RESEND_API_KEY)
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/mongo'
 import { v4 as uuidv4 } from 'uuid'
@@ -57,19 +56,19 @@ async function handle(request, ctx) {
   const route = '/' + parts.join('/')
   const url = new URL(request.url)
 
-  try {
-    const db = await getDb()
+  // -------- FAST-TRACK PINCODE LOOKUP --------
+  if ((parts[0] === 'pincode' || route.startsWith('/pincode')) && method === 'GET') {
+    const code = (parts[1] || url.searchParams.get('code') || url.searchParams.get('pincode') || '').trim()
 
-    if (route === '/' || route === '/health') return json({ ok: true, service: 'assam-goods-carrier', time: new Date().toISOString() })
+    if (!code || code.length < 6) {
+      return json({ ok: false, error: 'Valid 6-digit PIN code required' }, 400)
+    }
 
-    // -------- PINCODE LOOKUP --------
-    if (parts[0] === 'pincode' && method === 'GET') {
-      const code = parts[1] || url.searchParams.get('code') || ''
-      if (!code) return json({ ok: false, error: 'Pincode required' }, 400)
-
+    // Try 1: MongoDB Database Lookup
+    try {
+      const db = await getDb()
       const numericCode = Number(code)
 
-      // Query database for both string and numeric formats
       const pinDoc = await db.collection('pincodes').findOne({
         $or: [
           { pincode: code },
@@ -78,21 +77,47 @@ async function handle(request, ctx) {
         ]
       })
 
-      if (!pinDoc) {
-        return json({ ok: false, error: 'Invalid PIN Code' }, 404)
+      if (pinDoc) {
+        return json({
+          ok: true,
+          pincode: String(pinDoc.pincode),
+          district: pinDoc.Districtname || pinDoc.district || pinDoc.District || pinDoc.city || '',
+          city: pinDoc.Districtname || pinDoc.district || pinDoc.District || pinDoc.city || '',
+          state: pinDoc.statename || pinDoc.state || pinDoc.State || '',
+          officeName: pinDoc.officename || pinDoc.officeName || ''
+        })
       }
-
-      // Format response according to your MongoDB Document fields
-      return json({
-        ok: true,
-        pincode: String(pinDoc.pincode),
-        district: pinDoc.Districtname || pinDoc.district || pinDoc.District || '',
-        state: pinDoc.statename || pinDoc.state || pinDoc.State || '',
-        officeName: pinDoc.officename || pinDoc.officeName || '',
-        circle: pinDoc.circlename || '',
-        region: pinDoc.regionname || ''
-      })
+    } catch (dbErr) {
+      console.error("Pincode DB fetch failed, falling back to API:", dbErr)
     }
+
+    // Try 2: Postal API Fallback (Guaranteed to return data for any valid Indian Pincode)
+    try {
+      const postRes = await fetch(`https://api.postalpincode.in/pincode/${code}`)
+      const postData = await postRes.json()
+
+      if (postData && postData[0]?.Status === 'Success' && postData[0]?.PostOffice?.length > 0) {
+        const po = postData[0].PostOffice[0]
+        return json({
+          ok: true,
+          pincode: code,
+          district: po.District || po.Block || '',
+          city: po.District || po.Block || '',
+          state: po.State || '',
+          officeName: po.Name || ''
+        })
+      }
+    } catch (apiErr) {
+      console.error("Postal API Failed:", apiErr)
+    }
+
+    return json({ ok: false, error: 'Invalid PIN Code' }, 404)
+  }
+
+  try {
+    const db = await getDb()
+
+    if (route === '/' || route === '/health') return json({ ok: true, service: 'assam-goods-carrier', time: new Date().toISOString() })
 
     // -------- AUTH ---------
     if (route === '/admin/login' && method === 'POST') {
@@ -382,8 +407,9 @@ async function handle(request, ctx) {
       
       let mailed = false
       try {
+        const resendInstance = new Resend(process.env.RESEND_API_KEY)
         const resetLink = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/reset-password?token=${resetToken}`
-        await resend.emails.send({
+        await resendInstance.emails.send({
           from: "Assam Goods Carrier <onboarding@resend.dev>",
           to: email,
           subject: `${settings?.companyName || 'AGC'} — Password Reset OTP`,
