@@ -211,6 +211,29 @@ function SideItem({ icon: Icon, active, children, onClick }) {
   ) 
 }
 
+function Section({ title, children }) {
+  return (
+    <Card className="shadow-sm border-slate-200">
+      <CardContent className="p-6">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-[#0F3D91] mb-4 pb-2 border-b border-slate-100">{title}</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">{children}</div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function Field({ label, wide, children }) {
+  return (
+    <div className={wide ? 'md:col-span-3' : ''}>
+      <Label className="text-xs font-semibold text-slate-600 mb-1 block">{label}</Label>
+      {children}
+    </div>
+  )
+}
+
+function Th({ children }) { return <th className="px-4 py-3 text-left font-bold">{children}</th> }
+function Td({ children }) { return <td className="px-4 py-3 whitespace-nowrap">{children}</td> }
+
 function Overview({ stats }) {
   const cards = [
     { i: Truck, t: 'Total Bookings', v: stats?.totalBookings || 0, c:'from-blue-500 to-blue-600' },
@@ -430,7 +453,7 @@ function NewBooking({ onCreated }) {
     return () => clearTimeout(timer);
   }, [f.receiverName, showReceiverDropdown]);
 
-  // PIN Code Lookup - Sender (FIXED)
+  // PIN Code Lookup - Sender
   useEffect(() => {
     const pin = f.senderPincode ? f.senderPincode.trim() : ''
     if (pin.length !== 6) {
@@ -444,13 +467,15 @@ function NewBooking({ onCreated }) {
         const resData = await res.json()
         
         const doc = resData.data || resData.pincode || resData
-        const isOk = resData.ok || resData.success || (doc && doc.ok)
+        const state = doc.state || doc.statename || ''
+        const district = doc.district || doc.districtname || doc.city || ''
+        const isOk = resData.ok || resData.success || Boolean(state || district)
 
-        if (isOk) {
+        if (isOk && (state || district)) {
           setF((prev) => ({
             ...prev,
-            senderState: doc.state || doc.statename || '',
-            senderDistrict: doc.district || doc.districtname || doc.city || '',
+            senderState: state,
+            senderDistrict: district,
             senderCountry: 'India',
           }))
           setPincodeErrors((prev) => ({ ...prev, sender: '' }))
@@ -466,7 +491,7 @@ function NewBooking({ onCreated }) {
     return () => clearTimeout(timer)
   }, [f.senderPincode])
 
-  // PIN Code Lookup - Receiver (FIXED)
+  // PIN Code Lookup - Receiver
   useEffect(() => {
     const pin = f.receiverPincode ? f.receiverPincode.trim() : ''
     if (pin.length !== 6) {
@@ -480,13 +505,15 @@ function NewBooking({ onCreated }) {
         const resData = await res.json()
 
         const doc = resData.data || resData.pincode || resData
-        const isOk = resData.ok || resData.success || (doc && doc.ok)
+        const state = doc.state || doc.statename || ''
+        const district = doc.district || doc.districtname || doc.city || ''
+        const isOk = resData.ok || resData.success || Boolean(state || district)
 
-        if (isOk) {
+        if (isOk && (state || district)) {
           setF((prev) => ({
             ...prev,
-            receiverState: doc.state || doc.statename || '',
-            receiverDistrict: doc.district || doc.districtname || doc.city || '',
+            receiverState: state,
+            receiverDistrict: district,
             receiverCountry: 'India',
           }))
           setPincodeErrors((prev) => ({ ...prev, receiver: '' }))
@@ -685,15 +712,14 @@ function NewBooking({ onCreated }) {
             onChange={e=>set('senderPincode', e.target.value)} 
             required
           />
-          {pincodeErrors.sender && <span className="text-xs text-red-500 mt-1 block">{pincodeErrors.sender}</span>}
+          {pincodeErrors.sender && <p className="text-xs text-red-500 mt-1">{pincodeErrors.sender}</p>}
         </Field>
 
         <Field label="City / District">
           <Input 
             type="text" 
             value={f.senderDistrict} 
-            readOnly 
-            className="bg-gray-100 text-gray-600 cursor-not-allowed"
+            onChange={e=>set('senderDistrict', e.target.value)} 
           />
         </Field>
 
@@ -701,8 +727,7 @@ function NewBooking({ onCreated }) {
           <Input 
             type="text" 
             value={f.senderState} 
-            readOnly 
-            className="bg-gray-100 text-gray-600 cursor-not-allowed"
+            onChange={e=>set('senderState', e.target.value)} 
           />
         </Field>
       </Section>
@@ -772,15 +797,14 @@ function NewBooking({ onCreated }) {
             onChange={e=>set('receiverPincode', e.target.value)} 
             required
           />
-          {pincodeErrors.receiver && <span className="text-xs text-red-500 mt-1 block">{pincodeErrors.receiver}</span>}
+          {pincodeErrors.receiver && <p className="text-xs text-red-500 mt-1">{pincodeErrors.receiver}</p>}
         </Field>
 
         <Field label="City / District">
           <Input 
             type="text" 
             value={f.receiverDistrict} 
-            readOnly 
-            className="bg-gray-100 text-gray-600 cursor-not-allowed"
+            onChange={e=>set('receiverDistrict', e.target.value)} 
           />
         </Field>
 
@@ -788,59 +812,46 @@ function NewBooking({ onCreated }) {
           <Input 
             type="text" 
             value={f.receiverState} 
-            readOnly 
-            className="bg-gray-100 text-gray-600 cursor-not-allowed"
+            onChange={e=>set('receiverState', e.target.value)} 
           />
         </Field>
       </Section>
 
       <Section title="Weight & Charges">
-        <Field label="Packages"><Input type="number" value={f.packages} onChange={e=>set('packages',e.target.value)} min="1"/></Field>
-        <Field label="Actual Wt. (kg)"><Input type="number" value={f.actualWeight} onChange={e=>set('actualWeight',e.target.value)}/></Field>
-        <Field label="Chargeable Wt. (kg)"><Input type="number" value={f.chargeableWeight} onChange={e=>set('chargeableWeight',e.target.value)}/></Field>
-        <Field label="Freight Rate (₹/kg)"><Input type="number" value={f.freightRate} onChange={e=>set('freightRate',e.target.value)}/></Field>
+        <Field label="No. of Packages"><Input type="number" min={1} value={f.packages} onChange={e=>set('packages',e.target.value)}/></Field>
+        <Field label="Actual Weight (Kg)"><Input type="number" step="0.01" value={f.actualWeight} onChange={e=>set('actualWeight',e.target.value)}/></Field>
+        <Field label="Volumetric Weight (Kg)"><Input type="number" step="0.01" value={f.volumetricWeight} onChange={e=>set('volumetricWeight',e.target.value)}/></Field>
+        <Field label="Chargeable Weight (Kg)"><Input type="number" step="0.01" value={f.chargeableWeight} onChange={e=>set('chargeableWeight',e.target.value)}/></Field>
+        <Field label="Freight Rate (₹/Kg)"><Input type="number" step="0.01" value={f.freightRate} onChange={e=>set('freightRate',e.target.value)}/></Field>
         <Field label="Bilty Charge (₹)"><Input type="number" value={f.biltyCharge} onChange={e=>set('biltyCharge',e.target.value)}/></Field>
         <Field label="Door Delivery (₹)"><Input type="number" value={f.doorDeliveryCharge} onChange={e=>set('doorDeliveryCharge',e.target.value)}/></Field>
+        <Field label="Insurance Charge (₹)"><Input type="number" value={f.insurance} onChange={e=>set('insurance',e.target.value)}/></Field>
+        <Field label="Loading/Unloading (₹)"><Input type="number" value={f.loadingUnloading} onChange={e=>set('loadingUnloading',e.target.value)}/></Field>
+        <Field label="Hamali (₹)"><Input type="number" value={f.hamali} onChange={e=>set('hamali',e.target.value)}/></Field>
+        <Field label="Other Charges (₹)"><Input type="number" value={f.otherCharges} onChange={e=>set('otherCharges',e.target.value)}/></Field>
+        <Field label="Payment Mode">
+          <Select value={f.paymentMode} onValueChange={v=>set('paymentMode',v)}>
+            <SelectTrigger><SelectValue/></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="CASH">Cash</SelectItem>
+              <SelectItem value="UPI">UPI</SelectItem>
+              <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+              <SelectItem value="CREDIT">Credit / To Pay</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
       </Section>
 
-      <div className="bg-slate-900 text-white p-6 rounded-xl flex items-center justify-between">
+      <div className="bg-slate-900 text-white p-6 rounded-lg flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <div className="text-xs uppercase text-slate-400 font-semibold tracking-wider">Total Booking Amount</div>
-          <div className="text-3xl font-black text-amber-400 mt-1">₹{total.toLocaleString('en-IN')}</div>
-          <div className="text-xs text-slate-400 mt-1">Subtotal: ₹{subtotal} + GST (18%): ₹{gst}</div>
+          <div className="text-xs text-slate-400">Total Calculation</div>
+          <div className="text-lg font-medium">Freight: ₹{freight.toFixed(2)} | GST (18%): ₹{gst}</div>
+          <div className="text-2xl font-black text-agc-gold">Total Amount: ₹{total}</div>
         </div>
-        <Button disabled={busy} type="submit" className="h-12 px-8 bg-amber-400 text-slate-900 hover:bg-amber-300 font-bold text-base">
-          {busy ? 'Creating...' : 'Create Booking'}
+        <Button disabled={busy} type="submit" size="lg" className="bg-agc-orange hover:bg-amber-600 text-white font-bold w-full md:w-auto">
+          {busy ? 'Creating Booking...' : 'Create Booking'}
         </Button>
       </div>
     </form>
   )
-}
-
-function Section({ title, children }) {
-  return (
-    <Card className="border-slate-200">
-      <CardContent className="p-6">
-        <div className="text-sm font-bold text-[#0F3D91] border-b pb-3 mb-4 uppercase tracking-wider">{title}</div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">{children}</div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function Field({ label, wide, children }) {
-  return (
-    <div className={wide ? 'md:col-span-2 lg:col-span-3' : ''}>
-      <Label className="text-xs text-slate-600 mb-1 block font-medium">{label}</Label>
-      {children}
-    </div>
-  )
-}
-
-function Th({ children }) {
-  return <th className="px-4 py-3 text-left font-semibold">{children}</th>
-}
-
-function Td({ children }) {
-  return <td className="px-4 py-3 text-slate-700">{children}</td>
 }
