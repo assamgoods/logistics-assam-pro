@@ -45,6 +45,11 @@ const ROLE_PERMISSIONS = {
 
 function sanitize(doc) { if (!doc) return doc; const { _id, ...rest } = doc; return rest }
 
+export async function GET(request, ctx) { return handle(request, ctx) }
+export async function POST(request, ctx) { return handle(request, ctx) }
+export async function PUT(request, ctx) { return handle(request, ctx) }
+export async function DELETE(request, ctx) { return handle(request, ctx) }
+
 async function handle(request, ctx) {
   const method = request.method
   const p = await ctx.params
@@ -56,6 +61,38 @@ async function handle(request, ctx) {
     const db = await getDb()
 
     if (route === '/' || route === '/health') return json({ ok: true, service: 'assam-goods-carrier', time: new Date().toISOString() })
+
+    // -------- PINCODE LOOKUP --------
+    if (parts[0] === 'pincode' && method === 'GET') {
+      const code = parts[1] || url.searchParams.get('code') || ''
+      if (!code) return json({ ok: false, error: 'Pincode required' }, 400)
+
+      const numericCode = Number(code)
+
+      // Query database for both string and numeric formats
+      const pinDoc = await db.collection('pincodes').findOne({
+        $or: [
+          { pincode: code },
+          { pincode: String(code) },
+          ...(isNaN(numericCode) ? [] : [{ pincode: numericCode }])
+        ]
+      })
+
+      if (!pinDoc) {
+        return json({ ok: false, error: 'Invalid PIN Code' }, 404)
+      }
+
+      // Format response according to your MongoDB Document fields
+      return json({
+        ok: true,
+        pincode: String(pinDoc.pincode),
+        district: pinDoc.Districtname || pinDoc.district || pinDoc.District || '',
+        state: pinDoc.statename || pinDoc.state || pinDoc.State || '',
+        officeName: pinDoc.officename || pinDoc.officeName || '',
+        circle: pinDoc.circlename || '',
+        region: pinDoc.regionname || ''
+      })
+    }
 
     // -------- AUTH ---------
     if (route === '/admin/login' && method === 'POST') {
@@ -103,7 +140,6 @@ async function handle(request, ctx) {
       return json({ ok: true, token, role: 'driver', name: user.name, permissions: ROLE_PERMISSIONS.driver, mustChangePassword: !!user.mustChangePassword })
     }
     if (route === '/customer/login' && method === 'POST') {
-      // Simple phone-based customer login (in production add OTP)
       const { phone } = await request.json()
       if (!phone || phone.length < 10) return json({ ok: false, error: 'Enter valid phone' }, 400)
       const token = await createSession('customer', phone, { phone, name: 'Customer' })
@@ -135,26 +171,26 @@ async function handle(request, ctx) {
       ])
       return json({ totalBookings: total, todaysBookings: today, deliveredShipments: delivered, inTransitShipments: inTransit, pendingDeliveries: pending, cancelledShipments: cancelled, totalRevenue: revenueAgg[0]?.total || 0, outstandingPayments: outstandingAgg[0]?.total || 0 })
     }
+
     // -------- CUSTOMERS SEARCH --------
-if (route === '/customers' && method === 'GET') {
-  const q = (url.searchParams.get('q') || '').trim()
+    if (route === '/customers' && method === 'GET') {
+      const q = (url.searchParams.get('q') || '').trim()
 
-  if (!q) return json({ items: [] })
+      if (!q) return json({ items: [] })
 
-  const items = await db.collection('customers')
-    .find({
-      $or: [
-        { name: { $regex: q, $options: 'i' } },
-        { phone: { $regex: q, $options: 'i' } }
-      ]
-    })
-    .limit(10)
-    .toArray()
+      const items = await db.collection('customers')
+        .find({
+          $or: [
+            { name: { $regex: q, $options: 'i' } },
+            { phone: { $regex: q, $options: 'i' } }
+          ]
+        })
+        .limit(10)
+        .toArray()
 
-  return json({
-    items: items.map(sanitize)
-  })
-}
+      return json({ items: items.map(sanitize) })
+    }
+
     // -------- BOOKINGS ---------
     if (route === '/bookings' && method === 'GET') {
       const filter = {}
@@ -190,61 +226,36 @@ if (route === '/customers' && method === 'GET') {
         createdAt: now, updatedAt: now,
       }
       await db.collection('bookings').insertOne(doc)
-      // ================= AUTO SAVE CUSTOMERS =================
 
-// Sender
-if (doc.sender.name || doc.sender.phone) {
-  await db.collection("customers").updateOne(
-    {
-      type: "sender",
-      phone: doc.sender.phone || "",
-    },
-    {
-      $set: {
-        type: "sender",
-        name: doc.sender.name,
-        phone: doc.sender.phone,
-        address: doc.sender.address,
-        gst: doc.sender.gst,
-        updatedAt: new Date(),
-      },
-      $setOnInsert: {
-        createdAt: new Date(),
-      },
-    },
-    { upsert: true }
-  );
-}
+      // Sender Customer Upsert
+      if (doc.sender.name || doc.sender.phone) {
+        await db.collection("customers").updateOne(
+          { type: "sender", phone: doc.sender.phone || "" },
+          {
+            $set: { type: "sender", name: doc.sender.name, phone: doc.sender.phone, address: doc.sender.address, gst: doc.sender.gst, updatedAt: new Date() },
+            $setOnInsert: { createdAt: new Date() },
+          },
+          { upsert: true }
+        );
+      }
 
-// Receiver
-if (doc.receiver.name || doc.receiver.phone) {
-  await db.collection("customers").updateOne(
-    {
-      type: "receiver",
-      phone: doc.receiver.phone || "",
-    },
-    {
-      $set: {
-        type: "receiver",
-        name: doc.receiver.name,
-        phone: doc.receiver.phone,
-        address: doc.receiver.address,
-        gst: doc.receiver.gst,
-        updatedAt: new Date(),
-      },
-      $setOnInsert: {
-        createdAt: new Date(),
-      },
-    },
-    { upsert: true }
-  );
-}
+      // Receiver Customer Upsert
+      if (doc.receiver.name || doc.receiver.phone) {
+        await db.collection("customers").updateOne(
+          { type: "receiver", phone: doc.receiver.phone || "" },
+          {
+            $set: { type: "receiver", name: doc.receiver.name, phone: doc.receiver.phone, address: doc.receiver.address, gst: doc.receiver.gst, updatedAt: new Date() },
+            $setOnInsert: { createdAt: new Date() },
+          },
+          { upsert: true }
+        );
+      }
 
-// ================= END =================
       await logActivity(db, { actor: s?.userId || 'admin-root', role: s?.role || 'admin', action: 'BOOKING_CREATED', target: lrNumber })
       await sendNotification({ event: 'BOOKING_CREATED', booking: doc })
       return json({ ok: true, booking: sanitize(doc) })
     }
+
     if (parts[0] === 'bookings' && parts.length === 2 && method === 'GET') {
       const lr = decodeURIComponent(parts[1])
       const doc = await db.collection('bookings').findOne({ lrNumber: lr })
@@ -303,17 +314,8 @@ if (doc.receiver.name || doc.receiver.phone) {
           whatsapp: '8847428801',
           email: 'bookings@assamgoodscarrier.in',
           website: 'https://assamgoodscarrier.in',
-          bankName: '',
-          bankAccount: '',
-          bankIfsc: '',
-          bankBranch: '',
-          logoUrl: '',
-          lrPrefix: 'AGC',
-          transferPrefix: 'TXF',
-          gstPercent: 18,
-          sessionTimeoutMinutes: 60,
-          theme: 'light',
-          updatedAt: new Date(),
+          bankName: '', bankAccount: '', bankIfsc: '', bankBranch: '', logoUrl: '',
+          lrPrefix: 'AGC', transferPrefix: 'TXF', gstPercent: 18, sessionTimeoutMinutes: 60, theme: 'light', updatedAt: new Date(),
         }
         await db.collection('settings').insertOne(s)
       }
@@ -349,7 +351,6 @@ if (doc.receiver.name || doc.receiver.phone) {
         const hashed = await bcrypt.hash(newPassword, 10)
         await db.collection('users').updateOne({ id: s.userId }, { $set: { password: hashed, mustChangePassword: false, passwordChangedAt: new Date() }, $unset: { plainInitialPassword: '' } })
       } else if (s.role === 'admin') {
-        // Admin root can change its "password" stored in settings
         const hashed = await bcrypt.hash(newPassword, 10)
         await db.collection('settings').updateOne({ _id: 'company' }, { $set: { adminPasswordHash: hashed, adminPasswordChangedAt: new Date() } }, { upsert: true })
       }
@@ -357,27 +358,25 @@ if (doc.receiver.name || doc.receiver.phone) {
       return json({ ok:true })
     }
 
-    // -------- FORGOT / RESET PASSWORD (Email OTP) ---------
+    // -------- FORGOT / RESET PASSWORD ---------
     if (route === '/auth/forgot-password' && method === 'POST') {
       const { email } = await request.json()
       if (!email) return json({ ok:false, error:'Email is required' }, 400)
-      // Simple rate limit: max 3 per email per 15min
       const since = new Date(Date.now() - 15*60*1000)
       const recent = await db.collection('otp_tokens').countDocuments({ email, createdAt: { $gte: since } })
       if (recent >= 3) return json({ ok:false, error:'Too many reset requests. Please try again in 15 minutes.' }, 429)
-      // Locate user by email in users OR in settings (admin)
+
       const user = await db.collection('users').findOne({ email })
       const settings = await db.collection('settings').findOne({ _id: 'company' })
       const isAdmin = settings?.email === email || process.env.SMTP_USER === email
       if (!user && !isAdmin) {
-        // Do not reveal existence; still respond ok
         return json({ ok: true, message: 'If the email is registered, an OTP has been sent.' })
       }
       const otp = String(Math.floor(100000 + Math.random()*900000))
       const bcrypt = (await import('bcryptjs')).default
       const otpHash = await bcrypt.hash(otp, 10)
       const resetToken = uuidv4()
-      const expiresAt = new Date(Date.now() + 15*60*1000) // 15 min
+      const expiresAt = new Date(Date.now() + 15*60*1000)
       const doc = { id: uuidv4(), email, otpHash, resetToken, userId: user?.id || 'admin-root', role: user?.role || (isAdmin ? 'admin' : 'user'), used: false, expiresAt, createdAt: new Date() }
       await db.collection('otp_tokens').insertOne(doc)
       
@@ -400,10 +399,10 @@ if (doc.receiver.name || doc.receiver.phone) {
               <p style="color:#9CA3AF;font-size:11px;margin-top:24px">If you did not request this, please ignore this email.</p>
             </div>`,
         })
-mailed = true
-} catch (e) {
-  console.error("Resend send failed:", e);
-}
+        mailed = true
+      } catch (e) {
+        console.error("Resend send failed:", e);
+      }
 
       await logActivity(db, { actor: user?.id || 'system', role: user?.role || 'anon', action: 'PASSWORD_RESET_REQUESTED', target: email, meta: { mailed, mock_otp: mailed ? undefined : otp } })
       return json({ ok:true, message: mailed ? 'OTP sent to your email.' : 'OTP generated (Email delivery failed — check Activity Log for OTP).', mailed })
@@ -442,7 +441,6 @@ mailed = true
         await db.collection('users').updateOne({ id: tokenDoc.userId }, { $set: { password: hashed, mustChangePassword: false, passwordChangedAt: new Date() }, $unset: { plainInitialPassword: '' } })
       }
       await db.collection('otp_tokens').updateOne({ id: tokenDoc.id }, { $set: { used: true, usedAt: new Date() } })
-      // Invalidate other tokens for same email
       await db.collection('otp_tokens').updateMany({ email: tokenDoc.email, used: false, id: { $ne: tokenDoc.id } }, { $set: { used: true } })
       await logActivity(db, { actor: tokenDoc.userId, role: tokenDoc.role, action: 'PASSWORD_RESET_COMPLETED', target: tokenDoc.email })
       return json({ ok:true })
@@ -471,7 +469,6 @@ mailed = true
     if (route === '/label-sizes' && method === 'GET') {
       let items = await db.collection('label_sizes').find({}).sort({ createdAt: 1 }).toArray()
       if (items.length === 0) {
-        // Seed defaults
         const defaults = [
           { name: '100 × 150 mm (4×6)', width: 100, height: 150, isDefault: true },
           { name: '100 × 100 mm (4×4)', width: 100, height: 100, isDefault: true },
@@ -533,53 +530,20 @@ mailed = true
         createdAt: now, updatedAt: now,
       }
       await db.collection('transfers').insertOne(doc)
-      // Push into booking timeline & set currentLocation to toBranch
+
       await db.collection('bookings').updateOne(
         { lrNumber: body.lrNumber },
         { $set: { currentLocation: body.toBranch, branchCode: body.toBranch, updatedAt: now, status: 'IN_TRANSIT' },
           $push: { timeline: { key: 'IN_TRANSIT', label: `Transferred ${body.fromBranch} → ${body.toBranch}`, at: now.toISOString(), location: body.toBranch, note: `Transfer ${transferId}. ${body.remarks || ''}`.trim(), by: s?.name || 'admin' } } }
       )
-      await logActivity(db, { actor: s?.userId || 'admin-root', role: s?.role || 'admin', action: 'TRANSFER_CREATED', target: transferId, meta: { lr: body.lrNumber, from: body.fromBranch, to: body.toBranch } })
+      await logActivity(db, { actor: s?.userId || 'admin', role: s?.role || 'admin', action: 'BRANCH_TRANSFER', target: body.lrNumber })
       return json({ ok: true, transfer: sanitize(doc) })
-    }
-    if (parts[0] === 'transfers' && parts.length === 2 && method === 'GET') {
-      const doc = await db.collection('transfers').findOne({ transferId: parts[1] })
-      if (!doc) return json({ ok: false, error: 'Not found' }, 404)
-      return json({ ok: true, transfer: sanitize(doc) })
-    }
-    if (parts[0] === 'transfers' && parts[2] === 'receive' && method === 'POST') {
-      const transferId = parts[1]
-      const body = await request.json().catch(() => ({}))
-      const s = await getSession(request)
-      const now = new Date()
-      const existing = await db.collection('transfers').findOne({ transferId })
-      if (!existing) return json({ ok: false, error: 'Transfer record not found' }, 404)
-      
-      const res = await db.collection('transfers').findOneAndUpdate(
-        { transferId },
-        { 
-          $set: { status: 'RECEIVED', receivedBy: s?.name || s?.role || 'admin', receivedAt: now.toISOString(), receivedRemarks: body.remarks || '', updatedAt: now },
-          $push: { timeline: { event: 'RECEIVED', at: now.toISOString(), branch: existing.toBranch, by: s?.name || 'admin', note: body.remarks || 'Received at destination branch' } }
-        },
-        { returnDocument: 'after' }
-      )
-      const val = res?.value || res
-      await db.collection('bookings').updateOne(
-        { lrNumber: existing.lrNumber },
-        { 
-          $set: { currentLocation: existing.toBranch, status: 'ARRIVED', updatedAt: now },
-          $push: { timeline: { key: 'ARRIVED', label: `Arrived at ${existing.toBranch}`, at: now.toISOString(), location: existing.toBranch, note: `Received from transfer ${transferId}. ${body.remarks || ''}`.trim(), by: s?.name || 'admin' } }
-        }
-      )
-      await logActivity(db, { actor: s?.userId || 'admin-root', role: s?.role || 'admin', action: 'TRANSFER_RECEIVED', target: transferId })
-      return json({ ok: true, transfer: sanitize(val) })
     }
 
     return json({ ok: false, error: 'Route not found' }, 404)
-  } catch (err) {
-    console.error('API Error:', err)
-    return json({ ok: false, error: err.message || 'Server error' }, 500)
+
+  } catch (error) {
+    console.error("API error:", error)
+    return json({ ok: false, error: error.message }, 500)
   }
 }
-
-export { handle as GET, handle as POST, handle as PUT, handle as DELETE, handle as PATCH }
