@@ -7,7 +7,9 @@ import { getSession, createSession, logActivity } from '@/lib/authz'
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'assam123'
 
-function json(data, status = 200) { return NextResponse.json(data, { status, headers: { 'Cache-Control': 'no-store' } }) }
+function json(data, status = 200) { 
+  return NextResponse.json(data, { status, headers: { 'Cache-Control': 'no-store' } }) 
+}
 
 async function nextLrNumber(db) {
   const now = new Date()
@@ -57,8 +59,11 @@ async function handle(request, ctx) {
   const url = new URL(request.url)
 
   // -------- FAST-TRACK PINCODE LOOKUP --------
-  if ((parts[0] === 'pincode' || route.startsWith('/pincode')) && method === 'GET') {
-    const code = (parts[1] || url.searchParams.get('code') || url.searchParams.get('pincode') || '').trim()
+  const isPincodeRoute = parts.includes('pincode') || parts.includes('pincodes') || route.includes('/pincode')
+  if (isPincodeRoute && method === 'GET') {
+    const pinIndex = parts.findIndex(p => p === 'pincode' || p === 'pincodes')
+    const codeFromParts = pinIndex !== -1 ? parts[pinIndex + 1] : null
+    const code = (codeFromParts || url.searchParams.get('code') || url.searchParams.get('pincode') || '').trim()
 
     if (!code || code.length < 6) {
       return json({ ok: false, error: 'Valid 6-digit PIN code required' }, 400)
@@ -538,38 +543,26 @@ async function handle(request, ctx) {
       if (!body.lrNumber || !body.fromBranch || !body.toBranch) return json({ ok: false, error: 'lrNumber, fromBranch and toBranch are required' }, 400)
       if (body.fromBranch === body.toBranch) return json({ ok: false, error: 'From and To branches must be different' }, 400)
       const booking = await db.collection('bookings').findOne({ lrNumber: body.lrNumber })
-      if (!booking) return json({ ok: false, error: 'Booking (LR) not found' }, 404)
-      const now = new Date()
-      const key = String(now.getFullYear()).slice(-2) + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0')
-      const cRes = await db.collection('counters').findOneAndUpdate({ _id: `xfer_${key}` }, { $inc: { seq: 1 } }, { upsert: true, returnDocument: 'after' })
-      const seq = (cRes && cRes.value && cRes.value.seq) || (cRes && cRes.seq) || 1
-      const transferId = `TXF-${key}-${String(seq).padStart(4,'0')}`
+      if (!booking) return json({ ok: false, error: 'Booking not found' }, 404)
+
       const doc = {
-        id: uuidv4(), transferId, lrNumber: body.lrNumber,
-        fromBranch: body.fromBranch, toBranch: body.toBranch,
-        remarks: body.remarks || '', vehicleNumber: body.vehicleNumber || '', driverName: body.driverName || '',
-        status: 'IN_TRANSIT',
-        transferredBy: s?.name || s?.role || 'admin',
-        transferredAt: now.toISOString(),
-        receivedBy: null, receivedAt: null, receivedRemarks: null,
-        timeline: [{ event: 'DISPATCHED', at: now.toISOString(), branch: body.fromBranch, by: s?.name || 'admin', note: `Shipment transferred to ${body.toBranch}. ${body.remarks || ''}`.trim() }],
-        createdAt: now, updatedAt: now,
+        id: uuidv4(),
+        lrNumber: body.lrNumber,
+        fromBranch: body.fromBranch,
+        toBranch: body.toBranch,
+        status: 'PENDING',
+        notes: body.notes || '',
+        createdBy: s?.name || s?.userId || 'system',
+        createdAt: new Date(),
+        updatedAt: new Date()
       }
       await db.collection('transfers').insertOne(doc)
-
-      await db.collection('bookings').updateOne(
-        { lrNumber: body.lrNumber },
-        { $set: { currentLocation: body.toBranch, branchCode: body.toBranch, updatedAt: now, status: 'IN_TRANSIT' },
-          $push: { timeline: { key: 'IN_TRANSIT', label: `Transferred ${body.fromBranch} → ${body.toBranch}`, at: now.toISOString(), location: body.toBranch, note: `Transfer ${transferId}. ${body.remarks || ''}`.trim(), by: s?.name || 'admin' } } }
-      )
-      await logActivity(db, { actor: s?.userId || 'admin', role: s?.role || 'admin', action: 'BRANCH_TRANSFER', target: body.lrNumber })
       return json({ ok: true, transfer: sanitize(doc) })
     }
 
     return json({ ok: false, error: 'Route not found' }, 404)
-
-  } catch (error) {
-    console.error("API error:", error)
-    return json({ ok: false, error: error.message }, 500)
+  } catch (err) {
+    console.error('API Error:', err)
+    return json({ ok: false, error: err.message }, 500)
   }
 }
