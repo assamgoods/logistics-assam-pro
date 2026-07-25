@@ -66,8 +66,14 @@ async function handle(request, ctx) {
     const code = (codeFromParts || url.searchParams.get('code') || url.searchParams.get('pincode') || '').trim()
 
     if (!code || code.length < 6) {
-      return json({ ok: false, error: 'Valid 6-digit PIN code required' }, 400)
+      return json({ ok: false, success: false, error: 'Valid 6-digit PIN code required' }, 400)
     }
+
+    let district = ''
+    let city = ''
+    let state = ''
+    let officeName = ''
+    let found = false
 
     // Try 1: MongoDB Database Lookup
     try {
@@ -83,40 +89,51 @@ async function handle(request, ctx) {
       })
 
       if (pinDoc) {
-        return json({
-          ok: true,
-          pincode: String(pinDoc.pincode),
-          district: pinDoc.Districtname || pinDoc.district || pinDoc.District || pinDoc.city || '',
-          city: pinDoc.Districtname || pinDoc.district || pinDoc.District || pinDoc.city || '',
-          state: pinDoc.statename || pinDoc.state || pinDoc.State || '',
-          officeName: pinDoc.officename || pinDoc.officeName || ''
-        })
+        district = pinDoc.Districtname || pinDoc.district || pinDoc.District || pinDoc.city || ''
+        city = pinDoc.Districtname || pinDoc.district || pinDoc.District || pinDoc.city || ''
+        state = pinDoc.statename || pinDoc.state || pinDoc.State || ''
+        officeName = pinDoc.officename || pinDoc.officeName || ''
+        found = true
       }
     } catch (dbErr) {
       console.error("Pincode DB fetch failed, falling back to API:", dbErr)
     }
 
-    // Try 2: Postal API Fallback (Guaranteed to return data for any valid Indian Pincode)
-    try {
-      const postRes = await fetch(`https://api.postalpincode.in/pincode/${code}`)
-      const postData = await postRes.json()
+    // Try 2: Postal API Fallback
+    if (!found) {
+      try {
+        const postRes = await fetch(`https://api.postalpincode.in/pincode/${code}`)
+        const postData = await postRes.json()
 
-      if (postData && postData[0]?.Status === 'Success' && postData[0]?.PostOffice?.length > 0) {
-        const po = postData[0].PostOffice[0]
-        return json({
-          ok: true,
-          pincode: code,
-          district: po.District || po.Block || '',
-          city: po.District || po.Block || '',
-          state: po.State || '',
-          officeName: po.Name || ''
-        })
+        if (postData && postData[0]?.Status === 'Success' && postData[0]?.PostOffice?.length > 0) {
+          const po = postData[0].PostOffice[0]
+          district = po.District || po.Block || ''
+          city = po.District || po.Block || ''
+          state = po.State || ''
+          officeName = po.Name || ''
+          found = true
+        }
+      } catch (apiErr) {
+        console.error("Postal API Failed:", apiErr)
       }
-    } catch (apiErr) {
-      console.error("Postal API Failed:", apiErr)
     }
 
-    return json({ ok: false, error: 'Invalid PIN Code' }, 404)
+    if (found) {
+      const payload = {
+        ok: true,
+        success: true,
+        pincode: code,
+        pinCode: code,
+        district,
+        city,
+        state,
+        officeName,
+        data: { pincode: code, district, city, state, officeName }
+      }
+      return json(payload, 200)
+    }
+
+    return json({ ok: false, success: false, error: 'Invalid PIN Code' }, 404)
   }
 
   try {
