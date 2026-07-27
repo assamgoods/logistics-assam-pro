@@ -38,7 +38,7 @@ const DEFAULT_STAGES = [
 const NOTIFY_EVENTS = { BOOKED: 'BOOKING_CREATED', DISPATCHED: 'DISPATCHED', OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY', DELIVERED: 'DELIVERED' }
 
 const ROLE_PERMISSIONS = {
-  admin:     ['*'],
+  admin:    ['*'],
   branch:    ['booking.create','booking.read','booking.status','pod.upload','rate.read'],
   driver:    ['booking.read.own','pod.upload','booking.status.limited'],
   customer: ['booking.read.own','pod.download'],
@@ -138,6 +138,77 @@ async function handle(request, ctx) {
     const db = await getDb()
 
     if (route === '/' || route === '/health') return json({ ok: true, service: 'assam-goods-carrier', time: new Date().toISOString() })
+
+    // -------- ADMIN BILLING --------
+    if (route === '/admin/billing' && method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}))
+        const { lrNumber, amount } = body
+
+        if (!lrNumber || amount === undefined) {
+          return json({ ok: false, error: 'lrNumber and amount are required' }, 400)
+        }
+
+        const invoicesCollection = db.collection('invoices')
+
+        // 1. Check if an invoice already exists for the same lrNumber
+        const existingInvoice = await invoicesCollection.findOne({ lrNumber })
+        if (existingInvoice) {
+          return json({ ok: true, invoice: sanitize(existingInvoice) }, 200)
+        }
+
+        // Find booking using lrNumber
+        const bookingsCollection = db.collection('bookings')
+        const booking = await bookingsCollection.findOne({ lrNumber })
+
+        if (!booking) {
+          return json({ ok: false, error: 'Booking not found with the provided lrNumber' }, 404)
+        }
+
+        // Generate a unique invoice number
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+        let isUnique = false
+        let invoiceNumber = ''
+
+        while (!isUnique) {
+          const randomSuffix = Math.floor(1000 + Math.random() * 9000)
+          invoiceNumber = `INV-${dateStr}-${randomSuffix}`
+          const existing = await invoicesCollection.findOne({ invoiceNumber })
+          if (!existing) {
+            isUnique = true
+          }
+        }
+
+        // 2. Construct invoice document with all important booking information
+        const invoice = {
+          id: uuidv4(),
+          invoiceNumber,
+          lrNumber,
+          origin: booking.origin || '',
+          destination: booking.destination || '',
+          sender: booking.sender || {},
+          receiver: booking.receiver || {},
+          packages: booking.packages || 0,
+          chargeableWeight: booking.chargeableWeight || 0,
+          paymentMode: booking.paymentMode || 'CASH',
+          paymentStatus: booking.paymentStatus || 'PENDING',
+          freight: booking.freightRate || booking.freight || amount,
+          gst: booking.gst || 0,
+          totalAmount: amount,
+          createdAt: new Date()
+        }
+
+        // Insert invoice into invoices collection
+        const result = await invoicesCollection.insertOne(invoice)
+        invoice._id = result.insertedId
+
+        return json({ ok: true, invoice: sanitize(invoice) }, 201)
+
+      } catch (error) {
+        console.error('Error handling /admin/billing POST:', error)
+        return json({ ok: false, error: error.message || 'Internal Server Error' }, 500)
+      }
+    }
 
     // -------- AUTH ---------
     if (route === '/admin/login' && method === 'POST') {
@@ -580,47 +651,11 @@ async function handle(request, ctx) {
       await db.collection('label_sizes').insertOne(doc)
       return json({ ok: true, size: sanitize(doc) })
     }
-    if (parts[0] === 'label-sizes' && parts.length === 2 && method === 'DELETE') {
-      await db.collection('label_sizes').deleteOne({ id: parts[1], isDefault: { $ne: true } })
-      return json({ ok: true })
-    }
 
-    // -------- BRANCH TRANSFERS ---------
-    if (route === '/transfers' && method === 'GET') {
-      const filter = {}
-      const lr = url.searchParams.get('lr'); if (lr) filter.lrNumber = lr
-      const from = url.searchParams.get('from'); if (from) filter.fromBranch = from
-      const to = url.searchParams.get('to'); if (to) filter.toBranch = to
-      const status = url.searchParams.get('status'); if (status) filter.status = status
-      const items = await db.collection('transfers').find(filter).sort({ createdAt: -1 }).limit(500).toArray()
-      return json({ items: items.map(sanitize) })
-    }
-    if (route === '/transfers' && method === 'POST') {
-      const body = await request.json()
-      const s = await getSession(request)
-      if (!body.lrNumber || !body.fromBranch || !body.toBranch) return json({ ok: false, error: 'lrNumber, fromBranch and toBranch are required' }, 400)
-      if (body.fromBranch === body.toBranch) return json({ ok: false, error: 'From and To branches must be different' }, 400)
-      const booking = await db.collection('bookings').findOne({ lrNumber: body.lrNumber })
-      if (!booking) return json({ ok: false, error: 'Booking not found' }, 404)
+    return json({ ok: false, error: 'Not found' }, 404)
 
-      const doc = {
-        id: uuidv4(),
-        lrNumber: body.lrNumber,
-        fromBranch: body.fromBranch,
-        toBranch: body.toBranch,
-        status: 'PENDING',
-        notes: body.notes || '',
-        createdBy: s?.name || s?.userId || 'system',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-      await db.collection('transfers').insertOne(doc)
-      return json({ ok: true, transfer: sanitize(doc) })
-    }
-
-    return json({ ok: false, error: 'Route not found' }, 404)
   } catch (err) {
-    console.error('API Error:', err)
-    return json({ ok: false, error: err.message }, 500)
+    console.error("API Error:", err)
+    return json({ ok: false, error: err.message || 'Internal error' }, 500)
   }
 }
