@@ -1,971 +1,2765 @@
 'use client'
+
 import { LogoMark } from '@/components/Logo'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, LayoutDashboard, Plus, Truck, IndianRupee, PackageCheck, PackageX, Timer, Wallet, LogOut, Printer, RefreshCw, Search, Bell, ClipboardList, Users, Building2, FileSpreadsheet, DollarSign, Tag, ArrowRightLeft, Trash2, Edit, Save, CheckCircle, XCircle, Eye, Download } from 'lucide-react'
+import {
+  Lock,
+  LayoutDashboard,
+  Plus,
+  Truck,
+  IndianRupee,
+  LogOut,
+  RefreshCw,
+  Search,
+  Bell,
+  ClipboardList,
+  Users,
+  Building2,
+  FileSpreadsheet,
+  DollarSign,
+  Tag,
+  ArrowRightLeft
+} from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { toast } from 'sonner'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+
+import { toast } from 'sonner'
 import * as XLSX from 'xlsx'
 
 const STAGES = [
-  { key:'BOOKED', label:'Booking Received' },
-  { key:'PICKED_UP', label:'Picked Up' },
-  { key:'WAREHOUSE', label:'In Warehouse' },
-  { key:'DISPATCHED', label:'Dispatched' },
-  { key:'IN_TRANSIT', label:'In Transit' },
-  { key:'ARRIVED', label:'Arrived at Destination' },
-  { key:'OUT_FOR_DELIVERY', label:'Out for Delivery' },
-  { key:'DELIVERED', label:'Delivered' },
-  { key:'CANCELLED', label:'Cancelled' },
+  { key: 'BOOKED', label: 'Booking Received' },
+  { key: 'PICKED_UP', label: 'Picked Up' },
+  { key: 'WAREHOUSE', label: 'In Warehouse' },
+  { key: 'DISPATCHED', label: 'Dispatched' },
+  { key: 'IN_TRANSIT', label: 'In Transit' },
+  { key: 'ARRIVED', label: 'Arrived At Destination' },
+  { key: 'OUT_FOR_DELIVERY', label: 'Out For Delivery' },
+  { key: 'DELIVERED', label: 'Delivered' },
+  { key: 'CANCELLED', label: 'Cancelled' }
 ]
 
 export default function AdminPage() {
   const [authed, setAuthed] = useState(false)
-  const [pw, setPw] = useState('')
   const [loading, setLoading] = useState(false)
   const [mode, setMode] = useState('login')
+  const [password, setPassword] = useState('')
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
   const [resetToken, setResetToken] = useState('')
-  const [newPw, setNewPw] = useState('')
+  const [newPassword, setNewPassword] = useState('')
 
-  useEffect(() => { 
-    if (typeof window !== 'undefined' && localStorage.getItem('agc_token')) setAuthed(true) 
+  useEffect(() => {
+    const token = localStorage.getItem('agc_token')
+
+    if (token) {
+      setAuthed(true)
+    }
   }, [])
 
   const login = async (e) => {
-    e.preventDefault(); setLoading(true)
+    e.preventDefault()
+
+    if (!password.trim()) {
+      toast.error('Enter admin password')
+      return
+    }
+
+    setLoading(true)
+
     try {
-      const r = await fetch('/api/admin/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: pw })})
-      const d = await r.json()
-      if (d.ok) { localStorage.setItem('agc_token', d.token); setAuthed(true); toast.success('Welcome, Admin') }
-      else toast.error(d.error || 'Login failed')
-    } catch { toast.error('Network error') }
-    setLoading(false)
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          password: password.trim()
+        })
+      })
+
+      const data = await res.json()
+      if (data.ok) {
+        localStorage.setItem('agc_token', data.token)
+        setAuthed(true)
+        toast.success('Welcome Admin')
+      } else {
+        toast.error(data.error || 'Login failed')
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Network Error')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const forgot = async (e) => {
-    e.preventDefault(); setLoading(true)
-    try {
-      const r = await fetch('/api/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email })})
-      const d = await r.json()
-      if (d.ok) { toast.success(d.message); setMode('otp') } else toast.error(d.error)
-    } catch { toast.error('Network error') }
-    setLoading(false)
+  const logout = () => {
+    localStorage.removeItem('agc_token')
+    setAuthed(false)
   }
 
-  const verifyOtp = async (e) => {
-    e.preventDefault(); setLoading(true)
-    try {
-      const r = await fetch('/api/auth/verify-otp', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email, otp })})
-      const d = await r.json()
-      if (d.ok) { setResetToken(d.resetToken); setMode('reset'); toast.success('OTP verified') } else toast.error(d.error)
-    } catch { toast.error('Network error') }
-    setLoading(false)
+  if (!authed) {
+    return (
+      <div className="min-h-screen gradient-navy flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md"
+        >
+          <Card className="border-0 shadow-2xl shadow-black/30">
+            <CardContent className="p-8">
+              <div className="flex items-center gap-3 mb-8">
+                <LogoMark size={48} />
+                <div>
+                  <h1 className="text-2xl font-black text-[#0F3D91]">
+                    ASSAM GOODS CARRIER
+                  </h1>
+                  <p className="text-xs uppercase tracking-[0.25em] text-agc-orange font-semibold">
+                    Admin Portal
+                  </p>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h2 className="text-lg font-bold text-[#0F3D91] flex items-center gap-2">
+                  <Lock className="h-5 w-5" />
+                  Secure Admin Login
+                </h2>
+
+                <p className="text-sm text-slate-500 mt-2">
+                  Login using your administrator password to continue.
+                </p>
+              </div>
+
+              <form
+                onSubmit={login}
+                className="space-y-4"
+              >
+                <div>
+                  <Label className="text-xs font-semibold">
+                    Admin Password
+                  </Label>
+
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="mt-2 h-11"
+                    placeholder="Enter Admin Password"
+                    required
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-11 bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold"
+                >
+                  {loading ? 'Signing In...' : 'Sign In'}
+                </Button>
+
+                <button
+                  type="button"
+                  onClick={() => setMode('forgot')}
+                  className="w-full text-center text-sm text-[#0F3D91] hover:text-agc-orange font-semibold transition-colors"
+                >
+                  Forgot Admin Password?
+                </button>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    )
   }
 
-  const doReset = async (e) => {
-    e.preventDefault(); setLoading(true)
-    try {
-      const r = await fetch('/api/auth/reset-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ resetToken, newPassword: newPw })})
-      const d = await r.json()
-      if (d.ok) { toast.success('Password reset. Please login.'); setMode('login'); setPw(newPw); setOtp(''); setResetToken(''); setNewPw('') } else toast.error(d.error)
-    } catch { toast.error('Network error') }
-    setLoading(false)
-  }
-
-  const logout = () => { localStorage.removeItem('agc_token'); setAuthed(false) }
-
-  if (!authed) return (
-    <div className="min-h-screen gradient-navy grid place-items-center p-4">
-      <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} className="w-full max-w-md">
-        <Card className="border-0 shadow-2xl shadow-black/40"><CardContent className="p-8">
-          <div className="flex items-center gap-3"><LogoMark size={44}/><div><div className="font-black text-[#0F3D91]">ASSAM GOODS CARRIER</div><div className="text-[10px] uppercase tracking-[0.2em] text-agc-orange font-semibold">Admin Portal</div></div></div>
-
-          {mode === 'login' && (<>
-            <div className="mt-6 font-bold text-[#0F3D91] flex items-center gap-2"><Lock className="h-4 w-4"/> Super Admin Login</div>
-            <form onSubmit={login} className="mt-4 space-y-3">
-              <div><Label className="text-xs">Admin Password</Label><Input type="password" value={pw} onChange={e=>setPw(e.target.value)} className="mt-1 h-11" required/></div>
-              <Button disabled={loading} className="w-full h-11 bg-[#0F3D91] hover:bg-[#1E4FB8] font-bold">{loading ? 'Signing in...' : 'Sign In'}</Button>
-              <div className="text-center"><button type="button" onClick={()=>setMode('forgot')} className="text-xs text-[#0F3D91] hover:text-agc-orange font-semibold hover:underline">Forgot Admin Password?</button></div>
-            </form>
-          </>)}
-          {mode === 'forgot' && (<form onSubmit={forgot} className="mt-6 space-y-3">
-            <div className="text-sm text-slate-600">Enter the admin email (configured in Company Settings) to receive an OTP.</div>
-            <div><Label className="text-xs">Admin Email</Label><Input type="email" value={email} onChange={e=>setEmail(e.target.value.toLowerCase())} className="h-11 mt-1" required/></div>
-            <Button disabled={loading} className="w-full h-11 bg-[#0F3D91] text-white font-bold">{loading?'Sending…':'Send OTP'}</Button>
-            <div className="text-center"><button type="button" onClick={()=>setMode('login')} className="text-xs text-slate-600">← Back</button></div>
-          </form>)}
-          {mode === 'otp' && (<form onSubmit={verifyOtp} className="mt-6 space-y-3">
-            <div className="text-sm text-slate-600">Enter the 6-digit OTP sent to <b>{email}</b>. Expires in 15 min.</div>
-            <Input value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,'').slice(0,6))} placeholder="6-digit code" className="h-11 mt-1 text-center text-xl tracking-[0.4em] font-black" maxLength={6}/>
-            <Button disabled={loading || otp.length!==6} className="w-full h-11 bg-[#0F3D91] text-white font-bold">{loading?'Verifying…':'Verify OTP'}</Button>
-          </form>)}
-          {mode === 'reset' && (<form onSubmit={doReset} className="mt-6 space-y-3">
-            <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">✓ OTP verified. Set your new password.</div>
-            <div><Label className="text-xs">New Admin Password</Label><Input type="password" value={newPw} onChange={e=>setNewPw(e.target.value)} className="h-11 mt-1" minLength={6} required/></div>
-            <Button disabled={loading || newPw.length<6} className="w-full h-11 bg-[#0F3D91] text-white font-bold">{loading?'Saving…':'Set New Password'}</Button>
-          </form>)}
-        </CardContent></Card>
-      </motion.div>
-    </div>
+  return (
+    <Dashboard
+      onLogout={logout}
+    />
   )
-  return <Dashboard onLogout={logout}/>
 }
 
 function Dashboard({ onLogout }) {
   const [tab, setTab] = useState('overview')
-  const [stats, setStats] = useState(null)
+  const [stats, setStats] = useState({})
   const [bookings, setBookings] = useState([])
-  const [q, setQ] = useState('')
-
-  const loadAll = async () => {
+  const [search, setSearch] = useState('')
+  const loadDashboard = async () => {
     try {
-      const [s, b] = await Promise.all([
-        fetch('/api/stats').then(r=>r.json()),
-        fetch('/api/bookings').then(r=>r.json())
+      const [statsRes, bookingsRes] = await Promise.all([
+        fetch('/api/stats'),
+        fetch('/api/bookings')
       ])
-      setStats(s);
-      setBookings(b.items || [])
-    } catch (e) {
-      console.error(e)
+
+      const statsData = await statsRes.json()
+      const bookingsData = await bookingsRes.json()
+
+      setStats(statsData || {})
+      setBookings(bookingsData.items || [])
+    } catch (error) {
+      console.error(error)
+      toast.error('Failed to load dashboard')
     }
   }
 
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => {
+    loadDashboard()
+  }, [])
 
-  const filtered = bookings.filter(b => {
-    if (!q) return true;
-    const s = q.toLowerCase();
-    return (b.lrNumber||'').toLowerCase().includes(s) ||
-           (b.senderName||b.sender?.name||'').toLowerCase().includes(s) ||
-           (b.receiverName||b.receiver?.name||'').toLowerCase().includes(s) ||
-           (b.destination||'').toLowerCase().includes(s)
+  const filteredBookings = bookings.filter((item) => {
+    if (!search) return true
+
+    const value = search.toLowerCase()
+
+    return (
+      (item.lrNumber || '').toLowerCase().includes(value) ||
+      (item.senderName || item.sender?.name || '').toLowerCase().includes(value) ||
+      (item.receiverName || item.receiver?.name || '').toLowerCase().includes(value) ||
+      (item.destination || '').toLowerCase().includes(value)
+    )
   })
-
   const tabs = [
-    { k:'overview', l:'Overview', i: LayoutDashboard },
-    { k:'bookings', l:'Bookings', i: Truck },
-    { k:'new', l:'New Booking', i: Plus },
-    { k:'billing', l:'Billing & Invoices', i: IndianRupee },
-    { k:'rates', l:'Rate Management', i: DollarSign },
-    { k:'branches', l:'Branches', i: Building2 },
-    { k:'transfers', l:'Branch Transfers', i: ArrowRightLeft },
-    { k:'users', l:'Users & Roles', i: Users },
-    { k:'labels', l:'Label Settings', i: Tag },
-    { k:'company', l:'Company Settings', i: Building2 },
-    { k:'reports', l:'Reports', i: FileSpreadsheet },
-    { k:'activity', l:'Activity Log', i: ClipboardList },
-    { k:'notifications', l:'Notifications', i: Bell },
+    {
+      key: 'overview',
+      label: 'Overview',
+      icon: LayoutDashboard
+    },
+    {
+      key: 'bookings',
+      label: 'Bookings',
+      icon: Truck
+    },
+    {
+      key: 'new',
+      label: 'New Booking',
+      icon: Plus
+    },
+    {
+      key: 'billing',
+      label: 'Billing & Invoices',
+      icon: IndianRupee
+    },
+    {
+      key: 'rates',
+      label: 'Rate Management',
+      icon: DollarSign
+    },
+    {
+      key: 'branches',
+      label: 'Branches',
+      icon: Building2
+    },
+    {
+      key: 'transfers',
+      label: 'Branch Transfers',
+      icon: ArrowRightLeft
+    },
+  {
+  key: 'users',
+  label: 'Users & Roles',
+  icon: Users
+},
+{
+  key: 'labels',
+      label: 'Label Settings',
+      icon: Tag
+    },
+    {
+      key: 'company',
+      label: 'Company Settings',
+      icon: Building2
+    },
+    {
+      key: 'reports',
+      label: 'Reports',
+      icon: FileSpreadsheet
+    },
+    {
+      key: 'activity',
+      label: 'Activity Log',
+      icon: ClipboardList
+    },
+    {
+      key: 'notifications',
+      label: 'Notifications',
+      icon: Bell
+    }
   ]
 
   return (
     <div className="min-h-screen bg-slate-100">
       <aside className="fixed inset-y-0 left-0 w-64 gradient-navy text-white hidden lg:flex flex-col">
         <div className="p-5 border-b border-white/10">
-          <div className="flex items-center gap-3"><LogoMark size={44}/><div><div className="font-black leading-tight">AGC Admin</div><div className="text-[10px] uppercase tracking-[0.2em] text-agc-gold">Control Panel</div></div></div>
+          <div className="flex items-center gap-3">
+            <LogoMark size={44} />
+            <div>
+              <div className="font-black text-lg">
+                AGC Admin
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-agc-gold">
+                Control Panel
+              </div>
+            </div>
+          </div>
         </div>
-        <nav className="p-3 flex-1 space-y-1 text-sm overflow-y-auto">
-          {tabs.map(t => (<SideItem key={t.k} icon={t.i} active={tab===t.k} onClick={()=>setTab(t.k)}>{t.l}</SideItem>))}
+
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {tabs.map((item) => (
+            <SideItem
+              key={item.key}
+              icon={item.icon}
+              active={tab === item.key}
+              onClick={() => setTab(item.key)}
+            >
+              {item.label}
+            </SideItem>
+          ))}
         </nav>
-        <div className="p-3 border-t border-white/10"><Button onClick={onLogout} variant="outline" className="w-full bg-transparent border-white/20 hover:bg-white/10 text-white"><LogOut className="h-4 w-4 mr-2"/>Logout</Button></div>
+
+        <div className="p-3 border-t border-white/10">
+          <Button
+            onClick={onLogout}
+            variant="outline"
+            className="w-full bg-transparent border-white/20 text-white hover:bg-white/10"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
       </aside>
 
       <main className="lg:ml-64">
-        <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-          <div className="px-6 py-4 flex items-center justify-between">
-            <div><div className="text-xs uppercase tracking-widest text-agc-gold font-bold">{tabs.find(t=>t.k===tab)?.l}</div><div className="text-xl font-black text-[#0F3D91]">Welcome back, Admin</div></div>
-            <Button onClick={loadAll} variant="outline" className="h-9"><RefreshCw className="h-4 w-4 mr-2"/>Refresh</Button>
-          </div>
-          <div className="flex lg:hidden px-6 pb-3 gap-2 text-xs overflow-x-auto">
-            {tabs.map(t => (<button key={t.k} onClick={()=>setTab(t.k)} className={`px-3 py-1 rounded-full whitespace-nowrap ${tab===t.k?'bg-[#0F3D91] text-white':'bg-slate-100 text-slate-700'}`}>{t.l}</button>))}
+        <div className="sticky top-0 z-20 bg-white border-b border-slate-200">
+          <div className="flex items-center justify-between px-6 py-4">
+
+            <div>
+              <div className="text-xs uppercase tracking-[0.2em] text-agc-gold font-bold">
+                {tabs.find(t => t.key === tab)?.label}
+              </div>
+
+              <h1 className="text-2xl font-black text-[#0F3D91]">
+                Welcome Back, Admin
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-3">
+
+              <div className="relative hidden md:block">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search LR, Sender, Receiver..."
+                  className="pl-10 w-80"
+                />
+              </div>
+
+              <Button
+                variant="outline"
+                onClick={loadDashboard}
+                className="h-10"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+
+            </div>
           </div>
         </div>
         <div className="p-6">
-          {tab === 'overview' && <Overview stats={stats}/>}
-          {tab === 'bookings' && <BookingsList bookings={filtered} q={q} setQ={setQ} reload={loadAll}/>}
-          {tab === 'new' && <NewBooking onCreated={()=>{loadAll(); setTab('bookings')}}/>}
-          {tab === 'billing' && <BillingModule bookings={bookings} reload={loadAll} />}
-          {tab === 'rates' && <RateManagement />}
-          {tab === 'branches' && <BranchesModule />}
-          {tab === 'transfers' && <BranchTransfersModule />}
-          {tab === 'users' && <UsersModule />}
-          {tab === 'labels' && <LabelSettingsModule />}
-          {tab === 'company' && <CompanySettingsModule />}
-          {tab === 'reports' && <ReportsModule />}
-          {tab === 'activity' && <ActivityLogModule />}
-          {tab === 'notifications' && <NotificationsModule />}
+
+          {tab === 'overview' && (
+            <Overview
+  stats={stats}
+  setTab={setTab}
+/>          )}
+
+          {tab === 'bookings' && (
+            <BookingsList
+              bookings={filteredBookings}
+              search={search}
+              setSearch={setSearch}
+              reload={loadDashboard}
+            />
+          )}
+
+          {tab === 'new' && (
+            <NewBooking
+              onCreated={() => {
+                loadDashboard()
+                setTab('bookings')
+              }}
+            />
+          )}
+
+          {tab === 'billing' && (
+            <BillingModule
+              bookings={bookings}
+              reload={loadDashboard}
+            />
+          )}
+
+          {tab === 'rates' && (
+            <RateManagement
+              reload={loadDashboard}
+            />
+          )}
+
+          {tab === 'branches' && (
+            <BranchesModule
+              reload={loadDashboard}
+            />
+          )}
+          {tab === 'transfers' && (
+            <BranchTransfersModule
+              reload={loadDashboard}
+            />
+          )}
+
+          {tab === 'users' && (
+            <UsersModule
+              reload={loadDashboard}
+            />
+          )}
+
+          {tab === 'labels' && (
+            <LabelSettingsModule
+              reload={loadDashboard}
+            />
+          )}
+
+          {tab === 'company' && (
+            <CompanySettingsModule
+              reload={loadDashboard}
+            />
+          )}
+
+          {tab === 'reports' && (
+            <ReportsModule
+              bookings={bookings}
+            />
+          )}
+
+          {tab === 'activity' && (
+            <ActivityLogModule />
+          )}
+
+          {tab === 'notifications' && (
+            <NotificationsModule />
+          )}
+
         </div>
+
       </main>
+
     </div>
   )
 }
-
-function SideItem({ icon: Icon, active, children, onClick }) { 
+function SideItem({
+  icon: Icon,
+  active,
+  onClick,
+  children
+}) {
   return (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition ${active ? 'bg-agc-gold text-[#0F3D91] font-bold' : 'text-white/80 hover:bg-white/10'}`}>
-      <Icon className="h-4 w-4"/> {children}
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+        active
+          ? 'bg-white text-[#0F3D91] font-bold shadow-lg'
+          : 'text-white/80 hover:bg-white/10 hover:text-white'
+      }`}
+    >
+      <Icon className="h-5 w-5" />
+      <span>{children}</span>
     </button>
-  ) 
+  )
 }
 
-function Th({ children }) { return <th className="px-4 py-3 text-left font-bold">{children}</th> }
-function Td({ children }) { return <td className="px-4 py-3 whitespace-nowrap">{children}</td> }
-
-function Overview({ stats }) {
+function Overview({ stats, setTab }) {
   const cards = [
-    { i: Truck, t: 'Total Bookings', v: stats?.totalBookings || 0, c:'from-blue-500 to-blue-600' },
-    { i: Timer, t: "Today's Bookings", v: stats?.todaysBookings || 0, c:'from-amber-500 to-amber-600' },
-    { i: IndianRupee, t: 'Total Revenue', v: `₹${(stats?.totalRevenue || 0).toLocaleString('en-IN')}`, c:'from-emerald-500 to-emerald-600' },
-    { i: Wallet, t: 'Outstanding', v: `₹${(stats?.outstandingPayments || 0).toLocaleString('en-IN')}`, c:'from-rose-500 to-rose-600' },
-    { i: Timer, t: 'Pending Deliveries', v: stats?.pendingDeliveries || 0, c:'from-orange-500 to-orange-600' },
-    { i: Truck, t: 'In Transit', v: stats?.inTransitShipments || 0, c:'from-indigo-500 to-indigo-600' },
-    { i: PackageCheck, t: 'Delivered', v: stats?.deliveredShipments || 0, c:'from-green-500 to-green-600' },
-    { i: PackageX, t: 'Cancelled', v: stats?.cancelledShipments || 0, c:'from-slate-500 to-slate-600' },
+    {
+      title: 'Total Bookings',
+      value: stats?.totalBookings || 0,
+      icon: Truck,
+      color: 'bg-blue-600'
+    },
+    {
+      title: 'Delivered',
+      value: stats?.delivered || 0,
+      icon: CheckCircle,
+      color: 'bg-green-600'
+    },
+    {
+      title: 'In Transit',
+      value: stats?.inTransit || 0,
+      icon: PackageCheck,
+      color: 'bg-orange-500'
+    },
+    {
+      title: 'Pending Delivery',
+      value: stats?.pending || 0,
+      icon: Timer,
+      color: 'bg-yellow-500'
+    },
+    {
+      title: 'Revenue',
+      value: `₹${Number(stats?.revenue || 0).toLocaleString('en-IN')}`,
+      icon: IndianRupee,
+      color: 'bg-emerald-600'
+    }
   ]
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-      {cards.map(({i:Ic,t,v,c},k)=>(
-        <motion.div key={k} initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{delay:k*0.03}}>
-          <Card className="overflow-hidden border-slate-200">
-            <CardContent className="p-5">
-              <div className={`h-10 w-10 rounded-lg bg-gradient-to-br ${c} grid place-items-center text-white`}>
-                <Ic className="h-5 w-5"/>
-              </div>
-              <div className="mt-4 text-xs uppercase tracking-widest text-slate-500">{t}</div>
-              <div className="text-2xl font-black text-[#0F3D91] mt-1">{v}</div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
-function BookingsList({ bookings, q, setQ, reload }) {
-  const [selected, setSelected] = useState(null)
-
-  const exportExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(bookings.map(b => ({
-      LR: b.lrNumber,
-      Date: b.date,
-      Sender: b.senderName || b.sender?.name,
-      Receiver: b.receiverName || b.receiver?.name,
-      Origin: b.origin,
-      Destination: b.destination,
-      Weight: b.chargeableWeight,
-      Amount: b.totalAmount,
-      Status: b.status,
-      Payment: b.paymentStatus
-    })))
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Bookings');
-    XLSX.writeFile(wb, `AGC-Bookings-${new Date().toISOString().slice(0,10)}.xlsx`)
-  }
 
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400"/>
-          <Input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search LR, sender, receiver, destination..." className="pl-9 h-10"/>
-        </div>
-        <a href="/manifest" target="_blank" rel="noreferrer">
-          <Button variant="outline" className="h-10"><ClipboardList className="h-4 w-4 mr-2"/>New Manifest</Button>
-        </a>
-        <Button onClick={exportExcel} variant="outline" className="h-10"><FileSpreadsheet className="h-4 w-4 mr-2"/>Export Excel</Button>
-      </div>
+    <div className="space-y-6">
 
-      <Card><CardContent className="p-0"><div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
-            <tr><Th>LR Number</Th><Th>Date</Th><Th>Sender</Th><Th>Receiver</Th><Th>Route</Th><Th>Amount</Th><Th>Status</Th><Th></Th></tr>
-          </thead>
-          <tbody>
-            {bookings.length === 0 && (<tr><td colSpan="8" className="p-8 text-center text-slate-400">No bookings yet. Create your first booking!</td></tr>)}
-            {bookings.map(b => (
-              <tr key={b.lrNumber || b._id} className="border-t border-slate-100 hover:bg-slate-50">
-                <Td><span className="font-bold text-[#0F3D91]">{b.lrNumber}</span></Td>
-                <Td>{b.date}</Td>
-                <Td>{b.senderName || b.sender?.name}</Td>
-                <Td>{b.receiverName || b.receiver?.name}</Td>
-                <Td>{b.origin} → {b.destination}</Td>
-                <Td>₹{Number(b.totalAmount||0).toLocaleString('en-IN')}</Td>
-                <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-[#0F3D91]">{b.status}</span></Td>
-                <Td>
-                  <div className="flex gap-1">
-                    <Button onClick={()=>setSelected(b)} size="sm" variant="outline" className="h-8">Update</Button>
-                    <a href={`/print/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer">
-                      <Button size="sm" variant="outline" className="h-8" title="Print LR"><Printer className="h-3 w-3"/></Button>
-                    </a>
-                    <a href={`/sticker/${encodeURIComponent(b.lrNumber)}`} target="_blank" rel="noreferrer">
-                      <Button size="sm" variant="outline" className="h-8" title="Box Stickers"><PackageCheck className="h-3 w-3"/></Button>
-                    </a>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+
+        {cards.map((card, index) => {
+          const Icon = card.icon
+
+          return (
+            <Card
+              key={index}
+              className="border-0 shadow-md hover:shadow-xl transition-all"
+            >
+              <CardContent className="p-6">
+
+                <div className="flex items-center justify-between">
+
+                  <div>
+
+                    <p className="text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                      {card.title}
+                    </p>
+
+                    <h2 className="text-3xl font-black text-[#0F3D91] mt-2">
+                      {card.value}
+                    </h2>
+
                   </div>
-                </Td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div></CardContent></Card>
 
-      {selected && <StatusUpdater booking={selected} onClose={()=>setSelected(null)} onSaved={()=>{setSelected(null); reload()}}/>}
-    </div>
-  )
-}
+                  <div className={`${card.color} p-4 rounded-2xl text-white`}>
+                    <Icon className="h-7 w-7" />
+                  </div>
 
-function StatusUpdater({ booking, onClose, onSaved }) {
-  const [status, setStatus] = useState(booking.status); 
-  const [location, setLocation] = useState(booking.currentLocation || ''); 
-  const [note, setNote] = useState(''); 
-  const [busy, setBusy] = useState(false)
-
-  const save = async () => { 
-    setBusy(true); 
-    try { 
-      const token = localStorage.getItem('agc_token');
-      const r = await fetch(`/api/bookings/${encodeURIComponent(booking.lrNumber)}/status`, { 
-        method:'POST', 
-        headers:{
-          'Content-Type':'application/json',
-          'Authorization': `Bearer ${token}`
-        }, 
-        body: JSON.stringify({ status, location, note })
-      }); 
-      const d = await r.json(); 
-      if (d.ok) { toast.success('Status updated'); onSaved() } else toast.error(d.error || 'Failed') 
-    } catch { toast.error('Network error') } 
-    setBusy(false) 
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
-      <Card className="w-full max-w-md" onClick={e=>e.stopPropagation()}>
-        <CardContent className="p-6">
-          <div className="font-bold text-[#0F3D91]">Update Shipment Status</div>
-          <div className="text-xs text-slate-500 mt-1">{booking.lrNumber}</div>
-          <div className="mt-4 space-y-3">
-            <div>
-              <Label className="text-xs">Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger className="mt-1"><SelectValue/></SelectTrigger>
-                <SelectContent>{STAGES.map(s => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs">Current Location</Label>
-              <Input value={location} onChange={e=>setLocation(e.target.value)} placeholder="e.g. Guwahati Hub" className="mt-1"/>
-            </div>
-            <div>
-              <Label className="text-xs">Note</Label>
-              <Input value={note} onChange={e=>setNote(e.target.value)} placeholder="Optional note" className="mt-1"/>
-            </div>
-          </div>
-          <div className="mt-5 flex gap-2 justify-end">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button disabled={busy} onClick={save} className="bg-[#0F3D91] text-white font-bold">{busy?'Saving...':'Save Update'}</Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
-}
-
-function NewBooking({ onCreated }) {
-  const [f, setF] = useState({ 
-    date: new Date().toISOString().slice(0,10), 
-    senderName:'', senderPhone:'', senderGst:'', senderAddress:'', senderPincode:'', senderState:'', senderDistrict:'', senderCountry:'India', pickupAddress:'', origin:'Guwahati', 
-    receiverName:'', receiverPhone:'', receiverGst:'', receiverAddress:'', receiverPincode:'', receiverState:'', receiverDistrict:'', receiverCountry:'India', deliveryAddress:'', destination:'', 
-    invoiceNumber:'', eWayBill:'', remarks:'', packages:1, actualWeight:0, volumetricWeight:0, chargeableWeight:0, 
-    freightRate:18, biltyCharge:100, doorDeliveryCharge:0, insurance:0, loadingUnloading:0, hamali:0, otherCharges:0, 
-    paymentStatus:'PENDING', paymentMode:'CASH', eta:'', branchCode:'HO' 
-  })
-  
-  const [senderSuggestions, setSenderSuggestions] = useState([])
-  const [receiverSuggestions, setReceiverSuggestions] = useState([])
-  const [showSenderDropdown, setShowSenderDropdown] = useState(false)
-  const [showReceiverDropdown, setShowReceiverDropdown] = useState(false)
-  const [pincodeErrors, setPincodeErrors] = useState({ sender: '', receiver: '' })
-  const [busy, setBusy] = useState(false);
-
-  const weight = Number(f.chargeableWeight || f.actualWeight || 0)
-  const freight = weight * Number(f.freightRate || 0)
-  const subtotal = freight + Number(f.biltyCharge||0) + Number(f.doorDeliveryCharge||0) + Number(f.insurance||0) + Number(f.loadingUnloading||0) + Number(f.hamali||0) + Number(f.otherCharges||0)
-  const gst = Math.round(subtotal * 0.18); 
-  const total = subtotal + gst
-
-  const handlePhoneLookup = async (phone, type) => {
-    if (!phone || phone.length < 10) return;
-    try {
-      const token = localStorage.getItem('agc_token');
-      const res = await fetch(`/api/customers?phone=${phone}`, {
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-      });
-      const data = await res.json();
-      if (data.ok && data.customer) {
-        const c = data.customer;
-        if (type === 'sender') {
-          setF(prev => ({
-            ...prev,
-            senderName: c.name || prev.senderName,
-            senderGst: c.gst || prev.senderGst,
-            senderAddress: c.address || prev.senderAddress,
-            pickupAddress: c.address || prev.pickupAddress,
-            senderPincode: c.pincode || prev.senderPincode,
-            senderState: c.state || prev.senderState,
-            senderDistrict: c.district || prev.senderDistrict,
-          }));
-          toast.success('Sender details auto-filled!');
-        } else {
-          setF(prev => ({
-            ...prev,
-            receiverName: c.name || prev.receiverName,
-            receiverGst: c.gst || prev.receiverGst,
-            receiverAddress: c.address || prev.receiverAddress,
-            deliveryAddress: c.address || prev.deliveryAddress,
-            receiverPincode: c.pincode || prev.receiverPincode,
-            receiverState: c.state || prev.receiverState,
-            receiverDistrict: c.district || prev.receiverDistrict,
-          }));
-          toast.success('Receiver details auto-filled!');
-        }
-      }
-    } catch (err) {
-      console.error("Auto-fill error:", err);
-    }
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (f.senderName && f.senderName.trim().length >= 2 && showSenderDropdown) {
-        try {
-          const token = localStorage.getItem('agc_token');
-          const res = await fetch(`/api/customers/search?query=${encodeURIComponent(f.senderName)}&type=Sender`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const data = await res.json();
-          if (data.success) setSenderSuggestions(data.customers || []);
-        } catch (e) { console.error('Error searching senders:', e); }
-      } else { setSenderSuggestions([]); }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [f.senderName, showSenderDropdown]);
-
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (f.receiverName && f.receiverName.trim().length >= 2 && showReceiverDropdown) {
-        try {
-          const token = localStorage.getItem('agc_token');
-          const res = await fetch(`/api/customers/search?query=${encodeURIComponent(f.receiverName)}&type=Receiver`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const data = await res.json();
-          if (data.success) setReceiverSuggestions(data.customers || []);
-        } catch (e) { console.error('Error searching receivers:', e); }
-      } else { setReceiverSuggestions([]); }
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [f.receiverName, showReceiverDropdown]);
-
-  useEffect(() => {
-    const pin = f.senderPincode ? f.senderPincode.trim() : ''
-    if (pin.length !== 6) { setPincodeErrors((prev) => ({ ...prev, sender: '' })); return }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/pincode/${pin}`)
-        const resData = await res.json()
-        const doc = resData.data || resData.pincode || resData
-        const state = doc.state || doc.statename || ''
-        const district = doc.district || doc.districtname || doc.city || ''
-        const isOk = resData.ok || resData.success || Boolean(state || district)
-        if (isOk && (state || district)) {
-          setF((prev) => ({ ...prev, senderState: state, senderDistrict: district, senderCountry: 'India' }))
-          setPincodeErrors((prev) => ({ ...prev, sender: '' }))
-        } else {
-          setPincodeErrors((prev) => ({ ...prev, sender: 'Invalid PIN Code' }))
-          setF((prev) => ({ ...prev, senderState: '', senderDistrict: '', senderCountry: 'India' }))
-        }
-      } catch { setPincodeErrors((prev) => ({ ...prev, sender: 'Invalid PIN Code' })) }
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [f.senderPincode])
-
-  useEffect(() => {
-    const pin = f.receiverPincode ? f.receiverPincode.trim() : ''
-    if (pin.length !== 6) { setPincodeErrors((prev) => ({ ...prev, receiver: '' })); return }
-    const timer = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/pincode/${pin}`)
-        const resData = await res.json()
-        const doc = resData.data || resData.pincode || resData
-        const state = doc.state || doc.statename || ''
-        const district = doc.district || doc.districtname || doc.city || ''
-        const isOk = resData.ok || resData.success || Boolean(state || district)
-        if (isOk && (state || district)) {
-          setF((prev) => ({ ...prev, receiverState: state, receiverDistrict: district, receiverCountry: 'India' }))
-          setPincodeErrors((prev) => ({ ...prev, receiver: '' }))
-        } else {
-          setPincodeErrors((prev) => ({ ...prev, receiver: 'Invalid PIN Code' }))
-          setF((prev) => ({ ...prev, receiverState: '', receiverDistrict: '', receiverCountry: 'India' }))
-        }
-      } catch { setPincodeErrors((prev) => ({ ...prev, receiver: 'Invalid PIN Code' })) }
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [f.receiverPincode])
-
-  const selectSender = (cust) => {
-    setF((prev) => ({
-      ...prev,
-      senderName: cust.name || '',
-      senderPhone: cust.mobile || cust.phone || '',
-      senderGst: cust.gst || '',
-      senderAddress: cust.address || '',
-      pickupAddress: cust.address || '',
-      senderPincode: cust.pincode || '',
-      senderState: cust.state || '',
-      senderDistrict: cust.district || '',
-      senderCountry: cust.country || 'India',
-    }));
-    setShowSenderDropdown(false);
-  };
-
-  const selectReceiver = (cust) => {
-    setF((prev) => ({
-      ...prev,
-      receiverName: cust.name || '',
-      receiverPhone: cust.mobile || cust.phone || '',
-      receiverGst: cust.gst || '',
-      receiverAddress: cust.address || '',
-      deliveryAddress: cust.address || '',
-      receiverPincode: cust.pincode || '',
-      receiverState: cust.state || '',
-      receiverDistrict: cust.district || '',
-      receiverCountry: cust.country || 'India',
-    }));
-    setShowReceiverDropdown(false);
-  };
-
-  const submit = async (e) => { 
-    e.preventDefault(); 
-    setBusy(true); 
-    try { 
-      const token = localStorage.getItem('agc_token');
-      const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
-
-      await fetch('/api/customers/upsert', {
-        method: 'POST', headers,
-        body: JSON.stringify({ name: f.senderName, mobile: f.senderPhone, gst: f.senderGst, address: f.pickupAddress || f.senderAddress, pincode: f.senderPincode, state: f.senderState, district: f.senderDistrict, country: f.senderCountry || 'India', customerType: 'Sender' })
-      });
-
-      await fetch('/api/customers/upsert', {
-        method: 'POST', headers,
-        body: JSON.stringify({ name: f.receiverName, mobile: f.receiverPhone, gst: f.receiverGst, address: f.deliveryAddress || f.receiverAddress, pincode: f.receiverPincode, state: f.receiverState, district: f.receiverDistrict, country: f.receiverCountry || 'India', customerType: 'Receiver' })
-      });
-
-      const r = await fetch('/api/bookings', { 
-        method:'POST', headers, 
-        body: JSON.stringify({ 
-          ...f, 
-          sender: { name: f.senderName, phone: f.senderPhone, gst: f.senderGst, address: f.pickupAddress || f.senderAddress, pincode: f.senderPincode, state: f.senderState, district: f.senderDistrict, country: f.senderCountry },
-          receiver: { name: f.receiverName, phone: f.receiverPhone, gst: f.receiverGst, address: f.deliveryAddress || f.receiverAddress, pincode: f.receiverPincode, state: f.receiverState, district: f.receiverDistrict, country: f.receiverCountry },
-          totalAmount: total 
-        })
-      }); 
-      const d = await r.json(); 
-      if (d.ok || d.success) { 
-        toast.success(`Booking created — ${d.booking?.lrNumber || d.lrNumber || 'Success'}`); 
-        onCreated() 
-      } else toast.error(d.error || d.message || 'Failed') 
-    } catch { toast.error('Network error') }
-    setBusy(false)
-  };
-
-  return (
-    <form onSubmit={submit} className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Sender Details */}
-        <Card><CardContent className="p-6 space-y-4">
-          <h3 className="font-bold text-[#0F3D91] pb-2 border-b border-slate-100">Sender Details</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-xs">Phone Number *</Label>
-              <Input value={f.senderPhone} onChange={e=>{setF({...f, senderPhone:e.target.value}); handlePhoneLookup(e.target.value, 'sender')}} placeholder="10-digit mobile" maxLength={10} required className="mt-1"/>
-            </div>
-            <div className="relative">
-              <Label className="text-xs">Sender Name *</Label>
-              <Input value={f.senderName} onChange={e=>{setF({...f, senderName:e.target.value}); setShowSenderDropdown(true)}} onFocus={()=>setShowSenderDropdown(true)} placeholder="Company or Person" required className="mt-1"/>
-              {showSenderDropdown && senderSuggestions.length > 0 && (
-                <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                  {senderSuggestions.map((cust, idx)=>(
-                    <div key={idx} onClick={()=>selectSender(cust)} className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer border-b last:border-b-0">
-                      <div className="font-bold text-[#0F3D91]">{cust.name}</div>
-                      <div className="text-slate-500">{cust.mobile} — {cust.address}</div>
-                    </div>
-                  ))}
                 </div>
-              )}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label className="text-xs">GSTIN</Label><Input value={f.senderGst} onChange={e=>setF({...f, senderGst:e.target.value.toUpperCase()})} placeholder="GST Number" className="mt-1"/></div>
-            <div>
-              <Label className="text-xs">PIN Code *</Label>
-              <Input value={f.senderPincode} onChange={e=>setF({...f, senderPincode:e.target.value.replace(/\D/g,'').slice(0,6)})} placeholder="6-digit PIN" maxLength={6} required className="mt-1"/>
-              {pincodeErrors.sender && <div className="text-[10px] text-rose-500 mt-1">{pincodeErrors.sender}</div>}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label className="text-xs">State</Label><Input value={f.senderState} onChange={e=>setF({...f, senderState:e.target.value})} placeholder="Auto-filled" className="mt-1 bg-slate-50"/></div>
-            <div><Label className="text-xs">District / City</Label><Input value={f.senderDistrict} onChange={e=>setF({...f, senderDistrict:e.target.value})} placeholder="Auto-filled" className="mt-1 bg-slate-50"/></div>
-          </div>
-          <div><Label className="text-xs">Address *</Label><Input value={f.senderAddress} onChange={e=>setF({...f, senderAddress:e.target.value})} placeholder="Street address" required className="mt-1"/></div>
-        </CardContent></Card>
 
-        {/* Receiver Details */}
-        <Card><CardContent className="p-6 space-y-4">
-          <h3 className="font-bold text-[#0F3D91] pb-2 border-b border-slate-100">Receiver Details</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label className="text-xs">Phone Number *</Label>
-              <Input value={f.receiverPhone} onChange={e=>{setF({...f, receiverPhone:e.target.value}); handlePhoneLookup(e.target.value, 'receiver')}} placeholder="10-digit mobile" maxLength={10} required className="mt-1"/>
+              </CardContent>
+            </Card>
+          )
+        })}
+
+      </div>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6">
+
+            <h3 className="text-lg font-bold text-[#0F3D91] mb-5">
+              Shipment Status
+            </h3>
+
+            <div className="space-y-4">
+
+              {STAGES.slice(0, 6).map((stage) => {
+
+                const count = stats?.stageCounts?.[stage.key] || 0
+
+                return (
+                  <div
+                    key={stage.key}
+                    className="flex items-center justify-between border-b pb-3"
+                  >
+                    <span className="text-sm font-medium text-slate-700">
+                      {stage.label}
+                    </span>
+
+                    <span className="font-black text-[#0F3D91]">
+                      {count}
+                    </span>
+                  </div>
+                )
+
+              })}
+
             </div>
-            <div className="relative">
-              <Label className="text-xs">Receiver Name *</Label>
-              <Input value={f.receiverName} onChange={e=>{setF({...f, receiverName:e.target.value}); setShowReceiverDropdown(true)}} onFocus={()=>setShowReceiverDropdown(true)} placeholder="Company or Person" required className="mt-1"/>
-              {showReceiverDropdown && receiverSuggestions.length > 0 && (
-                <div className="absolute z-20 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
-                  {receiverSuggestions.map((cust, idx)=>(
-                    <div key={idx} onClick={()=>selectReceiver(cust)} className="px-3 py-2 text-xs hover:bg-slate-100 cursor-pointer border-b last:border-b-0">
-                      <div className="font-bold text-[#0F3D91]">{cust.name}</div>
-                      <div className="text-slate-500">{cust.mobile} — {cust.address}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-md">
+          <CardContent className="p-6">
+
+            <h3 className="text-lg font-bold text-[#0F3D91] mb-5">
+              Quick Actions
+            </h3>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                onClick={() => setTab('new')}
+                className="h-20 flex flex-col gap-2 bg-[#0F3D91] hover:bg-[#1E4FB8]"
+              >
+                <Plus className="h-6 w-6" />
+                New Booking
+              </Button>
+
+              <Button
+                onClick={() => setTab('bookings')}
+                variant="outline"
+                className="h-20 flex flex-col gap-2"
+              >
+                <Truck className="h-6 w-6" />
+                View Bookings
+              </Button>
+
+              <Button
+                onClick={() => setTab('billing')}
+                variant="outline"
+                className="h-20 flex flex-col gap-2"
+              >
+                <IndianRupee className="h-6 w-6" />
+                Billing
+              </Button>
+
+              <Button
+                onClick={() => setTab('reports')}
+                variant="outline"
+                className="h-20 flex flex-col gap-2"
+              >
+                <FileSpreadsheet className="h-6 w-6" />
+                Reports
+              </Button>
+
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label className="text-xs">GSTIN</Label><Input value={f.receiverGst} onChange={e=>setF({...f, receiverGst:e.target.value.toUpperCase()})} placeholder="GST Number" className="mt-1"/></div>
-            <div>
-              <Label className="text-xs">PIN Code *</Label>
-              <Input value={f.receiverPincode} onChange={e=>setF({...f, receiverPincode:e.target.value.replace(/\D/g,'').slice(0,6)})} placeholder="6-digit PIN" maxLength={6} required className="mt-1"/>
-              {pincodeErrors.receiver && <div className="text-[10px] text-rose-500 mt-1">{pincodeErrors.receiver}</div>}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label className="text-xs">State</Label><Input value={f.receiverState} onChange={e=>setF({...f, receiverState:e.target.value})} placeholder="Auto-filled" className="mt-1 bg-slate-50"/></div>
-            <div><Label className="text-xs">District / City</Label><Input value={f.receiverDistrict} onChange={e=>setF({...f, receiverDistrict:e.target.value})} placeholder="Auto-filled" className="mt-1 bg-slate-50"/></div>
-          </div>
-          <div><Label className="text-xs">Address *</Label><Input value={f.receiverAddress} onChange={e=>setF({...f, receiverAddress:e.target.value})} placeholder="Street address" required className="mt-1"/></div>
-        </CardContent></Card>
+
+          </CardContent>
+        </Card>
+
       </div>
 
-      {/* Shipment & Charges */}
-      <Card><CardContent className="p-6 space-y-4">
-        <h3 className="font-bold text-[#0F3D91] pb-2 border-b border-slate-100">Shipment & Charges</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div><Label className="text-xs">Booking Date</Label><Input type="date" value={f.date} onChange={e=>setF({...f, date:e.target.value})} className="mt-1"/></div>
-          <div><Label className="text-xs">Origin</Label><Input value={f.origin} onChange={e=>setF({...f, origin:e.target.value})} className="mt-1"/></div>
-          <div><Label className="text-xs">Destination *</Label><Input value={f.destination} onChange={e=>setF({...f, destination:e.target.value})} placeholder="Destination city" required className="mt-1"/></div>
-          <div><Label className="text-xs">Packages *</Label><Input type="number" value={f.packages} onChange={e=>setF({...f, packages:Number(e.target.value)})} min={1} required className="mt-1"/></div>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div><Label className="text-xs">Actual Weight (kg)</Label><Input type="number" value={f.actualWeight} onChange={e=>setF({...f, actualWeight:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Volumetric Wt (kg)</Label><Input type="number" value={f.volumetricWeight} onChange={e=>setF({...f, volumetricWeight:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Chargeable Wt (kg)</Label><Input type="number" value={f.chargeableWeight} onChange={e=>setF({...f, chargeableWeight:Number(e.target.value)})} placeholder="Defaults to actual" className="mt-1"/></div>
-          <div><Label className="text-xs">Freight Rate (₹/kg)</Label><Input type="number" value={f.freightRate} onChange={e=>setF({...f, freightRate:Number(e.target.value)})} className="mt-1"/></div>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-          <div><Label className="text-xs">Bilty Charge (₹)</Label><Input type="number" value={f.biltyCharge} onChange={e=>setF({...f, biltyCharge:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Door Delivery (₹)</Label><Input type="number" value={f.doorDeliveryCharge} onChange={e=>setF({...f, doorDeliveryCharge:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Insurance (₹)</Label><Input type="number" value={f.insurance} onChange={e=>setF({...f, insurance:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Loading/Unloading (₹)</Label><Input type="number" value={f.loadingUnloading} onChange={e=>setF({...f, loadingUnloading:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Hamali (₹)</Label><Input type="number" value={f.hamali} onChange={e=>setF({...f, hamali:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Other Charges (₹)</Label><Input type="number" value={f.otherCharges} onChange={e=>setF({...f, otherCharges:Number(e.target.value)})} className="mt-1"/></div>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div>
-            <Label className="text-xs">Payment Status</Label>
-            <Select value={f.paymentStatus} onValueChange={v=>setF({...f, paymentStatus:v})}>
-              <SelectTrigger className="mt-1"><SelectValue/></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="PENDING">Pending (To Pay)</SelectItem>
-                <SelectItem value="PAID">Paid</SelectItem>
-                <SelectItem value="CREDIT">Credit</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs">Payment Mode</Label>
-            <Select value={f.paymentMode} onValueChange={v=>setF({...f, paymentMode:v})}>
-              <SelectTrigger className="mt-1"><SelectValue/></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="CASH">Cash</SelectItem>
-                <SelectItem value="UPI">UPI</SelectItem>
-                <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
-                <SelectItem value="CHEQUE">Cheque</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div><Label className="text-xs">Invoice Number</Label><Input value={f.invoiceNumber} onChange={e=>setF({...f, invoiceNumber:e.target.value})} className="mt-1"/></div>
-          <div><Label className="text-xs">E-Way Bill No.</Label><Input value={f.eWayBill} onChange={e=>setF({...f, eWayBill:e.target.value})} className="mt-1"/></div>
-        </div>
-
-        {/* Live Calculation Box */}
-        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4 mt-4">
-          <div className="flex gap-6 text-xs text-slate-600">
-            <div>Freight: <b className="text-slate-900">₹{freight}</b></div>
-            <div>Subtotal: <b className="text-slate-900">₹{subtotal}</b></div>
-            <div>GST (18%): <b className="text-slate-900">₹{gst}</b></div>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right">
-              <div className="text-[10px] uppercase font-bold text-slate-400">Total Amount</div>
-              <div className="text-xl font-black text-[#0F3D91]">₹{total.toLocaleString('en-IN')}</div>
-            </div>
-            <Button disabled={busy} className="bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold h-11 px-8">
-              {busy ? 'Creating...' : 'Create Booking & Generate LR'}
-            </Button>
-          </div>
-        </div>
-      </CardContent></Card>
-    </form>
+    </div>
   )
 }
+function BookingsList({
+  bookings,
+  search,
+  setSearch,
+  reload,
+  setTab
+}) {
 
-// ----------------------------------------------------
-// BILLING MODULE (Exact Existing + View, Print, Download PDF Actions)
-// ----------------------------------------------------
-function BillingModule({ reload }) {
-  const [lrInput, setLrInput] = useState('')
-  const [invoiceData, setInvoiceData] = useState(null)
-  const [invoices, setInvoices] = useState([])
-  const [loading, setLoading] = useState(false)
+  return (
+    <div className="space-y-6">
 
-  const loadInvoices = async () => {
-    try {
-      const token = localStorage.getItem('agc_token')
-      const res = await fetch('/api/admin/billing', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      const data = await res.json()
-      if (data.ok || data.success) {
-        setInvoices(data.invoices || data.items || data.data || [])
-      }
-    } catch {
-      // Network catch
-    }
+      <Card className="border-0 shadow-md">
+
+        <CardContent className="p-6">
+
+          <div className="flex items-center justify-between mb-5">
+
+            <h2 className="text-xl font-black text-[#0F3D91]">
+              Booking Management
+            </h2>
+
+            <Button
+              onClick={reload}
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+
+          </div>
+
+          <div className="relative mb-6">
+
+            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search LR Number, Sender, Receiver..."
+              className="pl-10 h-11"
+            />
+
+          </div>
+
+          <div className="overflow-x-auto">
+
+            <table className="w-full text-sm">
+              <thead className="bg-slate-100 text-slate-600 uppercase text-[11px]">
+                <tr>
+                  <th className="p-3 text-left">LR No.</th>
+                  <th className="p-3 text-left">Sender</th>
+                  <th className="p-3 text-left">Receiver</th>
+                  <th className="p-3 text-left">Destination</th>
+                  <th className="p-3 text-center">Weight</th>
+                  <th className="p-3 text-right">Amount</th>
+                  <th className="p-3 text-center">Status</th>
+                  <th className="p-3 text-center">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+
+                {bookings.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={8}
+                      className="text-center p-10 text-slate-400"
+                    >
+                      No Booking Found
+                    </td>
+                  </tr>
+                )}
+
+                {bookings.map((item, index) => (
+                  <tr
+                    key={item._id || index}
+                    className="border-b hover:bg-slate-50"
+                  >
+                    <td className="p-3 font-bold text-[#0F3D91]">
+                      {item.lrNumber}
+                    </td>
+
+                    <td className="p-3">
+                      {item.senderName || item.sender?.name || '-'}
+                    </td>
+
+                    <td className="p-3">
+                      {item.receiverName || item.receiver?.name || '-'}
+                    </td>
+
+                    <td className="p-3">
+                      {item.destination || '-'}
+                    </td>
+
+                    <td className="p-3 text-center">
+                      {item.chargeableWeight || item.actualWeight || 0} Kg
+                    </td>
+
+                    <td className="p-3 text-right font-bold">
+                      ₹{Number(item.totalAmount || 0).toLocaleString('en-IN')}
+                    </td>
+
+                    <td className="p-3 text-center">
+
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          item.status === 'DELIVERED'
+                            ? 'bg-green-100 text-green-700'
+                            : item.status === 'IN_TRANSIT'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                        }`}
+                      >
+                        {item.status || 'BOOKED'}
+                      </span>
+
+                    </td>
+                    <td className="p-3">
+
+                      <div className="flex items-center justify-center gap-2">
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="View Booking"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="Edit Booking"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="Print LR"
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          title="Generate Invoice"
+                          onClick={() => setTab('billing')}
+                        >
+                          <IndianRupee className="h-4 w-4" />
+                        </Button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </CardContent>
+
+      </Card>
+
+    </div>
+
+  )
+}
+function NewBooking({ onCreated }) {
+
+  const emptyForm = {
+    senderName: '',
+    senderPhone: '',
+    receiverName: '',
+    receiverPhone: '',
+    origin: 'Guwahati',
+    destination: '',
+    packages: 1,
+    actualWeight: '',
+    chargeableWeight: '',
+    freight: '',
+    loading: '',
+    unloading: '',
+    otherCharges: '',
+    paymentMode: 'TO_PAY'
   }
 
-  useEffect(() => {
-    loadInvoices()
-  }, [])
+  const [form, setForm] = useState(emptyForm)
+  const [saving, setSaving] = useState(false)
 
-  const fetchLr = async () => {
-    if (!lrInput.trim()) return
-    setLoading(true)
-    try {
-      const token = localStorage.getItem('agc_token')
-      const res = await fetch(`/api/bookings/${encodeURIComponent(lrInput.trim())}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
-      const data = await res.json()
-      if (data.ok || data.success || data.booking) {
-        setInvoiceData(data.booking || data.data || data)
-        toast.success('LR fetched successfully!')
-      } else {
-        toast.error(data.error || 'LR not found')
-      }
-    } catch {
-      toast.error('Network error while fetching LR')
-    }
-    setLoading(false)
-  }
+  const totalAmount =
+    Number(form.freight || 0) +
+    Number(form.loading || 0) +
+    Number(form.unloading || 0) +
+    Number(form.otherCharges || 0)
 
-  const generateInvoice = async () => {
-    if (!invoiceData) return
+  const saveBooking = async (e) => {
+    e.preventDefault()
+
+    setSaving(true)
+
     try {
+
       const token = localStorage.getItem('agc_token')
-      const res = await fetch('/api/admin/billing', {
+
+      const res = await fetch('/api/bookings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ lrNumber: invoiceData.lrNumber })
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...form,
+          totalAmount
+        })
       })
+
       const data = await res.json()
-      if (data.ok || data.success) {
-        toast.success('Invoice generated successfully!')
-        loadInvoices()
-        reload()
+
+      if (data.ok) {
+        toast.success('Booking Created Successfully')
+        setForm(emptyForm)
+        onCreated()
       } else {
-        toast.error(data.error || 'Failed to generate invoice')
+        toast.error(data.error || 'Failed To Create Booking')
       }
-    } catch {
-      toast.error('Network error while generating invoice')
-    }
-  }
 
-  const viewInvoice = (lrNumber) => {
-    window.open(`/print/${encodeURIComponent(lrNumber)}`, '_blank')
-  }
-
-  const printInvoice = (lrNumber) => {
-    const printWindow = window.open(`/print/${encodeURIComponent(lrNumber)}`, '_blank')
-    if (printWindow) {
-      printWindow.onload = () => {
-        printWindow.print()
-      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Network Error')
+    } finally {
+      setSaving(false)
     }
-  }
 
-  const downloadPdf = (lrNumber) => {
-    const printWindow = window.open(`/print/${encodeURIComponent(lrNumber)}`, '_blank')
-    if (printWindow) {
-      printWindow.onload = () => {
-        printWindow.print()
-      }
-    }
   }
 
   return (
     <div className="space-y-6">
-      {/* Fetch LR Section */}
-      <Card><CardContent className="p-6 space-y-4">
-        <h3 className="font-bold text-[#0F3D91] text-lg">Fetch LR</h3>
-        <div className="flex items-center gap-3 max-w-md">
-          <Input 
-            value={lrInput} 
-            onChange={e => setLrInput(e.target.value)} 
-            placeholder="Enter LR Number..." 
-            className="h-10"
-          />
-          <Button disabled={loading} onClick={fetchLr} className="bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold h-10 px-6">
-            {loading ? 'Fetching...' : 'Fetch'}
-          </Button>
-        </div>
 
-        {invoiceData && (
-          <div className="mt-6 p-4 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
-            <div className="flex justify-between items-center">
-              <div>
-                <div className="text-xs text-slate-500 uppercase tracking-widest font-semibold">LR Number</div>
-                <div className="text-lg font-black text-[#0F3D91]">{invoiceData.lrNumber}</div>
-              </div>
-              <div>
-                <div className="text-xs text-slate-500 uppercase tracking-widest font-semibold">Amount</div>
-                <div className="text-lg font-black text-slate-900">₹{Number(invoiceData.totalAmount || 0).toLocaleString('en-IN')}</div>
-              </div>
+      <Card className="border-0 shadow-lg">
+
+        <CardContent className="p-6">
+
+          <h2 className="text-2xl font-black text-[#0F3D91] mb-6">
+            New Booking
+          </h2>
+
+          <form
+            onSubmit={saveBooking}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+          >
+
+            <div>
+              <Label>Sender Name</Label>
+              <Input
+                value={form.senderName}
+                onChange={(e)=>setForm({...form,senderName:e.target.value})}
+              />
             </div>
-            <div className="grid grid-cols-2 gap-4 text-xs text-slate-700 pt-2 border-t border-slate-200">
-              <div>Sender: <span className="font-bold">{invoiceData.senderName || invoiceData.sender?.name}</span></div>
-              <div>Receiver: <span className="font-bold">{invoiceData.receiverName || invoiceData.receiver?.name}</span></div>
-              <div>Route: <span className="font-bold">{invoiceData.origin} → {invoiceData.destination}</span></div>
-              <div>Date: <span className="font-bold">{invoiceData.date}</span></div>
+
+            <div>
+              <Label>Sender Phone</Label>
+              <Input
+                value={form.senderPhone}
+                onChange={(e)=>setForm({...form,senderPhone:e.target.value})}
+              />
             </div>
-          </div>
-        )}
-      </CardContent></Card>
 
-      {/* Generate Invoice Section */}
-      <Card><CardContent className="p-6 space-y-4">
-        <h3 className="font-bold text-[#0F3D91] text-lg">Generate Invoice</h3>
-        <p className="text-xs text-slate-500">Generate an official invoice document for the fetched LR shipment.</p>
-        <Button 
-          disabled={!invoiceData} 
-          onClick={generateInvoice} 
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-6"
-        >
-          Generate Invoice
-        </Button>
-      </CardContent></Card>
+            <div>
+              <Label>Receiver Name</Label>
+              <Input
+                value={form.receiverName}
+                onChange={(e)=>setForm({...form,receiverName:e.target.value})}
+              />
+            </div>
 
-      {/* Invoice History Section */}
-      <Card><CardContent className="p-6 space-y-4">
-        <h3 className="font-bold text-[#0F3D91] text-lg">Invoice History</h3>
-        <div className="overflow-x-auto border border-slate-100 rounded-lg">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
-              <tr>
-                <Th>LR / Invoice #</Th>
-                <Th>Date</Th>
-                <Th>Client / Sender</Th>
-                <Th>Route</Th>
-                <Th>Amount</Th>
-                <Th>Actions</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoices.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="p-8 text-center text-slate-400">No invoices generated yet.</td>
-                </tr>
-              ) : (
-                invoices.map((inv, idx) => (
-                  <tr key={idx} className="border-t border-slate-100 hover:bg-slate-50">
-                    <Td><span className="font-bold text-[#0F3D91]">{inv.lrNumber}</span></Td>
-                    <Td>{inv.date}</Td>
-                    <Td>{inv.senderName || inv.sender?.name}</Td>
-                    <Td>{inv.origin} → {inv.destination}</Td>
-                    <Td className="font-bold">₹{Number(inv.totalAmount || 0).toLocaleString('en-IN')}</Td>
-                    <Td>
-                      <div className="flex items-center gap-2">
-                        <Button onClick={() => viewInvoice(inv.lrNumber)} size="sm" variant="outline" className="h-8 gap-1" title="View Invoice">
-                          <Eye className="h-3 w-3"/> View
-                        </Button>
-                        <Button onClick={() => printInvoice(inv.lrNumber)} size="sm" variant="outline" className="h-8 gap-1" title="Print Invoice">
-                          <Printer className="h-3 w-3"/> Print
-                        </Button>
-                        <Button onClick={() => downloadPdf(inv.lrNumber)} size="sm" variant="outline" className="h-8 gap-1" title="Download PDF">
-                          <Download className="h-3 w-3"/> PDF
-                        </Button>
-                      </div>
-                    </Td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </CardContent></Card>
+            <div>
+              <Label>Receiver Phone</Label>
+              <Input
+                value={form.receiverPhone}
+                onChange={(e)=>setForm({...form,receiverPhone:e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Origin</Label>
+              <Input
+                value={form.origin}
+                onChange={(e)=>setForm({...form,origin:e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Destination</Label>
+              <Input
+                value={form.destination}
+                onChange={(e)=>setForm({...form,destination:e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Packages</Label>
+              <Input
+                type="number"
+                value={form.packages}
+                onChange={(e)=>setForm({...form,packages:e.target.value})}
+              />
+            </div>
+            <div>
+              <Label>Actual Weight (Kg)</Label>
+              <Input
+                type="number"
+                value={form.actualWeight}
+                onChange={(e)=>setForm({...form,actualWeight:e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Chargeable Weight (Kg)</Label>
+              <Input
+                type="number"
+                value={form.chargeableWeight}
+                onChange={(e)=>setForm({...form,chargeableWeight:e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Freight</Label>
+              <Input
+                type="number"
+                value={form.freight}
+                onChange={(e)=>setForm({...form,freight:e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Loading Charges</Label>
+              <Input
+                type="number"
+                value={form.loading}
+                onChange={(e)=>setForm({...form,loading:e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Unloading Charges</Label>
+              <Input
+                type="number"
+                value={form.unloading}
+                onChange={(e)=>setForm({...form,unloading:e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Other Charges</Label>
+              <Input
+                type="number"
+                value={form.otherCharges}
+                onChange={(e)=>setForm({...form,otherCharges:e.target.value})}
+              />
+            </div>
+
+            <div>
+              <Label>Payment Mode</Label>
+              <Select
+                value={form.paymentMode}
+                onValueChange={(v)=>setForm({...form,paymentMode:v})}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select Payment Mode" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="TO_PAY">
+                    To Pay
+                  </SelectItem>
+
+                  <SelectItem value="PAID">
+                    Paid
+                  </SelectItem>
+
+                  <SelectItem value="TBB">
+                    To Be Billed
+                  </SelectItem>
+
+                  <SelectItem value="FOC">
+                    Free Of Cost
+                  </SelectItem>
+                </SelectContent>
+
+              </Select>
+            </div>
+
+            <div className="lg:col-span-3">
+
+              <Card className="bg-slate-50 border-dashed">
+
+                <CardContent className="p-5 flex items-center justify-between">
+
+                  <div>
+
+                    <p className="text-xs uppercase tracking-widest text-slate-500">
+                      Total Freight Amount
+                    </p>
+
+                    <h2 className="text-3xl font-black text-[#0F3D91] mt-2">
+                      ₹{Number(totalAmount).toLocaleString('en-IN')}
+                    </h2>
+
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="h-12 px-8 bg-[#0F3D91] hover:bg-[#1E4FB8]"
+                  >
+                    {saving ? 'Saving...' : 'Create Booking'}
+                  </Button>
+
+                </CardContent>
+
+              </Card>
+
+            </div>
+
+          </form>
+
+        </CardContent>
+
+      </Card>
+
     </div>
+
+  )
+}
+function BillingModule({ bookings, reload }) {
+
+  const [lrNumber, setLrNumber] = useState('')
+  const [selectedBooking, setSelectedBooking] = useState(null)
+  const [history, setHistory] = useState([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    loadHistory()
+  }, [])
+
+  const loadHistory = async () => {
+    try {
+      const token = localStorage.getItem('agc_token')
+
+      const res = await fetch('/api/invoices', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setHistory(data.invoices || [])
+      }
+
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
+  const fetchLR = async () => {
+
+    if (!lrNumber.trim()) {
+      toast.error('Enter LR Number')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+
+      const token = localStorage.getItem('agc_token')
+
+      const res = await fetch(
+        `/api/bookings/${encodeURIComponent(lrNumber)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      )
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setSelectedBooking(data.booking)
+        toast.success('LR Loaded')
+      } else {
+        toast.error('LR Not Found')
+      }
+
+    } catch (e) {
+      toast.error('Network Error')
+    }
+
+    setLoading(false)
+  }
+  const generateInvoice = async () => {
+
+    if (!selectedBooking) {
+      toast.error('Fetch LR First')
+      return
+    }
+
+    try {
+
+      const token = localStorage.getItem('agc_token')
+
+      const res = await fetch('/api/invoices', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          lrNumber: selectedBooking.lrNumber
+        })
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+
+        toast.success('Invoice Generated Successfully')
+
+        loadHistory()
+
+        reload()
+
+      } else {
+
+        toast.error(data.error || 'Invoice Generation Failed')
+
+      }
+
+    } catch (e) {
+
+      console.error(e)
+
+      toast.error('Network Error')
+
+    }
+
+  }
+
+  const printInvoice = (lr) => {
+    window.open(`/invoice/${encodeURIComponent(lr)}`, '_blank')
+  }
+
+  const downloadInvoice = (lr) => {
+    window.open(`/api/invoices/${encodeURIComponent(lr)}/pdf`, '_blank')
+  }
+
+  return (
+    <div className="space-y-6">
+
+      <Card className="border-0 shadow-lg">
+
+        <CardContent className="p-6 space-y-5">
+
+          <h2 className="text-2xl font-black text-[#0F3D91]">
+            Billing & Invoice
+          </h2>
+
+          <div className="flex gap-3">
+
+            <Input
+              value={lrNumber}
+              onChange={(e) => setLrNumber(e.target.value)}
+              placeholder="Enter LR Number"
+            />
+
+            <Button
+              onClick={fetchLR}
+              disabled={loading}
+              className="bg-[#0F3D91] hover:bg-[#1E4FB8]"
+            >
+              {loading ? 'Fetching...' : 'Fetch LR'}
+            </Button>
+
+          </div>
+
+          {selectedBooking && (
+
+            <Card className="bg-slate-50">
+
+              <CardContent className="p-5">
+
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                  <div>
+                    <p className="text-xs text-slate-500">LR Number</p>
+                    <h3 className="font-bold text-[#0F3D91]">
+                      {selectedBooking.lrNumber}
+                    </h3>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-500">Sender</p>
+                    <h3 className="font-semibold">
+                      {selectedBooking.senderName}
+                    </h3>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-500">Receiver</p>
+                    <h3 className="font-semibold">
+                      {selectedBooking.receiverName}
+                    </h3>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-500">Amount</p>
+                    <h3 className="font-black text-green-600">
+                      ₹{Number(selectedBooking.totalAmount || 0).toLocaleString('en-IN')}
+                    </h3>
+                  </div>
+
+                </div>
+              </CardContent>
+
+            </Card>
+
+          )}
+
+          <div className="flex justify-end">
+
+            <Button
+              onClick={generateInvoice}
+              disabled={!selectedBooking}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              <IndianRupee className="h-4 w-4 mr-2" />
+              Generate Invoice
+            </Button>
+
+          </div>
+
+        </CardContent>
+
+      </Card>
+
+      <Card className="border-0 shadow-lg">
+
+        <CardContent className="p-6">
+
+          <h2 className="text-xl font-black text-[#0F3D91] mb-5">
+            Invoice History
+          </h2>
+
+          <div className="overflow-x-auto">
+
+            <table className="w-full text-sm">
+
+              <thead className="bg-slate-100">
+
+                <tr>
+
+                  <th className="p-3 text-left">Invoice No.</th>
+
+                  <th className="p-3 text-left">LR Number</th>
+
+                  <th className="p-3 text-left">Customer</th>
+
+                  <th className="p-3 text-right">Amount</th>
+
+                  <th className="p-3 text-center">Action</th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+                {history.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={5}
+                      className="p-8 text-center text-slate-400"
+                    >
+                      No Invoice Generated Yet
+                    </td>
+                  </tr>
+                )}
+
+                {history.map((invoice, index) => (
+
+                  <tr
+                    key={invoice._id || index}
+                    className="border-b hover:bg-slate-50"
+                  >
+
+                    <td className="p-3 font-bold text-[#0F3D91]">
+                      {invoice.invoiceNumber}
+                    </td>
+
+                    <td className="p-3">
+                      {invoice.lrNumber}
+                    </td>
+
+                    <td className="p-3">
+                      {invoice.senderName || invoice.sender?.name}
+                    </td>
+
+                    <td className="p-3 text-right font-bold">
+                      ₹{Number(invoice.totalAmount || 0).toLocaleString('en-IN')}
+                    </td>
+
+                    <td className="p-3">
+
+                      <div className="flex justify-center gap-2">
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() =>
+                            window.open(
+                              `/invoice/${encodeURIComponent(invoice.lrNumber)}`,
+                              '_blank'
+                            )
+                          }
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => printInvoice(invoice.lrNumber)}
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => downloadInvoice(invoice.lrNumber)}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </CardContent>
+
+      </Card>
+
+    </div>
+
   )
 }
 
-function RateManagement() {
-  return <div className="p-6 bg-white rounded-lg shadow-sm">Rate Management Module (Placeholder)</div>
+function RateManagement({ reload }) {
+
+  const [rates, setRates] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const loadRates = async () => {
+
+    try {
+
+      const token = localStorage.getItem('agc_token')
+
+      const res = await fetch('/api/rates', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setRates(data.items || [])
+      }
+
+    } catch (e) {
+      console.error(e)
+    }
+
+    setLoading(false)
+
+  }
+
+  useEffect(() => {
+    loadRates()
+  }, [])
+  return (
+
+    <div className="space-y-6">
+
+      <Card className="border-0 shadow-lg">
+
+        <CardContent className="p-6">
+
+          <div className="flex items-center justify-between mb-6">
+
+            <h2 className="text-2xl font-black text-[#0F3D91]">
+              Rate Management
+            </h2>
+
+            <Button
+              onClick={loadRates}
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+
+          </div>
+
+          {loading ? (
+
+            <div className="text-center py-10 text-slate-500">
+              Loading Rates...
+            </div>
+
+          ) : (
+
+            <div className="overflow-x-auto">
+
+              <table className="w-full text-sm">
+
+                <thead className="bg-slate-100">
+
+                  <tr>
+
+                    <th className="p-3 text-left">
+                      Branch
+                    </th>
+
+                    <th className="p-3 text-left">
+                      Destination
+                    </th>
+
+                    <th className="p-3 text-center">
+                      Rate / Kg
+                    </th>
+
+                    <th className="p-3 text-center">
+                      Min Charge
+                    </th>
+
+                    <th className="p-3 text-center">
+                      Actions
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+                {rates.length === 0 && (
+
+                  <tr>
+
+                    <td
+                      colSpan={5}
+                      className="text-center py-10 text-slate-400"
+                    >
+                      No Rates Available
+                    </td>
+
+                  </tr>
+
+                )}
+
+                {rates.map((rate, index) => (
+
+                  <tr
+                    key={rate._id || index}
+                    className="border-b hover:bg-slate-50"
+                  >
+
+                    <td className="p-3 font-semibold">
+                      {rate.branchName}
+                    </td>
+
+                    <td className="p-3">
+                      {rate.destination}
+                    </td>
+
+                    <td className="p-3 text-center font-bold">
+                      ₹{Number(rate.rate || 0).toLocaleString('en-IN')}
+                    </td>
+
+                    <td className="p-3 text-center">
+                      ₹{Number(rate.minimumCharge || 0).toLocaleString('en-IN')}
+                    </td>
+
+                    <td className="p-3">
+
+                      <div className="flex justify-center gap-2">
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+              </tbody>
+
+                             </table>
+
+          </div>
+
+        )}
+
+      </CardContent>
+
+      </Card>
+
+    </div>
+
+  )
+
 }
 
-function BranchesModule() {
-  return <div className="p-6 bg-white rounded-lg shadow-sm">Branches Module (Placeholder)</div>
+function BranchesModule({ reload }) {
+
+  const [branches, setBranches] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const loadBranches = async () => {
+
+    try {
+
+      const token = localStorage.getItem('agc_token')
+
+      const res = await fetch('/api/branches', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setBranches(data.items || [])
+      }
+
+    } catch (e) {
+      console.error(e)
+    }
+
+    setLoading(false)
+
+  }
+
+  useEffect(() => {
+    loadBranches()
+  }, [])
+
+  return (
+
+    <div className="space-y-6">
+
+      <Card className="border-0 shadow-lg">
+
+        <CardContent className="p-6">
+
+          <div className="flex items-center justify-between mb-6">
+
+            <h2 className="text-2xl font-black text-[#0F3D91]">
+              Branch Management
+            </h2>
+            <Button
+              onClick={loadBranches}
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+
+          </div>
+
+          {loading ? (
+
+            <div className="text-center py-10 text-slate-500">
+              Loading Branches...
+            </div>
+
+          ) : (
+
+            <div className="overflow-x-auto">
+
+              <table className="w-full text-sm">
+
+                <thead className="bg-slate-100">
+
+                  <tr>
+
+                    <th className="p-3 text-left">
+                      Branch Name
+                    </th>
+
+                    <th className="p-3 text-left">
+                      Branch Code
+                    </th>
+
+                    <th className="p-3 text-left">
+                      City
+                    </th>
+
+                    <th className="p-3 text-left">
+                      State
+                    </th>
+
+                    <th className="p-3 text-center">
+                      Status
+                    </th>
+
+                    <th className="p-3 text-center">
+                      Actions
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+                {branches.length === 0 && (
+
+                  <tr>
+
+                    <td
+                      colSpan={6}
+                      className="text-center py-10 text-slate-400"
+                    >
+                      No Branches Found
+                    </td>
+
+                  </tr>
+
+                )}
+
+                {branches.map((branch, index) => (
+
+                  <tr
+                    key={branch._id || index}
+                    className="border-b hover:bg-slate-50"
+                  >
+
+                    <td className="p-3 font-semibold">
+                      {branch.branchName}
+                    </td>
+
+                    <td className="p-3">
+                      {branch.branchCode}
+                    </td>
+
+                    <td className="p-3">
+                      {branch.city}
+                    </td>
+
+                    <td className="p-3">
+                      {branch.state}
+                    </td>
+
+                    <td className="p-3 text-center">
+
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          branch.active
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {branch.active ? 'ACTIVE' : 'INACTIVE'}
+                      </span>
+
+                    </td>
+                    <td className="p-3">
+
+                      <div className="flex justify-center gap-2">
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+                   </div>
+
+        )}
+
+        </CardContent>
+
+      </Card>
+
+    </div>
+
+  )
+
 }
 
-function BranchTransfersModule() {
-  return <div className="p-6 bg-white rounded-lg shadow-sm">Branch Transfers Module (Placeholder)</div>
+function BranchTransfersModule({ reload }) {
+
+  const [transfers, setTransfers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadTransfers()
+  }, [])
+  const loadTransfers = async () => {
+
+    try {
+
+      const token = localStorage.getItem('agc_token')
+
+      const res = await fetch('/api/transfers', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setTransfers(data.items || [])
+      }
+
+    } catch (e) {
+      console.error(e)
+    }
+
+    setLoading(false)
+
+  }
+
+  return (
+
+    <div className="space-y-6">
+
+      <Card className="border-0 shadow-lg">
+
+        <CardContent className="p-6">
+
+          <div className="flex items-center justify-between mb-6">
+
+            <h2 className="text-2xl font-black text-[#0F3D91]">
+              Branch Transfers
+            </h2>
+
+            <Button
+              onClick={loadTransfers}
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+
+          </div>
+
+          {loading ? (
+            <div className="text-center py-10 text-slate-500">
+              Loading Transfers...
+            </div>
+          ) : (
+
+            <div className="overflow-x-auto">
+
+              <table className="w-full text-sm">
+
+                <thead className="bg-slate-100">
+
+                  <tr>
+
+                    <th className="p-3 text-left">
+                      Transfer No.
+                    </th>
+
+                    <th className="p-3 text-left">
+                      From Branch
+                    </th>
+
+                    <th className="p-3 text-left">
+                      To Branch
+                    </th>
+
+                    <th className="p-3 text-left">
+                      LR Count
+                    </th>
+
+                    <th className="p-3 text-left">
+                      Date
+                    </th>
+
+                    <th className="p-3 text-center">
+                      Status
+                    </th>
+
+                    <th className="p-3 text-center">
+                      Action
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {transfers.length === 0 && (
+
+                    <tr>
+
+                      <td
+                        colSpan={7}
+                        className="text-center py-10 text-slate-400"
+                      >
+                        No Transfer Records Found
+                      </td>
+
+                    </tr>
+
+                  )}
+
+                  {transfers.map((item, index) => (
+
+                    <tr
+                      key={item._id || index}
+                      className="border-b hover:bg-slate-50"
+                    >
+                    <td className="p-3 font-semibold">
+                      {item.transferNumber}
+                    </td>
+
+                    <td className="p-3">
+                      {item.fromBranch}
+                    </td>
+
+                    <td className="p-3">
+                      {item.toBranch}
+                    </td>
+
+                    <td className="p-3">
+                      {item.totalLR || item.lrCount || 0}
+                    </td>
+
+                    <td className="p-3">
+                      {item.transferDate || item.date}
+                    </td>
+
+                    <td className="p-3 text-center">
+
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          item.status === 'COMPLETED'
+                            ? 'bg-green-100 text-green-700'
+                            : item.status === 'IN_TRANSIT'
+                            ? 'bg-blue-100 text-blue-700'
+                            : item.status === 'PENDING'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-slate-100 text-slate-700'
+                        }`}
+                      >
+                        {item.status || 'PENDING'}
+                      </span>
+
+                    </td>
+
+                    <td className="p-3">
+
+                      <div className="flex justify-center gap-2">
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+              </tbody>
+
+            </table>
+
+          </div>
+
+        )}
+
+      </CardContent>
+
+    </Card>
+
+  </div>
+
+)
+
 }
 
-function UsersModule() {
-  return <div className="p-6 bg-white rounded-lg shadow-sm">Users & Roles Module (Placeholder)</div>
+function UsersModule({ reload }) {
+
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadUsers()
+  }, [])
+
+  const loadUsers = async () => {
+
+    try {
+
+      const token = localStorage.getItem('agc_token')
+
+      const res = await fetch('/api/users', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        setUsers(data.items || [])
+      }
+
+    } catch (e) {
+      console.error(e)
+    }
+
+    setLoading(false)
+
+  }
+
+  return (
+    <div className="space-y-6">
+
+      <Card className="border-0 shadow-lg">
+
+        <CardContent className="p-6">
+
+          <div className="flex items-center justify-between mb-6">
+
+            <h2 className="text-2xl font-black text-[#0F3D91]">
+              Users & Roles
+            </h2>
+
+            <Button
+              onClick={loadUsers}
+              variant="outline"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+
+          </div>
+
+          {loading ? (
+
+            <div className="text-center py-10 text-slate-500">
+              Loading Users...
+            </div>
+
+          ) : (
+
+            <div className="overflow-x-auto">
+
+              <table className="w-full text-sm">
+
+                <thead className="bg-slate-100">
+
+                  <tr>
+
+                    <th className="p-3 text-left">
+                      Name
+                    </th>
+
+                    <th className="p-3 text-left">
+                      Email
+                    </th>
+
+                    <th className="p-3 text-left">
+                      Branch
+                    </th>
+
+                    <th className="p-3 text-left">
+                      Role
+                    </th>
+
+                    <th className="p-3 text-center">
+                      Status
+                    </th>
+
+                    <th className="p-3 text-center">
+                      Actions
+                    </th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+                {users.length === 0 && (
+
+                  <tr>
+
+                    <td
+                      colSpan={6}
+                      className="text-center py-10 text-slate-400"
+                    >
+                      No Users Found
+                    </td>
+
+                  </tr>
+
+                )}
+
+                {users.map((user, index) => (
+
+                  <tr
+                    key={user._id || index}
+                    className="border-b hover:bg-slate-50"
+                  >
+
+                    <td className="p-3 font-semibold">
+                      {user.name}
+                    </td>
+
+                    <td className="p-3">
+                      {user.email}
+                    </td>
+
+                    <td className="p-3">
+                      {user.branchName || '-'}
+                    </td>
+
+                    <td className="p-3">
+                      {user.role}
+                    </td>
+
+                    <td className="p-3 text-center">
+
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          user.active
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}
+                      >
+                        {user.active ? 'ACTIVE' : 'DISABLED'}
+                      </span>
+
+                    </td>
+
+                    <td className="p-3">
+                      <div className="flex justify-center gap-2">
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+
+                      </div>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        )}
+
+      </CardContent>
+
+    </Card>
+
+  </div>
+
+)
+
 }
 
 function LabelSettingsModule() {
-  return <div className="p-6 bg-white rounded-lg shadow-sm">Label Settings Module (Placeholder)</div>
-}
 
+  return (
+
+    <Card className="border-0 shadow-lg">
+
+      <CardContent className="p-6">
+
+        <h2 className="text-2xl font-black text-[#0F3D91] mb-4">
+          Label Settings
+        </h2>
+        <p className="text-slate-600 mb-6">
+          Configure LR Label, Invoice Layout and Barcode Settings.
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-6">
+
+          <div>
+            <Label>Company Name</Label>
+            <Input defaultValue="ASSAM GOODS CARRIER" />
+          </div>
+
+          <div>
+            <Label>Label Size</Label>
+            <Select defaultValue="4x6">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="4x6">4 x 6 Inch</SelectItem>
+                <SelectItem value="A4">A4 Sheet</SelectItem>
+                <SelectItem value="A5">A5 Sheet</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Barcode Type</Label>
+            <Select defaultValue="CODE128">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CODE128">CODE 128</SelectItem>
+                <SelectItem value="QR">QR Code</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Auto Print</Label>
+            <Select defaultValue="NO">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="YES">Yes</SelectItem>
+                <SelectItem value="NO">No</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="md:col-span-2 flex justify-end">
+            <Button className="bg-[#0F3D91]">
+              <Save className="h-4 w-4 mr-2" />
+              Save Settings
+            </Button>
+          </div>
+
+        </div>
+
+      </CardContent>
+
+    </Card>
+
+  )
+}
 function CompanySettingsModule() {
-  return <div className="p-6 bg-white rounded-lg shadow-sm">Company Settings Module (Placeholder)</div>
-}
 
-function ReportsModule() {
-  return <div className="p-6 bg-white rounded-lg shadow-sm">Reports Module (Placeholder)</div>
+  const [company, setCompany] = useState({
+    companyName: 'ASSAM GOODS CARRIER',
+    gst: '',
+    phone: '',
+    email: '',
+    website: '',
+    address: '',
+    city: '',
+    state: '',
+    pincode: ''
+  })
+
+  const saveCompany = async () => {
+
+    try {
+
+      const token = localStorage.getItem('agc_token')
+
+      const res = await fetch('/api/company', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(company)
+      })
+
+      const data = await res.json()
+
+      if (data.ok) {
+        toast.success('Company Settings Saved')
+      } else {
+        toast.error(data.error || 'Failed')
+      }
+
+    } catch (e) {
+      toast.error('Network Error')
+    }
+
+  }
+
+  return (
+
+    <Card className="border-0 shadow-lg">
+
+      <CardContent className="p-6">
+
+        <h2 className="text-2xl font-black text-[#0F3D91] mb-6">
+          Company Settings
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+          <div>
+            <Label>Company Name</Label>
+            <Input
+              value={company.companyName}
+              onChange={(e) =>
+                setCompany({ ...company, companyName: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <Label>GST Number</Label>
+            <Input
+              value={company.gst}
+              onChange={(e) =>
+                setCompany({ ...company, gst: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <Label>Phone Number</Label>
+            <Input
+              value={company.phone}
+              onChange={(e) =>
+                setCompany({ ...company, phone: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <Label>Email Address</Label>
+            <Input
+              value={company.email}
+              onChange={(e) =>
+                setCompany({ ...company, email: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <Label>Website</Label>
+            <Input
+              value={company.website}
+              onChange={(e) =>
+                setCompany({ ...company, website: e.target.value })
+              }
+            />
+          </div>
+
+          <div>
+            <Label>City</Label>
+            <Input
+              value={company.city}
+              onChange={(e) =>
+                setCompany({ ...company, city: e.target.value })
+              }
+            />
+          </div>
+          <div>
+            <Label>State</Label>
+            <Input
+              value={company.state}
+              onChange={(e) =>
+                setCompany({
+                  ...company,
+                  state: e.target.value
+                })
+              }
+            />
+          </div>
+
+          <div>
+            <Label>Pincode</Label>
+            <Input
+              value={company.pincode}
+              onChange={(e) =>
+                setCompany({
+                  ...company,
+                  pincode: e.target.value
+                })
+              }
+            />
+          </div>
+
+          <div className="md:col-span-2">
+            <Label>Office Address</Label>
+            <Input
+              value={company.address}
+              onChange={(e) =>
+                setCompany({
+                  ...company,
+                  address: e.target.value
+                })
+              }
+            />
+          </div>
+
+          <div className="md:col-span-2 flex justify-end">
+            <Button
+              onClick={saveCompany}
+              className="bg-[#0F3D91] hover:bg-[#1E4FB8]"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Company Details
+            </Button>
+          </div>
+
+        </div>
+
+      </CardContent>
+
+    </Card>
+
+  )
+}
+function ReportsModule({ bookings }) {
+
+  const exportExcel = () => {
+
+    const rows = bookings.map(item => ({
+      "LR Number": item.lrNumber,
+      "Sender": item.senderName || item.sender?.name,
+      "Receiver": item.receiverName || item.receiver?.name,
+      "Origin": item.origin,
+      "Destination": item.destination,
+      "Weight": item.chargeableWeight || item.actualWeight,
+      "Amount": item.totalAmount,
+      "Status": item.status
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(rows)
+    const wb = XLSX.utils.book_new()
+
+    XLSX.utils.book_append_sheet(wb, ws, "Bookings")
+
+    XLSX.writeFile(
+      wb,
+      `AGC-Report-${new Date().toISOString().slice(0,10)}.xlsx`
+    )
+
+    toast.success("Report Downloaded")
+
+  }
+
+  return (
+
+    <Card className="border-0 shadow-lg">
+
+      <CardContent className="p-6">
+
+        <div className="flex items-center justify-between mb-6">
+
+          <h2 className="text-2xl font-black text-[#0F3D91]">
+            Reports
+          </h2>
+
+          <Button
+            onClick={exportExcel}
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
+
+        </div>
+
+        <div className="text-slate-600">
+
+          Total Bookings :
+          <span className="font-bold ml-2">
+            {bookings.length}
+          </span>
+
+        </div>
+        <div className="mt-6 overflow-x-auto">
+
+          <table className="w-full text-sm">
+
+            <thead className="bg-slate-100">
+
+              <tr>
+
+                <th className="p-3 text-left">Status</th>
+
+                <th className="p-3 text-center">Count</th>
+
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              {STAGES.map(stage => {
+
+                const total = bookings.filter(
+                  b => b.status === stage.key
+                ).length
+
+                return (
+
+                  <tr
+                    key={stage.key}
+                    className="border-b"
+                  >
+
+                    <td className="p-3">
+                      {stage.label}
+                    </td>
+
+                    <td className="p-3 text-center font-bold">
+                      {total}
+                    </td>
+
+                  </tr>
+
+                )
+
+              })}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </CardContent>
+
+    </Card>
+
+  )
+
 }
 
 function ActivityLogModule() {
-  return <div className="p-6 bg-white rounded-lg shadow-sm">Activity Log Module (Placeholder)</div>
+
+  return (
+
+    <Card className="border-0 shadow-lg">
+
+      <CardContent className="p-6">
+
+        <h2 className="text-2xl font-black text-[#0F3D91] mb-6">
+          Activity Log
+        </h2>
+        <div className="space-y-4">
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+
+            <div>
+
+              <h3 className="font-bold">
+                Admin Login
+              </h3>
+
+              <p className="text-sm text-slate-500">
+                Super Admin logged into the system.
+              </p>
+
+            </div>
+
+            <span className="text-xs text-slate-400">
+              Just Now
+            </span>
+
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+
+            <div>
+
+              <h3 className="font-bold">
+                Booking Created
+              </h3>
+
+              <p className="text-sm text-slate-500">
+                New LR booking has been created successfully.
+              </p>
+
+            </div>
+
+            <span className="text-xs text-slate-400">
+              Today
+            </span>
+
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg">
+
+            <div>
+
+              <h3 className="font-bold">
+                Invoice Generated
+              </h3>
+
+              <p className="text-sm text-slate-500">
+                Invoice generated for the latest shipment.
+              </p>
+
+            </div>
+
+            <span className="text-xs text-slate-400">
+              Today
+            </span>
+
+          </div>
+
+        </div>
+
+      </CardContent>
+
+    </Card>
+
+  )
+
 }
 
 function NotificationsModule() {
-  return <div className="p-6 bg-white rounded-lg shadow-sm">Notifications Module (Placeholder)</div>
+
+  return (
+
+    <Card className="border-0 shadow-lg">
+
+      <CardContent className="p-6">
+
+        <h2 className="text-2xl font-black text-[#0F3D91] mb-6">
+          Notifications
+        </h2>
+        <div className="space-y-4">
+
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50">
+
+            <div className="flex items-center gap-3">
+
+              <Bell className="h-8 w-8 text-blue-600" />
+
+              <div>
+
+                <h3 className="font-bold text-[#0F3D91]">
+                  Booking Notifications
+                </h3>
+
+                <p className="text-sm text-slate-600">
+                  You will receive notifications whenever a new booking is created.
+                </p>
+
+              </div>
+
+            </div>
+
+            <CheckCircle className="h-6 w-6 text-green-600" />
+
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50">
+
+            <div className="flex items-center gap-3">
+
+              <IndianRupee className="h-8 w-8 text-green-600" />
+
+              <div>
+
+                <h3 className="font-bold text-[#0F3D91]">
+                  Billing Notifications
+                </h3>
+
+                <p className="text-sm text-slate-600">
+                  Invoice generation and payment updates will appear here.
+                </p>
+
+              </div>
+
+            </div>
+
+            <CheckCircle className="h-6 w-6 text-green-600" />
+
+          </div>
+
+          <div className="flex items-center justify-between p-4 border rounded-lg bg-orange-50">
+
+            <div className="flex items-center gap-3">
+
+              <Truck className="h-8 w-8 text-orange-600" />
+
+              <div>
+
+                <h3 className="font-bold text-[#0F3D91]">
+                  Shipment Alerts
+                </h3>
+
+                <p className="text-sm text-slate-600">
+                  LR dispatch, arrival and delivery alerts will be displayed here.
+                </p>
+
+              </div>
+
+            </div>
+
+            <Bell className="h-6 w-6 text-orange-600" />
+
+          </div>
+
+        </div>
+
+      </CardContent>
+
+    </Card>
+
+  )
+
 }
