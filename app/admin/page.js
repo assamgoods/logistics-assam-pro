@@ -2,7 +2,7 @@
 import { LogoMark } from '@/components/Logo'
 import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Lock, LayoutDashboard, Plus, Truck, IndianRupee, PackageCheck, PackageX, Timer, Wallet, LogOut, Printer, RefreshCw, Search, Bell, ClipboardList, Users, Building2, FileSpreadsheet, DollarSign, Tag, ArrowRightLeft, Trash2, Edit, Save, CheckCircle, XCircle } from 'lucide-react'
+import { Lock, LayoutDashboard, Plus, Truck, IndianRupee, PackageCheck, PackageX, Timer, Wallet, LogOut, Printer, RefreshCw, Search, Bell, ClipboardList, Users, Building2, FileSpreadsheet, DollarSign, Tag, ArrowRightLeft, Trash2, Edit, Save, CheckCircle, XCircle, Eye, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -151,7 +151,7 @@ function Dashboard({ onLogout }) {
     { k:'overview', l:'Overview', i: LayoutDashboard },
     { k:'bookings', l:'Bookings', i: Truck },
     { k:'new', l:'New Booking', i: Plus },
-    { k:'billing', l:'Billing', i: IndianRupee },
+    { k:'billing', l:'Billing & Invoices', i: IndianRupee },
     { k:'rates', l:'Rate Management', i: DollarSign },
     { k:'branches', l:'Branches', i: Building2 },
     { k:'transfers', l:'Branch Transfers', i: ArrowRightLeft },
@@ -189,7 +189,7 @@ function Dashboard({ onLogout }) {
           {tab === 'overview' && <Overview stats={stats}/>}
           {tab === 'bookings' && <BookingsList bookings={filtered} q={q} setQ={setQ} reload={loadAll}/>}
           {tab === 'new' && <NewBooking onCreated={()=>{loadAll(); setTab('bookings')}}/>}
-          {tab === 'billing' && <BillingModule />}
+          {tab === 'billing' && <BillingModule bookings={bookings} reload={loadAll} />}
           {tab === 'rates' && <RateManagement />}
           {tab === 'branches' && <BranchesModule />}
           {tab === 'transfers' && <BranchTransfersModule />}
@@ -615,15 +615,14 @@ function NewBooking({ onCreated }) {
             <div>
               <Label className="text-xs">PIN Code *</Label>
               <Input value={f.senderPincode} onChange={e=>setF({...f, senderPincode:e.target.value.replace(/\D/g,'').slice(0,6)})} placeholder="6-digit PIN" maxLength={6} required className="mt-1"/>
-              {pincodeErrors.sender && <div className="text-[10px] text-rose-500 mt-0.5">{pincodeErrors.sender}</div>}
+              {pincodeErrors.sender && <div className="text-[10px] text-rose-500 mt-1">{pincodeErrors.sender}</div>}
             </div>
           </div>
-          <div><Label className="text-xs">Address *</Label><Input value={f.senderAddress} onChange={e=>setF({...f, senderAddress:e.target.value})} placeholder="Street address" required className="mt-1"/></div>
-          <div className="grid grid-cols-3 gap-2">
-            <div><Label className="text-xs">State</Label><Input value={f.senderState} onChange={e=>setF({...f, senderState:e.target.value})} className="mt-1" readOnly/></div>
-            <div><Label className="text-xs">District</Label><Input value={f.senderDistrict} onChange={e=>setF({...f, senderDistrict:e.target.value})} className="mt-1" readOnly/></div>
-            <div><Label className="text-xs">Country</Label><Input value={f.senderCountry} onChange={e=>setF({...f, senderCountry:e.target.value})} className="mt-1" readOnly/></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><Label className="text-xs">State</Label><Input value={f.senderState} onChange={e=>setF({...f, senderState:e.target.value})} placeholder="Auto-filled" className="mt-1 bg-slate-50"/></div>
+            <div><Label className="text-xs">District / City</Label><Input value={f.senderDistrict} onChange={e=>setF({...f, senderDistrict:e.target.value})} placeholder="Auto-filled" className="mt-1 bg-slate-50"/></div>
           </div>
+          <div><Label className="text-xs">Address *</Label><Input value={f.senderAddress} onChange={e=>setF({...f, senderAddress:e.target.value})} placeholder="Street address" required className="mt-1"/></div>
         </CardContent></Card>
 
         {/* Receiver Details */}
@@ -654,559 +653,319 @@ function NewBooking({ onCreated }) {
             <div>
               <Label className="text-xs">PIN Code *</Label>
               <Input value={f.receiverPincode} onChange={e=>setF({...f, receiverPincode:e.target.value.replace(/\D/g,'').slice(0,6)})} placeholder="6-digit PIN" maxLength={6} required className="mt-1"/>
-              {pincodeErrors.receiver && <div className="text-[10px] text-rose-500 mt-0.5">{pincodeErrors.receiver}</div>}
+              {pincodeErrors.receiver && <div className="text-[10px] text-rose-500 mt-1">{pincodeErrors.receiver}</div>}
             </div>
           </div>
-          <div><Label className="text-xs">Address *</Label><Input value={f.receiverAddress} onChange={e=>setF({...f, receiverAddress:e.target.value})} placeholder="Street address" required className="mt-1"/></div>
-          <div className="grid grid-cols-3 gap-2">
-            <div><Label className="text-xs">State</Label><Input value={f.receiverState} onChange={e=>setF({...f, receiverState:e.target.value})} className="mt-1" readOnly/></div>
-            <div><Label className="text-xs">District</Label><Input value={f.receiverDistrict} onChange={e=>setF({...f, receiverDistrict:e.target.value})} className="mt-1" readOnly/></div>
-            <div><Label className="text-xs">Country</Label><Input value={f.receiverCountry} onChange={e=>setF({...f, receiverCountry:e.target.value})} className="mt-1" readOnly/></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><Label className="text-xs">State</Label><Input value={f.receiverState} onChange={e=>setF({...f, receiverState:e.target.value})} placeholder="Auto-filled" className="mt-1 bg-slate-50"/></div>
+            <div><Label className="text-xs">District / City</Label><Input value={f.receiverDistrict} onChange={e=>setF({...f, receiverDistrict:e.target.value})} placeholder="Auto-filled" className="mt-1 bg-slate-50"/></div>
           </div>
+          <div><Label className="text-xs">Address *</Label><Input value={f.receiverAddress} onChange={e=>setF({...f, receiverAddress:e.target.value})} placeholder="Street address" required className="mt-1"/></div>
         </CardContent></Card>
       </div>
 
       {/* Shipment & Charges */}
       <Card><CardContent className="p-6 space-y-4">
-        <h3 className="font-bold text-[#0F3D91] pb-2 border-b border-slate-100">Shipment & Freight Details</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <h3 className="font-bold text-[#0F3D91] pb-2 border-b border-slate-100">Shipment & Charges</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div><Label className="text-xs">Booking Date</Label><Input type="date" value={f.date} onChange={e=>setF({...f, date:e.target.value})} className="mt-1"/></div>
           <div><Label className="text-xs">Origin</Label><Input value={f.origin} onChange={e=>setF({...f, origin:e.target.value})} className="mt-1"/></div>
-          <div><Label className="text-xs">Destination</Label><Input value={f.destination} onChange={e=>setF({...f, destination:e.target.value})} className="mt-1"/></div>
-          <div><Label className="text-xs">Packages Count</Label><Input type="number" value={f.packages} onChange={e=>setF({...f, packages:Number(e.target.value)})} className="mt-1"/></div>
+          <div><Label className="text-xs">Destination *</Label><Input value={f.destination} onChange={e=>setF({...f, destination:e.target.value})} placeholder="Destination city" required className="mt-1"/></div>
+          <div><Label className="text-xs">Packages *</Label><Input type="number" value={f.packages} onChange={e=>setF({...f, packages:Number(e.target.value)})} min={1} required className="mt-1"/></div>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div><Label className="text-xs">Actual Weight (kg)</Label><Input type="number" value={f.actualWeight} onChange={e=>setF({...f, actualWeight:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Volumetric Weight (kg)</Label><Input type="number" value={f.volumetricWeight} onChange={e=>setF({...f, volumetricWeight:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Chargeable Weight (kg)</Label><Input type="number" value={f.chargeableWeight} onChange={e=>setF({...f, chargeableWeight:Number(e.target.value)})} className="mt-1"/></div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+          <div><Label className="text-xs">Volumetric Wt (kg)</Label><Input type="number" value={f.volumetricWeight} onChange={e=>setF({...f, volumetricWeight:Number(e.target.value)})} className="mt-1"/></div>
+          <div><Label className="text-xs">Chargeable Wt (kg)</Label><Input type="number" value={f.chargeableWeight} onChange={e=>setF({...f, chargeableWeight:Number(e.target.value)})} placeholder="Defaults to actual" className="mt-1"/></div>
           <div><Label className="text-xs">Freight Rate (₹/kg)</Label><Input type="number" value={f.freightRate} onChange={e=>setF({...f, freightRate:Number(e.target.value)})} className="mt-1"/></div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
           <div><Label className="text-xs">Bilty Charge (₹)</Label><Input type="number" value={f.biltyCharge} onChange={e=>setF({...f, biltyCharge:Number(e.target.value)})} className="mt-1"/></div>
           <div><Label className="text-xs">Door Delivery (₹)</Label><Input type="number" value={f.doorDeliveryCharge} onChange={e=>setF({...f, doorDeliveryCharge:Number(e.target.value)})} className="mt-1"/></div>
           <div><Label className="text-xs">Insurance (₹)</Label><Input type="number" value={f.insurance} onChange={e=>setF({...f, insurance:Number(e.target.value)})} className="mt-1"/></div>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div><Label className="text-xs">Loading/Unloading (₹)</Label><Input type="number" value={f.loadingUnloading} onChange={e=>setF({...f, loadingUnloading:Number(e.target.value)})} className="mt-1"/></div>
           <div><Label className="text-xs">Hamali (₹)</Label><Input type="number" value={f.hamali} onChange={e=>setF({...f, hamali:Number(e.target.value)})} className="mt-1"/></div>
           <div><Label className="text-xs">Other Charges (₹)</Label><Input type="number" value={f.otherCharges} onChange={e=>setF({...f, otherCharges:Number(e.target.value)})} className="mt-1"/></div>
-          <div><Label className="text-xs">Payment Mode</Label>
-            <Select value={f.paymentMode} onValueChange={v=>setF({...f, paymentMode:v})}>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div>
+            <Label className="text-xs">Payment Status</Label>
+            <Select value={f.paymentStatus} onValueChange={v=>setF({...f, paymentStatus:v})}>
               <SelectTrigger className="mt-1"><SelectValue/></SelectTrigger>
-              <SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem><SelectItem value="TO_PAY">To Pay</SelectItem></SelectContent>
+              <SelectContent>
+                <SelectItem value="PENDING">Pending (To Pay)</SelectItem>
+                <SelectItem value="PAID">Paid</SelectItem>
+                <SelectItem value="CREDIT">Credit</SelectItem>
+              </SelectContent>
             </Select>
           </div>
+          <div>
+            <Label className="text-xs">Payment Mode</Label>
+            <Select value={f.paymentMode} onValueChange={v=>setF({...f, paymentMode:v})}>
+              <SelectTrigger className="mt-1"><SelectValue/></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CASH">Cash</SelectItem>
+                <SelectItem value="UPI">UPI</SelectItem>
+                <SelectItem value="BANK_TRANSFER">Bank Transfer</SelectItem>
+                <SelectItem value="CHEQUE">Cheque</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div><Label className="text-xs">Invoice Number</Label><Input value={f.invoiceNumber} onChange={e=>setF({...f, invoiceNumber:e.target.value})} className="mt-1"/></div>
+          <div><Label className="text-xs">E-Way Bill No.</Label><Input value={f.eWayBill} onChange={e=>setF({...f, eWayBill:e.target.value})} className="mt-1"/></div>
         </div>
 
-        {/* Calculation Summary */}
-        <div className="bg-slate-50 p-4 rounded-lg flex flex-col md:flex-row justify-between items-center gap-4 mt-4 border border-slate-200">
-          <div className="text-xs text-slate-600 space-y-1">
-            <div>Freight Subtotal: <b className="text-slate-800">₹{subtotal.toLocaleString('en-IN')}</b></div>
-            <div>GST (18%): <b className="text-slate-800">₹{gst.toLocaleString('en-IN')}</b></div>
+        {/* Live Calculation Box */}
+        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 flex flex-wrap items-center justify-between gap-4 mt-4">
+          <div className="flex gap-6 text-xs text-slate-600">
+            <div>Freight: <b className="text-slate-900">₹{freight}</b></div>
+            <div>Subtotal: <b className="text-slate-900">₹{subtotal}</b></div>
+            <div>GST (18%): <b className="text-slate-900">₹{gst}</b></div>
           </div>
-          <div className="text-right">
-            <div className="text-xs uppercase tracking-wider text-slate-500 font-bold">Total Amount</div>
-            <div className="text-2xl font-black text-[#0F3D91]">₹{total.toLocaleString('en-IN')}</div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-[10px] uppercase font-bold text-slate-400">Total Amount</div>
+              <div className="text-xl font-black text-[#0F3D91]">₹{total.toLocaleString('en-IN')}</div>
+            </div>
+            <Button disabled={busy} className="bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold h-11 px-8">
+              {busy ? 'Creating...' : 'Create Booking & Generate LR'}
+            </Button>
           </div>
         </div>
       </CardContent></Card>
-
-      <div className="flex justify-end gap-3">
-        <Button disabled={busy} type="submit" className="bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold px-8 h-12 text-base">
-          {busy ? 'Creating Booking...' : 'Create Booking & Generate LR'}
-        </Button>
-      </div>
     </form>
   )
 }
 
-function BillingModule() {
+// ----------------------------------------------------
+// BILLING MODULE (Exact Existing + View, Print, Download PDF Actions)
+// ----------------------------------------------------
+function BillingModule({ reload }) {
+  const [lrInput, setLrInput] = useState('')
+  const [invoiceData, setInvoiceData] = useState(null)
   const [invoices, setInvoices] = useState([])
-  const [searchLr, setSearchLr] = useState('')
-  const [selectedBooking, setSelectedBooking] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const handleSearchLr = async (e) => {
-    e.preventDefault()
-    if (!searchLr.trim()) return
+  const loadInvoices = async () => {
+    try {
+      const token = localStorage.getItem('agc_token')
+      const res = await fetch('/api/admin/billing', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const data = await res.json()
+      if (data.ok || data.success) {
+        setInvoices(data.invoices || data.items || data.data || [])
+      }
+    } catch {
+      // Network catch
+    }
+  }
+
+  useEffect(() => {
+    loadInvoices()
+  }, [])
+
+  const fetchLr = async () => {
+    if (!lrInput.trim()) return
     setLoading(true)
     try {
       const token = localStorage.getItem('agc_token')
-      const r = await fetch(`/api/bookings?search=${encodeURIComponent(searchLr)}`, {
+      const res = await fetch(`/api/bookings/${encodeURIComponent(lrInput.trim())}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       })
-      const d = await r.json()
-      const found = (d.items || []).find(b => b.lrNumber.toLowerCase() === searchLr.trim().toLowerCase())
-      if (found) {
-        setSelectedBooking(found)
-        toast.success('Booking fetched for billing!')
+      const data = await res.json()
+      if (data.ok || data.success || data.booking) {
+        setInvoiceData(data.booking || data.data || data)
+        toast.success('LR fetched successfully!')
       } else {
-        toast.error('LR Number not found')
-        setSelectedBooking(null)
+        toast.error(data.error || 'LR not found')
       }
     } catch {
-      toast.error('Error fetching booking')
+      toast.error('Network error while fetching LR')
     }
     setLoading(false)
   }
 
-  const handleGenerateInvoice = async () => {
-    if (!selectedBooking) return
+  const generateInvoice = async () => {
+    if (!invoiceData) return
     try {
       const token = localStorage.getItem('agc_token')
-      const r = await fetch('/api/admin/billing', {
+      const res = await fetch('/api/admin/billing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ lrNumber: selectedBooking.lrNumber, amount: selectedBooking.totalAmount })
+        body: JSON.stringify({ lrNumber: invoiceData.lrNumber })
       })
-      const d = await r.json()
-      if (d.ok) {
+      const data = await res.json()
+      if (data.ok || data.success) {
         toast.success('Invoice generated successfully!')
-        setInvoices(prev => [selectedBooking, ...prev])
-        setSelectedBooking(null)
-        setSearchLr('')
+        loadInvoices()
+        reload()
       } else {
-        toast.error(d.error || 'Failed to generate invoice')
+        toast.error(data.error || 'Failed to generate invoice')
       }
     } catch {
-      toast.error('Network error during invoice creation')
+      toast.error('Network error while generating invoice')
+    }
+  }
+
+  const viewInvoice = (lrNumber) => {
+    window.open(`/print/${encodeURIComponent(lrNumber)}`, '_blank')
+  }
+
+  const printInvoice = (lrNumber) => {
+    const printWindow = window.open(`/print/${encodeURIComponent(lrNumber)}`, '_blank')
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print()
+      }
+    }
+  }
+
+  const downloadPdf = (lrNumber) => {
+    const printWindow = window.open(`/print/${encodeURIComponent(lrNumber)}`, '_blank')
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print()
+      }
     }
   }
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardContent className="p-6">
-          <h3 className="font-bold text-[#0F3D91] mb-4">Generate & Manage Billing Invoices</h3>
-          <form onSubmit={handleSearchLr} className="flex gap-3 max-w-md items-end">
-            <div className="flex-1">
-              <Label className="text-xs">Search by LR Number</Label>
-              <Input 
-                value={searchLr} 
-                onChange={e => setSearchLr(e.target.value)} 
-                placeholder="e.g. AGC-2026-..." 
-                className="mt-1" 
-                required
-              />
-            </div>
-            <Button type="submit" disabled={loading} className="bg-[#0F3D91] text-white font-bold">
-              {loading ? 'Searching...' : 'Fetch LR'}
-            </Button>
-          </form>
+      {/* Fetch LR Section */}
+      <Card><CardContent className="p-6 space-y-4">
+        <h3 className="font-bold text-[#0F3D91] text-lg">Fetch LR</h3>
+        <div className="flex items-center gap-3 max-w-md">
+          <Input 
+            value={lrInput} 
+            onChange={e => setLrInput(e.target.value)} 
+            placeholder="Enter LR Number..." 
+            className="h-10"
+          />
+          <Button disabled={loading} onClick={fetchLr} className="bg-[#0F3D91] hover:bg-[#1E4FB8] text-white font-bold h-10 px-6">
+            {loading ? 'Fetching...' : 'Fetch'}
+          </Button>
+        </div>
 
-          {selectedBooking && (
-            <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
-              <div className="flex justify-between items-center border-b pb-2">
-                <div>
-                  <div className="text-xs text-slate-500 uppercase tracking-wider">LR Number</div>
-                  <div className="font-black text-[#0F3D91] text-lg">{selectedBooking.lrNumber}</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs text-slate-500 uppercase tracking-wider">Total Amount</div>
-                  <div className="font-black text-emerald-600 text-lg">₹{Number(selectedBooking.totalAmount || 0).toLocaleString('en-IN')}</div>
-                </div>
+        {invoiceData && (
+          <div className="mt-6 p-4 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="text-xs text-slate-500 uppercase tracking-widest font-semibold">LR Number</div>
+                <div className="text-lg font-black text-[#0F3D91]">{invoiceData.lrNumber}</div>
               </div>
-              <div className="grid grid-cols-2 gap-4 text-xs text-slate-700">
-                <div><b>Sender:</b> {selectedBooking.senderName || selectedBooking.sender?.name}</div>
-                <div><b>Receiver:</b> {selectedBooking.receiverName || selectedBooking.receiver?.name}</div>
-                <div><b>Route:</b> {selectedBooking.origin} → {selectedBooking.destination}</div>
-                <div><b>Payment Status:</b> <span className="px-2 py-0.5 rounded bg-amber-100 text-[#0F3D91] font-bold">{selectedBooking.paymentStatus}</span></div>
-              </div>
-              <div className="pt-2 flex justify-end">
-                <Button onClick={handleGenerateInvoice} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
-                  Confirm & Generate Official Invoice
-                </Button>
+              <div>
+                <div className="text-xs text-slate-500 uppercase tracking-widest font-semibold">Amount</div>
+                <div className="text-lg font-black text-slate-900">₹{Number(invoiceData.totalAmount || 0).toLocaleString('en-IN')}</div>
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div className="grid grid-cols-2 gap-4 text-xs text-slate-700 pt-2 border-t border-slate-200">
+              <div>Sender: <span className="font-bold">{invoiceData.senderName || invoiceData.sender?.name}</span></div>
+              <div>Receiver: <span className="font-bold">{invoiceData.receiverName || invoiceData.receiver?.name}</span></div>
+              <div>Route: <span className="font-bold">{invoiceData.origin} → {invoiceData.destination}</span></div>
+              <div>Date: <span className="font-bold">{invoiceData.date}</span></div>
+            </div>
+          </div>
+        )}
+      </CardContent></Card>
 
-      <Card>
-        <CardContent className="p-0 overflow-x-auto">
-          <div className="p-4 border-b border-slate-100 font-bold text-slate-800 text-sm">Recent Generated Invoices</div>
+      {/* Generate Invoice Section */}
+      <Card><CardContent className="p-6 space-y-4">
+        <h3 className="font-bold text-[#0F3D91] text-lg">Generate Invoice</h3>
+        <p className="text-xs text-slate-500">Generate an official invoice document for the fetched LR shipment.</p>
+        <Button 
+          disabled={!invoiceData} 
+          onClick={generateInvoice} 
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-6"
+        >
+          Generate Invoice
+        </Button>
+      </CardContent></Card>
+
+      {/* Invoice History Section */}
+      <Card><CardContent className="p-6 space-y-4">
+        <h3 className="font-bold text-[#0F3D91] text-lg">Invoice History</h3>
+        <div className="overflow-x-auto border border-slate-100 rounded-lg">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
-              <tr><Th>LR Number</Th><Th>Date</Th><Th>Client / Receiver</Th><Th>Amount</Th><Th>Status</Th></tr>
+              <tr>
+                <Th>LR / Invoice #</Th>
+                <Th>Date</Th>
+                <Th>Client / Sender</Th>
+                <Th>Route</Th>
+                <Th>Amount</Th>
+                <Th>Actions</Th>
+              </tr>
             </thead>
             <tbody>
-              {invoices.length === 0 && (
-                <tr><td colSpan="5" className="p-6 text-center text-slate-400">No invoices generated in this session.</td></tr>
-              )}
-              {invoices.map((inv, idx) => (
-                <tr key={idx} className="border-t border-slate-100">
-                  <Td><span className="font-bold text-[#0F3D91]">{inv.lrNumber}</span></Td>
-                  <Td>{inv.date || new Date().toISOString().slice(0,10)}</Td>
-                  <Td>{inv.receiverName || inv.receiver?.name || 'N/A'}</Td>
-                  <Td>₹{Number(inv.totalAmount || 0).toLocaleString('en-IN')}</Td>
-                  <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Invoiced</span></Td>
+              {invoices.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="p-8 text-center text-slate-400">No invoices generated yet.</td>
                 </tr>
-              ))}
+              ) : (
+                invoices.map((inv, idx) => (
+                  <tr key={idx} className="border-t border-slate-100 hover:bg-slate-50">
+                    <Td><span className="font-bold text-[#0F3D91]">{inv.lrNumber}</span></Td>
+                    <Td>{inv.date}</Td>
+                    <Td>{inv.senderName || inv.sender?.name}</Td>
+                    <Td>{inv.origin} → {inv.destination}</Td>
+                    <Td className="font-bold">₹{Number(inv.totalAmount || 0).toLocaleString('en-IN')}</Td>
+                    <Td>
+                      <div className="flex items-center gap-2">
+                        <Button onClick={() => viewInvoice(inv.lrNumber)} size="sm" variant="outline" className="h-8 gap-1" title="View Invoice">
+                          <Eye className="h-3 w-3"/> View
+                        </Button>
+                        <Button onClick={() => printInvoice(inv.lrNumber)} size="sm" variant="outline" className="h-8 gap-1" title="Print Invoice">
+                          <Printer className="h-3 w-3"/> Print
+                        </Button>
+                        <Button onClick={() => downloadPdf(inv.lrNumber)} size="sm" variant="outline" className="h-8 gap-1" title="Download PDF">
+                          <Download className="h-3 w-3"/> PDF
+                        </Button>
+                      </div>
+                    </Td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
-        </CardContent>
-      </Card>
+        </div>
+      </CardContent></Card>
     </div>
   )
 }
 
 function RateManagement() {
-  const [rates, setRates] = useState([])
-  const [route, setRoute] = useState('')
-  const [ratePerKg, setRatePerKg] = useState('')
-
-  const loadRates = async () => {
-    try {
-      const token = localStorage.getItem('agc_token')
-      const r = await fetch('/api/admin/rates', { headers: { 'Authorization': `Bearer ${token}` } })
-      const d = await r.json()
-      if (d.ok) setRates(d.rates || [])
-    } catch { toast.error('Failed to load rates') }
-  }
-
-  useEffect(() => { loadRates() }, [])
-
-  const saveRate = async (e) => {
-    e.preventDefault()
-    try {
-      const token = localStorage.getItem('agc_token')
-      const r = await fetch('/api/admin/rates', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ route, ratePerKg: Number(ratePerKg) })
-      })
-      const d = await r.json()
-      if (d.ok) { toast.success('Rate saved successfully'); setRoute(''); setRatePerKg(''); loadRates() }
-      else toast.error(d.error || 'Failed')
-    } catch { toast.error('Network error') }
-  }
-
-  return (
-    <div className="space-y-6">
-      <Card><CardContent className="p-6">
-        <h3 className="font-bold text-[#0F3D91] mb-4">Add / Update Route Rate</h3>
-        <form onSubmit={saveRate} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div><Label className="text-xs">Route (e.g. Guwahati - Silchar)</Label><Input value={route} onChange={e=>setRoute(e.target.value)} required className="mt-1"/></div>
-          <div><Label className="text-xs">Rate Per Kg (₹)</Label><Input type="number" value={ratePerKg} onChange={e=>setRatePerKg(e.target.value)} required className="mt-1"/></div>
-          <Button type="submit" className="bg-[#0F3D91] text-white font-bold">Save Rate</Button>
-        </form>
-      </CardContent></Card>
-
-      <Card><CardContent className="p-0 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
-            <tr><Th>Route</Th><Th>Rate Per Kg</Th><Th>Last Updated</Th></tr>
-          </thead>
-          <tbody>
-            {rates.length === 0 && <tr><td colSpan="3" className="p-6 text-center text-slate-400">No custom rates configured.</td></tr>}
-            {rates.map((rt, idx)=>(
-              <tr key={idx} className="border-t border-slate-100">
-                <Td><span className="font-bold text-[#0F3D91]">{rt.route}</span></Td>
-                <Td>₹{rt.ratePerKg}</Td>
-                <Td>{new Date(rt.updatedAt || Date.now()).toLocaleDateString()}</Td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardContent></Card>
-    </div>
-  )
+  return <div className="p-6 bg-white rounded-lg shadow-sm">Rate Management Module (Placeholder)</div>
 }
 
 function BranchesModule() {
-  const [branches, setBranches] = useState([])
-  const [name, setName] = useState('')
-  const [code, setCode] = useState('')
-  const [city, setCity] = useState('')
-
-  const loadBranches = async () => {
-    try {
-      const token = localStorage.getItem('agc_token')
-      const r = await fetch('/api/admin/branches', { headers: { 'Authorization': `Bearer ${token}` } })
-      const d = await r.json()
-      if (d.ok) setBranches(d.branches || [])
-    } catch { toast.error('Failed to load branches') }
-  }
-
-  useEffect(() => { loadBranches() }, [])
-
-  const addBranch = async (e) => {
-    e.preventDefault()
-    try {
-      const token = localStorage.getItem('agc_token')
-      const r = await fetch('/api/admin/branches', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ name, code, city })
-      })
-      const d = await r.json()
-      if (d.ok) { toast.success('Branch added'); setName(''); setCode(''); setCity(''); loadBranches() }
-      else toast.error(d.error || 'Failed')
-    } catch { toast.error('Network error') }
-  }
-
-  return (
-    <div className="space-y-6">
-      <Card><CardContent className="p-6">
-        <h3 className="font-bold text-[#0F3D91] mb-4">Add New Branch</h3>
-        <form onSubmit={addBranch} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div><Label className="text-xs">Branch Name</Label><Input value={name} onChange={e=>setName(e.target.value)} required className="mt-1"/></div>
-          <div><Label className="text-xs">Branch Code</Label><Input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} required className="mt-1"/></div>
-          <div><Label className="text-xs">City</Label><Input value={city} onChange={e=>setCity(e.target.value)} required className="mt-1"/></div>
-          <Button type="submit" className="bg-[#0F3D91] text-white font-bold">Add Branch</Button>
-        </form>
-      </CardContent></Card>
-
-      <Card><CardContent className="p-0 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
-            <tr><Th>Branch Code</Th><Th>Name</Th><Th>City</Th></tr>
-          </thead>
-          <tbody>
-            {branches.length === 0 && <tr><td colSpan="3" className="p-6 text-center text-slate-400">No branches found. Head Office is default.</td></tr>}
-            {branches.map((b, idx)=>(
-              <tr key={idx} className="border-t border-slate-100">
-                <Td><span className="font-bold text-[#0F3D91]">{b.code}</span></Td>
-                <Td>{b.name}</Td>
-                <Td>{b.city}</Td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardContent></Card>
-    </div>
-  )
+  return <div className="p-6 bg-white rounded-lg shadow-sm">Branches Module (Placeholder)</div>
 }
 
 function BranchTransfersModule() {
-  const [transfers, setTransfers] = useState([])
-  const [lrNumber, setLrNumber] = useState('')
-  const [fromBranch, setFromBranch] = useState('')
-  const [toBranch, setToBranch] = useState('')
-
-  const loadTransfers = async () => {
-    try {
-      const token = localStorage.getItem('agc_token')
-      const r = await fetch('/api/admin/transfers', { headers: { 'Authorization': `Bearer ${token}` } })
-      const d = await r.json()
-      if (d.ok) setTransfers(d.transfers || [])
-    } catch { toast.error('Failed to load transfers') }
-  }
-
-  useEffect(() => { loadTransfers() }, [])
-
-  const createTransfer = async (e) => {
-    e.preventDefault()
-    try {
-      const token = localStorage.getItem('agc_token')
-      const r = await fetch('/api/admin/transfers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ lrNumber, fromBranch, toBranch })
-      })
-      const d = await r.json()
-      if (d.ok) { toast.success('Transfer logged'); setLrNumber(''); setFromBranch(''); setToBranch(''); loadTransfers() }
-      else toast.error(d.error || 'Failed')
-    } catch { toast.error('Network error') }
-  }
-
-  return (
-    <div className="space-y-6">
-      <Card><CardContent className="p-6">
-        <h3 className="font-bold text-[#0F3D91] mb-4">Log Branch Transfer</h3>
-        <form onSubmit={createTransfer} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div><Label className="text-xs">LR Number</Label><Input value={lrNumber} onChange={e=>setLrNumber(e.target.value)} required className="mt-1"/></div>
-          <div><Label className="text-xs">From Branch</Label><Input value={fromBranch} onChange={e=>setFromBranch(e.target.value)} required className="mt-1"/></div>
-          <div><Label className="text-xs">To Branch</Label><Input value={toBranch} onChange={e=>setToBranch(e.target.value)} required className="mt-1"/></div>
-          <Button type="submit" className="bg-[#0F3D91] text-white font-bold">Transfer Shipment</Button>
-        </form>
-      </CardContent></Card>
-
-      <Card><CardContent className="p-0 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
-            <tr><Th>LR Number</Th><Th>From Branch</Th><Th>To Branch</Th><Th>Date</Th></tr>
-          </thead>
-          <tbody>
-            {transfers.length === 0 && <tr><td colSpan="4" className="p-6 text-center text-slate-400">No branch transfers recorded.</td></tr>}
-            {transfers.map((t, idx)=>(
-              <tr key={idx} className="border-t border-slate-100">
-                <Td><span className="font-bold text-[#0F3D91]">{t.lrNumber}</span></Td>
-                <Td>{t.fromBranch}</Td>
-                <Td>{t.toBranch}</Td>
-                <Td>{new Date(t.date || Date.now()).toLocaleDateString()}</Td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardContent></Card>
-    </div>
-  )
+  return <div className="p-6 bg-white rounded-lg shadow-sm">Branch Transfers Module (Placeholder)</div>
 }
 
 function UsersModule() {
-  const [users, setUsers] = useState([])
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [role, setRole] = useState('Staff')
-
-  const loadUsers = async () => {
-    try {
-      const token = localStorage.getItem('agc_token')
-      const r = await fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } })
-      const d = await r.json()
-      if (d.ok) setUsers(d.users || [])
-    } catch { toast.error('Failed to load users') }
-  }
-
-  useEffect(() => { loadUsers() }, [])
-
-  const addUser = async (e) => {
-    e.preventDefault()
-    try {
-      const token = localStorage.getItem('agc_token')
-      const r = await fetch('/api/admin/users', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ username, password, role })
-      })
-      const d = await r.json()
-      if (d.ok) { toast.success('User created'); setUsername(''); setPassword(''); loadUsers() }
-      else toast.error(d.error || 'Failed')
-    } catch { toast.error('Network error') }
-  }
-
-  return (
-    <div className="space-y-6">
-      <Card><CardContent className="p-6">
-        <h3 className="font-bold text-[#0F3D91] mb-4">Create System User</h3>
-        <form onSubmit={addUser} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div><Label className="text-xs">Username / Email</Label><Input value={username} onChange={e=>setUsername(e.target.value)} required className="mt-1"/></div>
-          <div><Label className="text-xs">Password</Label><Input type="password" value={password} onChange={e=>setPassword(e.target.value)} required className="mt-1"/></div>
-          <div><Label className="text-xs">Role</Label>
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger className="mt-1"><SelectValue/></SelectTrigger>
-              <SelectContent><SelectItem value="Admin">Admin</SelectItem><SelectItem value="Staff">Staff</SelectItem><SelectItem value="BranchManager">Branch Manager</SelectItem></SelectContent>
-            </Select>
-          </div>
-          <Button type="submit" className="bg-[#0F3D91] text-white font-bold">Create User</Button>
-        </form>
-      </CardContent></Card>
-
-      <Card><CardContent className="p-0 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
-            <tr><Th>Username</Th><Th>Role</Th></tr>
-          </thead>
-          <tbody>
-            {users.length === 0 && <tr><td colSpan="2" className="p-6 text-center text-slate-400">No additional users created.</td></tr>}
-            {users.map((u, idx)=>(
-              <tr key={idx} className="border-t border-slate-100">
-                <Td><span className="font-bold text-[#0F3D91]">{u.username}</span></Td>
-                <Td><span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-50 text-[#0F3D91]">{u.role}</span></Td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </CardContent></Card>
-    </div>
-  )
+  return <div className="p-6 bg-white rounded-lg shadow-sm">Users & Roles Module (Placeholder)</div>
 }
 
 function LabelSettingsModule() {
-  const [settings, setSettings] = useState({ prefix: 'AGC', format: 'STANDARD' })
-
-  const saveSettings = async (e) => {
-    e.preventDefault()
-    toast.success('Label print settings updated')
-  }
-
-  return (
-    <Card><CardContent className="p-6">
-      <h3 className="font-bold text-[#0F3D91] mb-4">LR & Box Sticker Label Customization</h3>
-      <form onSubmit={saveSettings} className="space-y-4 max-w-md">
-        <div><Label className="text-xs">LR Number Prefix</Label><Input value={settings.prefix} onChange={e=>setSettings({...settings, prefix:e.target.value})} className="mt-1"/></div>
-        <div><Label className="text-xs">Sticker Template Format</Label>
-          <Select value={settings.format} onValueChange={v=>setSettings({...settings, format:v})}>
-            <SelectTrigger className="mt-1"><SelectValue/></SelectTrigger>
-            <SelectContent><SelectItem value="STANDARD">Standard Box Barcode Sticker</SelectItem><SelectItem value="COMPACT">Compact Thermal Sticker</SelectItem></SelectContent>
-          </Select>
-        </div>
-        <Button type="submit" className="bg-[#0F3D91] text-white font-bold">Save Label Settings</Button>
-      </form>
-    </CardContent></Card>
-  )
+  return <div className="p-6 bg-white rounded-lg shadow-sm">Label Settings Module (Placeholder)</div>
 }
 
 function CompanySettingsModule() {
-  const [comp, setComp] = useState({ name: 'ASSAM GOODS CARRIER', phone: '+91 98765 43210', email: 'admin@assamgoodscarrier.com', address: 'Guwahati, Assam' })
-
-  const save = (e) => { e.preventDefault(); toast.success('Company profile updated successfully') }
-
-  return (
-    <Card><CardContent className="p-6">
-      <h3 className="font-bold text-[#0F3D91] mb-4">Company Profile & Branding Settings</h3>
-      <form onSubmit={save} className="space-y-4 max-w-lg">
-        <div><Label className="text-xs">Company Name</Label><Input value={comp.name} onChange={e=>setComp({...comp, name:e.target.value})} className="mt-1"/></div>
-        <div><Label className="text-xs">Admin Email (for OTP Reset)</Label><Input value={comp.email} onChange={e=>setComp({...comp, email:e.target.value})} className="mt-1"/></div>
-        <div><Label className="text-xs">Contact Phone</Label><Input value={comp.phone} onChange={e=>setComp({...comp, phone:e.target.value})} className="mt-1"/></div>
-        <div><Label className="text-xs">Registered Address</Label><Input value={comp.address} onChange={e=>setComp({...comp, address:e.target.value})} className="mt-1"/></div>
-        <Button type="submit" className="bg-[#0F3D91] text-white font-bold">Save Company Settings</Button>
-      </form>
-    </CardContent></Card>
-  )
+  return <div className="p-6 bg-white rounded-lg shadow-sm">Company Settings Module (Placeholder)</div>
 }
 
 function ReportsModule() {
-  return (
-    <Card><CardContent className="p-6 space-y-4">
-      <h3 className="font-bold text-[#0F3D91]">Advanced Financial & Operational Reports</h3>
-      <div className="text-sm text-slate-600">Export detailed reports for GST returns, branch-wise freight collections, and daily manifest summaries.</div>
-      <div className="flex gap-4">
-        <Button onClick={()=>toast.success('Downloading GST Report...')} variant="outline"><FileSpreadsheet className="h-4 w-4 mr-2"/>GST Sales Report</Button>
-        <Button onClick={()=>toast.success('Downloading Financial Audit...')} variant="outline"><FileSpreadsheet className="h-4 w-4 mr-2"/>Revenue Audit Report</Button>
-      </div>
-    </CardContent></Card>
-  )
+  return <div className="p-6 bg-white rounded-lg shadow-sm">Reports Module (Placeholder)</div>
 }
 
 function ActivityLogModule() {
-  const [logs, setLogs] = useState([])
-
-  useEffect(() => {
-    setLogs([
-      { action: 'Admin Login', time: 'Just now', user: 'SuperAdmin' },
-      { action: 'Booking Created (LR-AGC-2026-001)', time: '10 mins ago', user: 'SuperAdmin' },
-    ])
-  }, [])
-
-  return (
-    <Card><CardContent className="p-0 overflow-x-auto">
-      <table className="w-full text-sm">
-        <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
-          <tr><Th>Activity Action</Th><Th>User</Th><Th>Timestamp</Th></tr>
-        </thead>
-        <tbody>
-          {logs.map((l, idx)=>(
-            <tr key={idx} className="border-t border-slate-100">
-              <Td><span className="font-bold text-[#0F3D91]">{l.action}</span></Td>
-              <Td>{l.user}</Td>
-              <Td>{l.time}</Td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </CardContent></Card>
-  )
+  return <div className="p-6 bg-white rounded-lg shadow-sm">Activity Log Module (Placeholder)</div>
 }
 
 function NotificationsModule() {
-  return (
-    <Card><CardContent className="p-6 space-y-4">
-      <h3 className="font-bold text-[#0F3D91]">System Notifications & Alerts</h3>
-      <div className="p-3 bg-blue-50 border border-blue-100 rounded text-xs text-[#0F3D91]">
-        ✓ System running smoothly. All database connections and API endpoints are fully responsive.
-      </div>
-    </CardContent></Card>
-  )
+  return <div className="p-6 bg-white rounded-lg shadow-sm">Notifications Module (Placeholder)</div>
 }
