@@ -895,13 +895,15 @@ const fetchPincode = async (pincode, type) => {
       data[0]?.PostOffice?.length
     ) {
 
-      const office = data[0].PostOffice[0]
+      const office = data[0].PostOffice.find(
+  item => item.Pincode === pincode
+) || data[0].PostOffice[0]
 
       if (type === "sender") {
 
         setForm(prev => ({
           ...prev,
-          senderCity: office.District,
+          senderCity: office.Block || office.District,
           senderState: office.State
         }))
 
@@ -912,7 +914,7 @@ const fetchPincode = async (pincode, type) => {
 
         setForm(prev => ({
           ...prev,
-          receiverCity: office.District,
+          receiverCity: office.Block || office.District,
           receiverState: office.State
         }))
 
