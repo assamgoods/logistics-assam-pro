@@ -139,74 +139,87 @@ async function handle(request, ctx) {
 
     if (route === '/' || route === '/health') return json({ ok: true, service: 'assam-goods-carrier', time: new Date().toISOString() })
 
-    // -------- ADMIN BILLING --------
-    if (route === '/admin/billing' && method === 'POST') {
-      try {
-        const body = await request.json().catch(() => ({}))
-        const { lrNumber, amount } = body
-
-        if (!lrNumber || amount === undefined) {
-          return json({ ok: false, error: 'lrNumber and amount are required' }, 400)
+    // -------- ADMIN BILLING (GET & POST) --------
+    if (route === '/admin/billing') {
+      if (method === 'GET') {
+        try {
+          const invoicesCollection = db.collection('invoices')
+          const invoices = await invoicesCollection.find({}).sort({ createdAt: -1 }).toArray()
+          return json({ ok: true, invoices: invoices.map(sanitize) })
+        } catch (error) {
+          console.error('Error handling /admin/billing GET:', error)
+          return json({ ok: false, error: error.message || 'Internal Server Error' }, 500)
         }
+      }
 
-        const invoicesCollection = db.collection('invoices')
+      if (method === 'POST') {
+        try {
+          const body = await request.json().catch(() => ({}))
+          const { lrNumber, amount } = body
 
-        // 1. Check if an invoice already exists for the same lrNumber
-        const existingInvoice = await invoicesCollection.findOne({ lrNumber })
-        if (existingInvoice) {
-          return json({ ok: true, invoice: sanitize(existingInvoice) }, 200)
-        }
-
-        // Find booking using lrNumber
-        const bookingsCollection = db.collection('bookings')
-        const booking = await bookingsCollection.findOne({ lrNumber })
-
-        if (!booking) {
-          return json({ ok: false, error: 'Booking not found with the provided lrNumber' }, 404)
-        }
-
-        // Generate a unique invoice number
-        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-        let isUnique = false
-        let invoiceNumber = ''
-
-        while (!isUnique) {
-          const randomSuffix = Math.floor(1000 + Math.random() * 9000)
-          invoiceNumber = `INV-${dateStr}-${randomSuffix}`
-          const existing = await invoicesCollection.findOne({ invoiceNumber })
-          if (!existing) {
-            isUnique = true
+          if (!lrNumber || amount === undefined) {
+            return json({ ok: false, error: 'lrNumber and amount are required' }, 400)
           }
+
+          const invoicesCollection = db.collection('invoices')
+
+          // 1. Check if an invoice already exists for the same lrNumber
+          const existingInvoice = await invoicesCollection.findOne({ lrNumber })
+          if (existingInvoice) {
+            return json({ ok: true, invoice: sanitize(existingInvoice) }, 200)
+          }
+
+          // Find booking using lrNumber
+          const bookingsCollection = db.collection('bookings')
+          const booking = await bookingsCollection.findOne({ lrNumber })
+
+          if (!booking) {
+            return json({ ok: false, error: 'Booking not found with the provided lrNumber' }, 404)
+          }
+
+          // Generate a unique invoice number
+          const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+          let isUnique = false
+          let invoiceNumber = ''
+
+          while (!isUnique) {
+            const randomSuffix = Math.floor(1000 + Math.random() * 9000)
+            invoiceNumber = `INV-${dateStr}-${randomSuffix}`
+            const existing = await invoicesCollection.findOne({ invoiceNumber })
+            if (!existing) {
+              isUnique = true
+            }
+          }
+
+          // 2. Construct invoice document with all important booking information
+          const invoice = {
+            id: uuidv4(),
+            invoiceNumber,
+            lrNumber,
+            origin: booking.origin || '',
+            destination: booking.destination || '',
+            sender: booking.sender || {},
+            receiver: booking.receiver || {},
+            packages: booking.packages || 0,
+            chargeableWeight: booking.chargeableWeight || 0,
+            paymentMode: booking.paymentMode || 'CASH',
+            paymentStatus: booking.paymentStatus || 'PENDING',
+            freight: booking.freightRate || booking.freight || amount,
+            gst: booking.gst || 0,
+            totalAmount: amount,
+            createdAt: new Date()
+          }
+
+          // Insert invoice into invoices collection
+          const result = await invoicesCollection.insertOne(invoice)
+          invoice._id = result.insertedId
+
+          return json({ ok: true, invoice: sanitize(invoice) }, 201)
+
+        } catch (error) {
+          console.error('Error handling /admin/billing POST:', error)
+          return json({ ok: false, error: error.message || 'Internal Server Error' }, 500)
         }
-
-        // 2. Construct invoice document with all important booking information
-        const invoice = {
-          id: uuidv4(),
-          invoiceNumber,
-          lrNumber,
-          origin: booking.origin || '',
-          destination: booking.destination || '',
-          sender: booking.sender || {},
-          receiver: booking.receiver || {},
-          packages: booking.packages || 0,
-          chargeableWeight: booking.chargeableWeight || 0,
-          paymentMode: booking.paymentMode || 'CASH',
-          paymentStatus: booking.paymentStatus || 'PENDING',
-          freight: booking.freightRate || booking.freight || amount,
-          gst: booking.gst || 0,
-          totalAmount: amount,
-          createdAt: new Date()
-        }
-
-        // Insert invoice into invoices collection
-        const result = await invoicesCollection.insertOne(invoice)
-        invoice._id = result.insertedId
-
-        return json({ ok: true, invoice: sanitize(invoice) }, 201)
-
-      } catch (error) {
-        console.error('Error handling /admin/billing POST:', error)
-        return json({ ok: false, error: error.message || 'Internal Server Error' }, 500)
       }
     }
 
@@ -605,57 +618,10 @@ async function handle(request, ctx) {
       await logActivity(db, { actor: tokenDoc.userId, role: tokenDoc.role, action: 'PASSWORD_RESET_COMPLETED', target: tokenDoc.email })
       return json({ ok:true })
     }
-    if (parts[0] === 'users' && parts[2] === 'reset-password' && method === 'POST') {
-      const s = await getSession(request)
-      if (!s || s.role !== 'admin') return json({ ok:false, error:'Super Admin only' }, 403)
-      const { newPassword } = await request.json()
-      const bcrypt = (await import('bcryptjs')).default
-      const hashed = await bcrypt.hash(newPassword || 'agc123', 10)
-      await db.collection('users').updateOne({ id: parts[1] }, { $set: { password: hashed, mustChangePassword: true, passwordChangedAt: new Date() } })
-      await logActivity(db, { actor: s.userId, role: s.role, action: 'PASSWORD_RESET', target: parts[1] })
-      return json({ ok:true })
-    }
-    if (parts[0] === 'users' && parts[2] === 'toggle-active' && method === 'POST') {
-      const s = await getSession(request)
-      if (!s || s.role !== 'admin') return json({ ok:false, error:'Super Admin only' }, 403)
-      const u = await db.collection('users').findOne({ id: parts[1] })
-      if (!u) return json({ ok:false, error:'Not found' }, 404)
-      await db.collection('users').updateOne({ id: parts[1] }, { $set: { active: !(u.active !== false) } })
-      await logActivity(db, { actor: s.userId, role: s.role, action: 'USER_TOGGLE_ACTIVE', target: parts[1] })
-      return json({ ok:true, active: !(u.active !== false) })
-    }
-
-    // -------- LABEL SIZES ---------
-    if (route === '/label-sizes' && method === 'GET') {
-      let items = await db.collection('label_sizes').find({}).sort({ createdAt: 1 }).toArray()
-      if (items.length === 0) {
-        const defaults = [
-          { name: '100 × 150 mm (4×6)', width: 100, height: 150, isDefault: true },
-          { name: '100 × 100 mm (4×4)', width: 100, height: 100, isDefault: true },
-          { name: '100 × 75 mm (4×3)',  width: 100, height: 75,  isDefault: true },
-          { name: '100 × 50 mm (4×2)',  width: 100, height: 50,  isDefault: true },
-          { name: '75 × 50 mm (3×2)',   width: 75,  height: 50,  isDefault: true },
-          { name: '50 × 25 mm (2×1)',   width: 50,  height: 25,  isDefault: true },
-        ].map(x => ({ id: uuidv4(), ...x, createdAt: new Date() }))
-        await db.collection('label_sizes').insertMany(defaults)
-        items = defaults
-      }
-      return json({ items: items.map(sanitize) })
-    }
-    if (route === '/label-sizes' && method === 'POST') {
-      const b = await request.json()
-      const w = Number(b.width); const h = Number(b.height)
-      if (!w || !h || w < 10 || h < 10 || w > 300 || h > 300) return json({ ok:false, error:'Enter valid width & height in mm (10-300)' }, 400)
-      const name = b.name || `${w} × ${h} mm`
-      const doc = { id: uuidv4(), name, width: w, height: h, isDefault: false, createdAt: new Date() }
-      await db.collection('label_sizes').insertOne(doc)
-      return json({ ok: true, size: sanitize(doc) })
-    }
-
-    return json({ ok: false, error: 'Not found' }, 404)
-
   } catch (err) {
-    console.error("API Error:", err)
-    return json({ ok: false, error: err.message || 'Internal error' }, 500)
+    console.error('API Error:', err)
+    return json({ ok: false, error: err.message || 'Internal Server Error' }, 500)
   }
+
+  return json({ ok: false, error: 'Not Found' }, 404)
 }
