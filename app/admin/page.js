@@ -662,7 +662,8 @@ function BookingsList({
   reload,
   setTab
 }) {
-
+const [selectedBooking, setSelectedBooking] = useState(null)
+const [showView, setShowView] = useState(false)
   return (
     <div className="space-y-6">
 
@@ -833,24 +834,43 @@ function BookingsList({
 function NewBooking({ onCreated }) {
 
   const emptyForm = {
+
     senderName: '',
     senderPhone: '',
+    senderAddress: '',
+    senderCity: '',
+    senderState: '',
+    senderPincode: '',
+    senderGst: '',
+
     receiverName: '',
     receiverPhone: '',
+    receiverAddress: '',
+    receiverCity: '',
+    receiverState: '',
+    receiverPincode: '',
+    receiverGst: '',
+
     origin: 'Guwahati',
     destination: '',
+
     packages: 1,
     actualWeight: '',
     chargeableWeight: '',
+
     freight: '',
     loading: '',
     unloading: '',
     otherCharges: '',
+
     paymentMode: 'TO_PAY'
+
   }
+
 
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+
 
   const totalAmount =
     Number(form.freight || 0) +
@@ -858,7 +878,9 @@ function NewBooking({ onCreated }) {
     Number(form.unloading || 0) +
     Number(form.otherCharges || 0)
 
+
   const saveBooking = async (e) => {
+
     e.preventDefault()
 
     setSaving(true)
@@ -867,174 +889,503 @@ function NewBooking({ onCreated }) {
 
       const token = localStorage.getItem('agc_token')
 
+
       const res = await fetch('/api/bookings', {
+
         method: 'POST',
+
         headers: {
+
           'Content-Type': 'application/json',
+
           Authorization: `Bearer ${token}`
+
         },
+
+
         body: JSON.stringify({
+
           ...form,
+
           totalAmount
+
         })
+
       })
+
 
       const data = await res.json()
 
+
       if (data.ok) {
+
         toast.success('Booking Created Successfully')
+
         setForm(emptyForm)
+
         onCreated()
+
       } else {
+
         toast.error(data.error || 'Failed To Create Booking')
+
       }
 
-    } catch (error) {
+
+    } catch(error) {
+
       console.error(error)
+
       toast.error('Network Error')
+
+
     } finally {
+
       setSaving(false)
+
     }
 
   }
 
+
+
   return (
+
     <div className="space-y-6">
+
 
       <Card className="border-0 shadow-lg">
 
+
         <CardContent className="p-6">
+
 
           <h2 className="text-2xl font-black text-[#0F3D91] mb-6">
             New Booking
           </h2>
+
+
 
           <form
             onSubmit={saveBooking}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
           >
 
+
+
+            <div className="lg:col-span-3">
+
+              <h3 className="text-xl font-bold text-[#0F3D91]">
+                Sender Details
+              </h3>
+
+            </div>
+
+
+
             <div>
+
               <Label>Sender Name</Label>
+
               <Input
                 value={form.senderName}
-                onChange={(e)=>setForm({...form,senderName:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  senderName:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Sender Phone</Label>
+
               <Input
                 value={form.senderPhone}
-                onChange={(e)=>setForm({...form,senderPhone:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  senderPhone:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
+              <Label>Sender GST</Label>
+
+              <Input
+                value={form.senderGst}
+                onChange={(e)=>setForm({
+                  ...form,
+                  senderGst:e.target.value
+                })}
+              />
+
+            </div>
+
+
+
+            <div className="lg:col-span-3">
+
+              <Label>Sender Address</Label>
+
+              <Input
+                value={form.senderAddress}
+                onChange={(e)=>setForm({
+                  ...form,
+                  senderAddress:e.target.value
+                })}
+              />
+
+            </div>
+
+
+
+            <div>
+
+              <Label>Sender City</Label>
+
+              <Input
+                value={form.senderCity}
+                onChange={(e)=>setForm({
+                  ...form,
+                  senderCity:e.target.value
+                })}
+              />
+
+            </div>
+
+
+
+            <div>
+
+              <Label>Sender State</Label>
+
+              <Input
+                value={form.senderState}
+                onChange={(e)=>setForm({
+                  ...form,
+                  senderState:e.target.value
+                })}
+              />
+
+            </div>
+
+
+
+            <div>
+
+              <Label>Sender Pincode</Label>
+
+              <Input
+                value={form.senderPincode}
+                onChange={(e)=>setForm({
+                  ...form,
+                  senderPincode:e.target.value
+                })}
+              />
+
+            </div>
+
+
+
+
+
+            <div className="lg:col-span-3 mt-4">
+
+              <h3 className="text-xl font-bold text-[#0F3D91]">
+                Receiver Details
+              </h3>
+
+            </div>
+
+
+
+            <div>
+
               <Label>Receiver Name</Label>
+
               <Input
                 value={form.receiverName}
-                onChange={(e)=>setForm({...form,receiverName:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  receiverName:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Receiver Phone</Label>
+
               <Input
                 value={form.receiverPhone}
-                onChange={(e)=>setForm({...form,receiverPhone:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  receiverPhone:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
+              <Label>Receiver GST</Label>
+
+              <Input
+                value={form.receiverGst}
+                onChange={(e)=>setForm({
+                  ...form,
+                  receiverGst:e.target.value
+                })}
+              />
+
+            </div>
+
+
+
+            <div className="lg:col-span-3">
+
+              <Label>Receiver Address</Label>
+
+              <Input
+                value={form.receiverAddress}
+                onChange={(e)=>setForm({
+                  ...form,
+                  receiverAddress:e.target.value
+                })}
+              />
+
+            </div>
+            <div>
+
+              <Label>Receiver City</Label>
+
+              <Input
+                value={form.receiverCity}
+                onChange={(e)=>setForm({
+                  ...form,
+                  receiverCity:e.target.value
+                })}
+              />
+
+            </div>
+
+
+            <div>
+
+              <Label>Receiver State</Label>
+
+              <Input
+                value={form.receiverState}
+                onChange={(e)=>setForm({
+                  ...form,
+                  receiverState:e.target.value
+                })}
+              />
+
+            </div>
+
+
+            <div>
+
+              <Label>Receiver Pincode</Label>
+
+              <Input
+                value={form.receiverPincode}
+                onChange={(e)=>setForm({
+                  ...form,
+                  receiverPincode:e.target.value
+                })}
+              />
+
+            </div>
+
+
+
+            <div>
+
               <Label>Origin</Label>
+
               <Input
                 value={form.origin}
-                onChange={(e)=>setForm({...form,origin:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  origin:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Destination</Label>
+
               <Input
                 value={form.destination}
-                onChange={(e)=>setForm({...form,destination:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  destination:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Packages</Label>
+
               <Input
                 type="number"
                 value={form.packages}
-                onChange={(e)=>setForm({...form,packages:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  packages:e.target.value
+                })}
               />
+
             </div>
+
+
+
             <div>
+
               <Label>Actual Weight (Kg)</Label>
+
               <Input
                 type="number"
                 value={form.actualWeight}
-                onChange={(e)=>setForm({...form,actualWeight:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  actualWeight:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Chargeable Weight (Kg)</Label>
+
               <Input
                 type="number"
                 value={form.chargeableWeight}
-                onChange={(e)=>setForm({...form,chargeableWeight:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  chargeableWeight:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Freight</Label>
+
               <Input
                 type="number"
                 value={form.freight}
-                onChange={(e)=>setForm({...form,freight:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  freight:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Loading Charges</Label>
+
               <Input
                 type="number"
                 value={form.loading}
-                onChange={(e)=>setForm({...form,loading:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  loading:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Unloading Charges</Label>
+
               <Input
                 type="number"
                 value={form.unloading}
-                onChange={(e)=>setForm({...form,unloading:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  unloading:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Other Charges</Label>
+
               <Input
                 type="number"
                 value={form.otherCharges}
-                onChange={(e)=>setForm({...form,otherCharges:e.target.value})}
+                onChange={(e)=>setForm({
+                  ...form,
+                  otherCharges:e.target.value
+                })}
               />
+
             </div>
 
+
+
             <div>
+
               <Label>Payment Mode</Label>
+
               <Select
                 value={form.paymentMode}
-                onValueChange={(v)=>setForm({...form,paymentMode:v})}
+                onValueChange={(v)=>setForm({
+                  ...form,
+                  paymentMode:v
+                })}
               >
-                <SelectTrigger className="mt-1">
+
+                <SelectTrigger>
+
                   <SelectValue placeholder="Select Payment Mode" />
+
                 </SelectTrigger>
 
+
                 <SelectContent>
+
                   <SelectItem value="TO_PAY">
                     To Pay
                   </SelectItem>
@@ -1050,10 +1401,15 @@ function NewBooking({ onCreated }) {
                   <SelectItem value="FOC">
                     Free Of Cost
                   </SelectItem>
+
                 </SelectContent>
 
               </Select>
+
             </div>
+
+
+
 
             <div className="lg:col-span-3">
 
@@ -1061,11 +1417,13 @@ function NewBooking({ onCreated }) {
 
                 <CardContent className="p-5 flex items-center justify-between">
 
+
                   <div>
 
                     <p className="text-xs uppercase tracking-widest text-slate-500">
                       Total Freight Amount
                     </p>
+
 
                     <h2 className="text-3xl font-black text-[#0F3D91] mt-2">
                       ₹{Number(totalAmount).toLocaleString('en-IN')}
@@ -1073,13 +1431,18 @@ function NewBooking({ onCreated }) {
 
                   </div>
 
+
+
                   <Button
                     type="submit"
                     disabled={saving}
                     className="h-12 px-8 bg-[#0F3D91] hover:bg-[#1E4FB8]"
                   >
+
                     {saving ? 'Saving...' : 'Create Booking'}
+
                   </Button>
+
 
                 </CardContent>
 
@@ -1087,15 +1450,21 @@ function NewBooking({ onCreated }) {
 
             </div>
 
+
+
           </form>
+
 
         </CardContent>
 
+
       </Card>
+
 
     </div>
 
   )
+
 }
 function BillingModule({ bookings, reload }) {
 
