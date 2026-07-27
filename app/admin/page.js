@@ -878,7 +878,61 @@ function NewBooking({ onCreated }) {
     Number(form.unloading || 0) +
     Number(form.otherCharges || 0)
 
+const fetchPincode = async (pincode, type) => {
 
+  if (pincode.length !== 6) return
+
+  try {
+
+    const res = await fetch(
+      `https://api.postalpincode.in/pincode/${pincode}`
+    )
+
+    const data = await res.json()
+
+    if (
+      data[0]?.Status === "Success" &&
+      data[0]?.PostOffice?.length
+    ) {
+
+      const office = data[0].PostOffice[0]
+
+      if (type === "sender") {
+
+        setForm(prev => ({
+          ...prev,
+          senderCity: office.District,
+          senderState: office.State
+        }))
+
+      }
+
+
+      if (type === "receiver") {
+
+        setForm(prev => ({
+          ...prev,
+          receiverCity: office.District,
+          receiverState: office.State
+        }))
+
+      }
+
+    } else {
+
+      toast.error("Pincode Not Found")
+
+    }
+
+  } catch(error) {
+
+    console.log(error)
+
+    toast.error("Pincode Service Error")
+
+  }
+
+}
   const saveBooking = async (e) => {
 
     e.preventDefault()
@@ -1084,13 +1138,22 @@ function NewBooking({ onCreated }) {
               <Label>Sender Pincode</Label>
 
               <Input
-                value={form.senderPincode}
-                onChange={(e)=>setForm({
-                  ...form,
-                  senderPincode:e.target.value
-                })}
-              />
+  value={form.senderPincode}
+  onChange={(e)=>{
 
+    const pin = e.target.value
+
+    setForm({
+      ...form,
+      senderPincode: pin
+    })
+
+    if(pin.length === 6){
+      fetchPincode(pin,"sender")
+    }
+
+  }}
+/>
             </div>
 
 
@@ -1203,12 +1266,22 @@ function NewBooking({ onCreated }) {
               <Label>Receiver Pincode</Label>
 
               <Input
-                value={form.receiverPincode}
-                onChange={(e)=>setForm({
-                  ...form,
-                  receiverPincode:e.target.value
-                })}
-              />
+  value={form.receiverPincode}
+  onChange={(e)=>{
+
+    const pin = e.target.value
+
+    setForm({
+      ...form,
+      receiverPincode: pin
+    })
+
+    if(pin.length === 6){
+      fetchPincode(pin,"receiver")
+    }
+
+  }}
+/>
 
             </div>
 
