@@ -863,7 +863,8 @@ function NewBooking({ onCreated }) {
     unloading: '',
     otherCharges: '',
 
-    paymentMode: 'TO_PAY'
+    paymentMode: 'TO_PAY',
+    oda: 'NO',
 
   }
 
@@ -872,12 +873,12 @@ function NewBooking({ onCreated }) {
   const [saving, setSaving] = useState(false)
 
 
-  const totalAmount =
-    Number(form.freight || 0) +
-    Number(form.loading || 0) +
-    Number(form.unloading || 0) +
-    Number(form.otherCharges || 0)
-
+const totalAmount =
+  Number(form.freight || 0) +
+  Number(form.loading || 0) +
+  Number(form.unloading || 0) +
+  Number(form.hamali || 0) +
+  Number(form.otherCharges || 0)
 const fetchPincode = async (pincode, type) => {
 
   if (pincode.length !== 6) return
@@ -1408,7 +1409,20 @@ const fetchPincode = async (pincode, type) => {
 
             <div>
 
-              <Label>Unloading Charges</Label>
+              <Label>LC</Label>
+              <div>
+  <Label>Hamali Charges</Label>
+
+  <Input
+    type="number"
+    value={form.hamali || ''}
+    onChange={(e)=>setForm({
+      ...form,
+      hamali:e.target.value
+    })}
+  />
+
+</div>
 
               <Input
                 type="number"
@@ -1426,6 +1440,36 @@ const fetchPincode = async (pincode, type) => {
             <div>
 
               <Label>Other Charges</Label>
+              <div>
+  <Label>ODA</Label>
+
+  <Select
+    value={form.oda}
+    onValueChange={(v)=>setForm({
+      ...form,
+      oda:v
+    })}
+  >
+
+    <SelectTrigger>
+      <SelectValue />
+    </SelectTrigger>
+
+    <SelectContent>
+
+      <SelectItem value="NO">
+        NO
+      </SelectItem>
+
+      <SelectItem value="YES">
+        YES
+      </SelectItem>
+
+    </SelectContent>
+
+  </Select>
+
+</div>
 
               <Input
                 type="number"
@@ -1936,7 +1980,82 @@ function RateManagement({ reload }) {
 </div>
 
           </div>
+{showAdd && (
 
+  <Card className="mb-6 bg-slate-50">
+
+    <CardContent className="p-5">
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+        <Input
+          placeholder="Branch"
+          value={rateForm.branchName}
+          disabled
+        />
+
+        <Input
+          placeholder="Destination City"
+          value={rateForm.destination}
+          onChange={(e)=>setRateForm({
+            ...rateForm,
+            destination:e.target.value
+          })}
+        />
+
+        <Input
+          placeholder="Rate / Kg"
+          type="number"
+          value={rateForm.rate}
+          onChange={(e)=>setRateForm({
+            ...rateForm,
+            rate:e.target.value
+          })}
+        />
+
+        <Input
+          placeholder="Minimum Charge"
+          type="number"
+          value={rateForm.minimumCharge}
+          onChange={(e)=>setRateForm({
+            ...rateForm,
+            minimumCharge:e.target.value
+          })}
+        />
+
+        <Input
+          placeholder="Bilty Charge"
+          type="number"
+          value={rateForm.biltyCharge}
+          onChange={(e)=>setRateForm({
+            ...rateForm,
+            biltyCharge:e.target.value
+          })}
+        />
+
+        <Input
+          placeholder="ODA Charge"
+          type="number"
+          value={rateForm.odaCharge}
+          onChange={(e)=>setRateForm({
+            ...rateForm,
+            odaCharge:e.target.value
+          })}
+        />
+
+      </div>
+
+      <Button
+        className="mt-5 bg-[#0F3D91]"
+      >
+        Save Rate
+      </Button>
+
+    </CardContent>
+
+  </Card>
+
+)}
           {loading ? (
 
             <div className="text-center py-10 text-slate-500">
