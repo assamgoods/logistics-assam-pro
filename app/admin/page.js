@@ -151,6 +151,7 @@ function Dashboard({ onLogout }) {
     { k:'overview', l:'Overview', i: LayoutDashboard },
     { k:'bookings', l:'Bookings', i: Truck },
     { k:'new', l:'New Booking', i: Plus },
+    { k:'billing', l:'Billing', i: IndianRupee },
     { k:'rates', l:'Rate Management', i: DollarSign },
     { k:'branches', l:'Branches', i: Building2 },
     { k:'transfers', l:'Branch Transfers', i: ArrowRightLeft },
@@ -188,6 +189,7 @@ function Dashboard({ onLogout }) {
           {tab === 'overview' && <Overview stats={stats}/>}
           {tab === 'bookings' && <BookingsList bookings={filtered} q={q} setQ={setQ} reload={loadAll}/>}
           {tab === 'new' && <NewBooking onCreated={()=>{loadAll(); setTab('bookings')}}/>}
+          {tab === 'billing' && <BillingModule />}
           {tab === 'rates' && <RateManagement />}
           {tab === 'branches' && <BranchesModule />}
           {tab === 'transfers' && <BranchTransfersModule />}
@@ -718,9 +720,135 @@ function NewBooking({ onCreated }) {
   )
 }
 
-/* ---------------------------------------------------- */
-/* NEWLY INTEGRATED MODULES COMPONENTS                  */
-/* ---------------------------------------------------- */
+function BillingModule() {
+  const [invoices, setInvoices] = useState([])
+  const [searchLr, setSearchLr] = useState('')
+  const [selectedBooking, setSelectedBooking] = useState(null)
+  const [loading, setLoading] = useState(false)
+
+  const handleSearchLr = async (e) => {
+    e.preventDefault()
+    if (!searchLr.trim()) return
+    setLoading(true)
+    try {
+      const token = localStorage.getItem('agc_token')
+      const r = await fetch(`/api/bookings?search=${encodeURIComponent(searchLr)}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const d = await r.json()
+      const found = (d.items || []).find(b => b.lrNumber.toLowerCase() === searchLr.trim().toLowerCase())
+      if (found) {
+        setSelectedBooking(found)
+        toast.success('Booking fetched for billing!')
+      } else {
+        toast.error('LR Number not found')
+        setSelectedBooking(null)
+      }
+    } catch {
+      toast.error('Error fetching booking')
+    }
+    setLoading(false)
+  }
+
+  const handleGenerateInvoice = async () => {
+    if (!selectedBooking) return
+    try {
+      const token = localStorage.getItem('agc_token')
+      const r = await fetch('/api/admin/billing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ lrNumber: selectedBooking.lrNumber, amount: selectedBooking.totalAmount })
+      })
+      const d = await r.json()
+      if (d.ok) {
+        toast.success('Invoice generated successfully!')
+        setInvoices(prev => [selectedBooking, ...prev])
+        setSelectedBooking(null)
+        setSearchLr('')
+      } else {
+        toast.error(d.error || 'Failed to generate invoice')
+      }
+    } catch {
+      toast.error('Network error during invoice creation')
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardContent className="p-6">
+          <h3 className="font-bold text-[#0F3D91] mb-4">Generate & Manage Billing Invoices</h3>
+          <form onSubmit={handleSearchLr} className="flex gap-3 max-w-md items-end">
+            <div className="flex-1">
+              <Label className="text-xs">Search by LR Number</Label>
+              <Input 
+                value={searchLr} 
+                onChange={e => setSearchLr(e.target.value)} 
+                placeholder="e.g. AGC-2026-..." 
+                className="mt-1" 
+                required
+              />
+            </div>
+            <Button type="submit" disabled={loading} className="bg-[#0F3D91] text-white font-bold">
+              {loading ? 'Searching...' : 'Fetch LR'}
+            </Button>
+          </form>
+
+          {selectedBooking && (
+            <div className="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-3">
+              <div className="flex justify-between items-center border-b pb-2">
+                <div>
+                  <div className="text-xs text-slate-500 uppercase tracking-wider">LR Number</div>
+                  <div className="font-black text-[#0F3D91] text-lg">{selectedBooking.lrNumber}</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xs text-slate-500 uppercase tracking-wider">Total Amount</div>
+                  <div className="font-black text-emerald-600 text-lg">₹{Number(selectedBooking.totalAmount || 0).toLocaleString('en-IN')}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-xs text-slate-700">
+                <div><b>Sender:</b> {selectedBooking.senderName || selectedBooking.sender?.name}</div>
+                <div><b>Receiver:</b> {selectedBooking.receiverName || selectedBooking.receiver?.name}</div>
+                <div><b>Route:</b> {selectedBooking.origin} → {selectedBooking.destination}</div>
+                <div><b>Payment Status:</b> <span className="px-2 py-0.5 rounded bg-amber-100 text-[#0F3D91] font-bold">{selectedBooking.paymentStatus}</span></div>
+              </div>
+              <div className="pt-2 flex justify-end">
+                <Button onClick={handleGenerateInvoice} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                  Confirm & Generate Official Invoice
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-0 overflow-x-auto">
+          <div className="p-4 border-b border-slate-100 font-bold text-slate-800 text-sm">Recent Generated Invoices</div>
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] tracking-widest">
+              <tr><Th>LR Number</Th><Th>Date</Th><Th>Client / Receiver</Th><Th>Amount</Th><Th>Status</Th></tr>
+            </thead>
+            <tbody>
+              {invoices.length === 0 && (
+                <tr><td colSpan="5" className="p-6 text-center text-slate-400">No invoices generated in this session.</td></tr>
+              )}
+              {invoices.map((inv, idx) => (
+                <tr key={idx} className="border-t border-slate-100">
+                  <Td><span className="font-bold text-[#0F3D91]">{inv.lrNumber}</span></Td>
+                  <Td>{inv.date || new Date().toISOString().slice(0,10)}</Td>
+                  <Td>{inv.receiverName || inv.receiver?.name || 'N/A'}</Td>
+                  <Td>₹{Number(inv.totalAmount || 0).toLocaleString('en-IN')}</Td>
+                  <Td><span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">Invoiced</span></Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
 
 function RateManagement() {
   const [rates, setRates] = useState([])
@@ -1046,7 +1174,6 @@ function ActivityLogModule() {
   const [logs, setLogs] = useState([])
 
   useEffect(() => {
-    // Simulated activity logs fetch
     setLogs([
       { action: 'Admin Login', time: 'Just now', user: 'SuperAdmin' },
       { action: 'Booking Created (LR-AGC-2026-001)', time: '10 mins ago', user: 'SuperAdmin' },
