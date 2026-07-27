@@ -1923,13 +1923,17 @@ function RateManagement({ reload }) {
               Rate Management
             </h2>
 
-            <Button
-              onClick={loadRates}
-              variant="outline"
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            <div className="flex gap-3">
+
+  <Button
+    onClick={()=>setShowAdd(!showAdd)}
+    className="bg-[#0F3D91]"
+  >
+    + Add Rate
+  </Button>
+
+  
+</div>
 
           </div>
 
@@ -2059,6 +2063,16 @@ function BranchesModule({ reload }) {
 
   const [branches, setBranches] = useState([])
   const [loading, setLoading] = useState(true)
+  const [showAdd, setShowAdd] = useState(false)
+
+const [rateForm, setRateForm] = useState({
+  branchName: "Panchkula",
+  destination: "",
+  rate: "",
+  minimumCharge: "",
+  biltyCharge: "",
+  odaCharge: "500"
+})
 
   const loadBranches = async () => {
 
