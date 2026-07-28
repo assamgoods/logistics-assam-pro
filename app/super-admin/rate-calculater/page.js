@@ -56,13 +56,25 @@ export default function AdvancedRateCalculator() {
   return (
     <div style={{ background: '#0b192c', minHeight: '100vh', fontFamily: 'Inter, Arial, sans-serif', paddingBottom: '40px', color: '#fff' }}>
       
-      {/* Header */}
+      {/* Header with Ditto AGC Branding */}
       <header style={{ background: '#08121e', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '15px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ fontSize: '32px', fontWeight: '900', color: '#ff7b00', fontStyle: 'italic', lineHeight: '1' }}>A</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ 
+            width: '36px', 
+            height: '36px', 
+            background: '#ff7b00', 
+            borderRadius: '6px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            fontSize: '22px', 
+            fontWeight: '900', 
+            color: '#08121e' 
+          }}>A</div>
           <div>
-            <span style={{ fontWeight: '900', fontSize: '16px', color: '#ffffff', letterSpacing: '0.5px', display: 'block' }}>ASSAM GOODS CARRIER</span>
-            <span style={{ fontSize: '9px', color: '#ff7b00', fontWeight: '700', letterSpacing: '1.5px' }}>SAFE • FAST • RELIABLE</span>
+            <div style={{ fontWeight: '900', fontSize: '13px', color: '#ffffff', letterSpacing: '0.8px', lineHeight: '1.2' }}>ASSAM GOODS</div>
+            <div style={{ fontWeight: '900', fontSize: '13px', color: '#ffffff', letterSpacing: '0.8px', lineHeight: '1.2' }}>CARRIER</div>
+            <div style={{ fontSize: '7px', color: '#ff7b00', fontWeight: '800', letterSpacing: '1.2px', marginTop: '2px' }}>SAFE • FAST • RELIABLE</div>
           </div>
         </div>
         <a href="/super-admin/dashboard" style={{ background: 'rgba(255,255,255,0.08)', color: '#ffffff', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>← Back to Dashboard</a>
@@ -78,11 +90,11 @@ export default function AdvancedRateCalculator() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#94a3b8', marginBottom: '6px' }}>FROM PINCODE</label>
-                <input type="text" placeholder="e.g. 134113" value={fromPincode} onChange={(e) => setFromPincode(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: '#0b192c', color: '#fff', fontSize: '14px' }} />
+                <input type="text" placeholder="e.g. 781001" value={fromPincode} onChange={(e) => setFromPincode(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: '#0b192c', color: '#fff', fontSize: '14px' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#94a3b8', marginBottom: '6px' }}>TO PINCODE</label>
-                <input type="text" placeholder="e.g. 227405" value={toPincode} onChange={(e) => setToPincode(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: '#0b192c', color: '#fff', fontSize: '14px' }} />
+                <input type="text" placeholder="e.g. 788001" value={toPincode} onChange={(e) => setToPincode(e.target.value)} style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: '#0b192c', color: '#fff', fontSize: '14px' }} />
               </div>
             </div>
 
@@ -121,7 +133,7 @@ export default function AdvancedRateCalculator() {
             {result ? (
               <div style={{ background: '#0b192c', border: '1px solid rgba(255,255,255,0.1)', padding: '25px', borderRadius: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '16px', fontWeight: '700', color: '#ffffff' }}>Surface Express</span>
+                  <span style={{ fontSize: '16px', fontWeight: '700', color: '#ffffff' }}>AGC Surface Express</span>
                   <span style={{ fontSize: '26px', fontWeight: '800', color: '#ff7b00' }}>₹{result.totalAmount.toLocaleString()}</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px' }}>Delivery in {result.estimatedDelivery} • Chargeable Weight: {result.totalWeight} kg</div>
@@ -139,7 +151,7 @@ export default function AdvancedRateCalculator() {
               <div style={{ background: '#0b192c', border: '2px dashed rgba(255,255,255,0.15)', padding: '60px 20px', borderRadius: '10px', textAlign: 'center', color: '#94a3b8' }}>
                 <div style={{ fontSize: '32px', marginBottom: '10px' }}>🧮</div>
                 <div style={{ fontWeight: '700', fontSize: '15px', color: '#ffffff' }}>Ready to Calculate</div>
-                <div style={{ fontSize: '12px', marginTop: '5px' }}>Enter pincodes and box dimensions on left to view instant freight quote.</div>
+                <div style={{ fontSize: '12px', marginTop: '5px' }}>Enter pincodes and box dimensions on left to view instant AGC freight quote.</div>
               </div>
             )}
           </div>
