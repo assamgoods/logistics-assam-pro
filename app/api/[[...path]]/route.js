@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { ObjectId } from 'mongodb'
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/mongo'
 import { v4 as uuidv4 } from 'uuid'
@@ -453,6 +454,33 @@ async function handle(request, ctx) {
 
       return json({ ok: true, booking: sanitize(val) })
     }
+    if (parts[0] === 'bookings' && parts.length === 2 && method === 'PUT') {
+
+  const id = parts[1]
+  const body = await request.json()
+
+  const result = await db.collection('bookings').updateOne(
+    { _id: new ObjectId(id) },
+    {
+      $set: {
+        ...body,
+        updatedAt: new Date()
+      }
+    }
+  )
+
+  if(result.matchedCount === 0){
+    return json({
+      ok:false,
+      error:'Booking not found'
+    },404)
+  }
+
+  return json({
+    ok:true,
+    message:'Booking Updated Successfully'
+  })
+}
     if (parts[0] === 'bookings' && parts[2] === 'pod' && method === 'POST') {
       const lr = decodeURIComponent(parts[1])
       const body = await request.json()
