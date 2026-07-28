@@ -62,39 +62,49 @@ export default function AdvancedRateCalculator() {
   };
 
   return (
-    <div style={{ background: '#f4f7fa', minHeight: '100vh', padding: '40px 20px', fontFamily: 'Inter, sans-serif' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        
-        {/* Brand Header */}
-        <div style={{ background: '#0b2545', color: '#fff', padding: '20px 30px', borderRadius: '10px 10px 0 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 12px rgba(11,37,69,0.15)' }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: '22px', fontWeight: '700', letterSpacing: '0.5px' }}>ASSAM GOODS CARRIER</h1>
-            <p style={{ margin: '5px 0 0 0', fontSize: '13px', color: '#94a3b8' }}>Advanced Express Logistics & Freight Rate Estimator</p>
+    <div style={{ background: '#f4f7fa', minHeight: '100vh', fontFamily: 'Inter, sans-serif', paddingBottom: '40px' }}>
+      
+      {/* Official Website Matching Header */}
+      <header style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ background: '#0b2545', color: '#fff', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '18px' }}>
+            AG
           </div>
-          <div style={{ background: '#134074', padding: '6px 14px', borderRadius: '20px', fontSize: '12px', fontWeight: '600', color: '#63b3ed' }}>
-            Enterprise Portal
+          <div>
+            <span style={{ fontWeight: '800', fontSize: '16px', color: '#0b2545', letterSpacing: '0.5px', display: 'block' }}>ASSAM GOODS CARRIER</span>
+            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>Enterprise Logistics & Rate Estimator</span>
           </div>
         </div>
 
+        <div>
+          <a href="/super-admin/dashboard" style={{ background: '#f1f5f9', color: '#0b2545', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>
+            ← Back to Dashboard
+          </a>
+        </div>
+      </header>
+
+      {/* Main Container */}
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
+        
         {/* Main Grid Content */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '25px', background: '#ffffff', padding: '30px', borderRadius: '0 0 10px 10px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '25px', background: '#ffffff', padding: '30px', borderRadius: '10px', boxShadow: '0 4px 20px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
           
           {/* Left Form Section */}
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
               📍 Route & Pincode Details
             </h3>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>FROM PINCODE</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>FROM PINCODE</label>
                 <input 
                   type="text" placeholder="e.g. 134113" value={fromPincode} onChange={(e) => setFromPincode(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>TO PINCODE</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>TO PINCODE</label>
                 <input 
                   type="text" placeholder="e.g. 227405" value={toPincode} onChange={(e) => setToPincode(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px', outline: 'none' }}
@@ -102,7 +112,7 @@ export default function AdvancedRateCalculator() {
               </div>
             </div>
 
-            <h3 style={{ fontSize: '15px', fontWeight: '600', color: '#1e293b', marginBottom: '12px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '12px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
               📦 Package Dimensions & Quantities
             </h3>
 
@@ -131,21 +141,21 @@ export default function AdvancedRateCalculator() {
                 </div>
               ))}
 
-              <button type="button" onClick={addBoxRow} style={{ background: 'transparent', border: 'none', color: '#0b2545', cursor: 'pointer', fontWeight: '600', fontSize: '13px', marginTop: '6px' }}>
+              <button type="button" onClick={addBoxRow} style={{ background: 'transparent', border: 'none', color: '#0b2545', cursor: 'pointer', fontWeight: '700', fontSize: '13px', marginTop: '6px' }}>
                 + Add Another Box Size
               </button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>TOTAL WEIGHT (KG)</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>TOTAL WEIGHT (KG)</label>
                 <input 
                   type="number" placeholder="e.g. 20" value={shipmentWeight} onChange={(e) => setShipmentWeight(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>INVOICE AMOUNT (₹)</label>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '6px' }}>INVOICE AMOUNT (₹)</label>
                 <input 
                   type="number" placeholder="e.g. 15000" value={shipmentAmount} onChange={(e) => setShipmentAmount(e.target.value)}
                   style={{ width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '14px' }}
@@ -154,7 +164,7 @@ export default function AdvancedRateCalculator() {
             </div>
 
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '8px' }}>PAYMENT MODE</label>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#475569', marginBottom: '8px' }}>PAYMENT MODE</label>
               <div style={{ display: 'flex', gap: '20px', fontSize: '14px', color: '#334155' }}>
                 <label style={{ cursor: 'pointer' }}><input type="radio" name="pay" checked={paymentMode === 'Prepaid'} onChange={() => setPaymentMode('Prepaid')} /> Prepaid</label>
                 <label style={{ cursor: 'pointer' }}><input type="radio" name="pay" checked={paymentMode === 'COD'} onChange={() => setPaymentMode('COD')} /> Collect on Delivery (COD)</label>
@@ -163,12 +173,12 @@ export default function AdvancedRateCalculator() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '25px' }}>
               <div style={{ border: '1px solid #e2e8f0', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>FREIGHT TYPE</div>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>FREIGHT TYPE</div>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '4px', cursor: 'pointer' }}><input type="radio" name="freight" checked={freightType === 'Freight on Pickup'} onChange={() => setFreightType('Freight on Pickup')} /> Freight on Pickup</label>
                 <label style={{ display: 'block', fontSize: '13px', cursor: 'pointer' }}><input type="radio" name="freight" checked={freightType === 'Freight on Delivery'} onChange={() => setFreightType('Freight on Delivery')} /> Freight on Delivery</label>
               </div>
               <div style={{ border: '1px solid #e2e8f0', padding: '12px', borderRadius: '8px' }}>
-                <div style={{ fontSize: '11px', fontWeight: '600', color: '#64748b', marginBottom: '6px' }}>INSURANCE OPTION</div>
+                <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '6px' }}>INSURANCE OPTION</div>
                 <label style={{ display: 'block', fontSize: '13px', marginBottom: '4px', cursor: 'pointer' }}><input type="radio" name="ins" checked={insuranceType === "Owner's Risk"} onChange={() => setInsuranceType("Owner's Risk")} /> Owner&apos;s Risk</label>
                 <label style={{ display: 'block', fontSize: '13px', cursor: 'pointer' }}><input type="radio" name="ins" checked={insuranceType === "Carrier's Insurance"} onChange={() => setInsuranceType("Carrier's Insurance")} /> Carrier&apos;s Insurance</label>
               </div>
@@ -225,8 +235,8 @@ export default function AdvancedRateCalculator() {
               </div>
             ) : (
               <div style={{ background: '#f8fafc', border: '2px dashed #cbd5e1', padding: '50px 20px', borderRadius: '10px', textAlign: 'center', color: '#64748b' }}>
-                <div style={{ fontSize: '32px', marginBottom: '10px' }}>📊</div>
-                <div style={{ fontWeight: '600', fontSize: '15px', color: '#334155' }}>Ready to Calculate</div>
+                <div style={{ fontSize: '32px', marginBottom: '10px' }}>🧮</div>
+                <div style={{ fontWeight: '700', fontSize: '15px', color: '#334155' }}>Ready to Calculate</div>
                 <p style={{ fontSize: '13px', margin: '5px 0 0 0' }}>Enter pincodes, dimensions & click calculate to generate price breakdown.</p>
               </div>
             )}
