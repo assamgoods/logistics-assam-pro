@@ -194,6 +194,7 @@ export default function AdminPage() {
 
 function Dashboard({ onLogout }) {
   const [tab, setTab] = useState('overview')
+  const [selectedBooking, setSelectedBooking] = useState(null)
   const [stats, setStats] = useState({})
   const [bookings, setBookings] = useState([])
   const [search, setSearch] = useState('')
