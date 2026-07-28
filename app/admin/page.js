@@ -1200,17 +1200,17 @@ const fetchPincode = async (pincode, type) => {
       const token = localStorage.getItem('agc_token')
 
 
-      const res = await fetch('/api/bookings', {
+     const res = await fetch(
+  editBooking
+    ? `/api/bookings/${editBooking._id}`
+    : '/api/bookings',
+  {
+    method: editBooking ? 'PUT' : 'POST',
 
-        method: 'POST',
-
-        headers: {
-
-          'Content-Type': 'application/json',
-
-          Authorization: `Bearer ${token}`
-
-        },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`
+    },
 
 
         body: JSON.stringify({
