@@ -956,7 +956,17 @@ function BookingsList({
 
             </table>
 
+{showView && selectedBooking && (
+  <div className="p-4 bg-white border rounded">
+    View: {selectedBooking.lrNumber}
+  </div>
+)}
 
+{showEdit && selectedBooking && (
+  <div className="p-4 bg-white border rounded">
+    Edit: {selectedBooking.lrNumber}
+  </div>
+)}
           </div>
 
 
