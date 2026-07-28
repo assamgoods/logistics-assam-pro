@@ -1,97 +1,132 @@
 'use client';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import React from 'react';
 
 export default function SuperAdminDashboard() {
-  const [isAuth, setIsAuth] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [apiName, setApiName] = useState('Delhivery');
-  const [savedMessage, setSavedMessage] = useState('');
-  const router = useRouter();
-
-  useEffect(() => {
-    const auth = localStorage.getItem('isSuperAdmin');
-    if (!auth) {
-      router.push('/super-admin/login');
-    } else {
-      setIsAuth(true);
-    }
-  }, [router]);
-
-  const handleSaveApi = (e) => {
-    e.preventDefault();
-    localStorage.setItem('aggregator_api_key', apiKey);
-    localStorage.setItem('aggregator_name', apiName);
-    setSavedMessage('API Credentials successfully save ho gaye hain!');
-    setTimeout(() => setSavedMessage(''), 4000);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('isSuperAdmin');
-    router.push('/super-admin/login');
-  };
-
-  if (!isAuth) return null;
+  const [searchTerm, setSearchTerm] = useState('');
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f3f4f6', padding: '30px', fontFamily: 'sans-serif' }}>
-      <div style={{ maxWidth: '800px', margin: '0 auto', backgroundColor: 'white', padding: '30px', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-        
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '15px', marginBottom: '20px' }}>
-          <h2 style={{ margin: 0, color: '#1f2937' }}>Super Admin Aggregator Panel</h2>
-          <button 
-            onClick={handleLogout}
-            style={{ backgroundColor: '#ef4444', color: 'white', border: 'none', padding: '8px 15px', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
-          >
-            Logout
-          </button>
+    <div style={{ background: '#f4f7fa', minHeight: '100vh', fontFamily: 'Inter, sans-serif', paddingBottom: '40px' }}>
+      
+      {/* Top Navbar Header */}
+      <header style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+          <span style={{ fontWeight: '800', fontSize: '18px', color: '#0b2545', letterSpacing: '0.5px' }}>ASSAM GOODS CARRIER</span>
+          <div style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '6px 12px', width: '320px' }}>
+            <span style={{ fontSize: '12px', color: '#64748b', marginRight: '10px', borderRight: '1px solid #cbd5e1', paddingRight: '10px', fontWeight: '600' }}>LRN ▼</span>
+            <input 
+              type="text" placeholder="Search upto 25 LRNs" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', width: '100%' }}
+            />
+            <span style={{ fontSize: '12px', color: '#0b2545', fontWeight: '600', cursor: 'pointer' }}>Search</span>
+          </div>
         </div>
 
-        <p style={{ color: '#4b5563', marginBottom: '20px' }}>
-          Yahan se aap third-party courier (jaise Delhivery) ki API configure kar sakte hain. Iska aapke purane admin ya branch data se koi lena-dena nahi hai.
-        </p>
-
-        {savedMessage && (
-          <div style={{ backgroundColor: '#d1fae5', color: '#065f46', padding: '10px', borderRadius: '4px', marginBottom: '20px', textAlign: 'center', fontWeight: '500' }}>
-            {savedMessage}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <div style={{ background: '#f1f5f9', padding: '8px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: '600', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            ⚡ Quick Actions
           </div>
-        )}
+          <div style={{ background: '#0b2545', color: '#fff', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '14px' }}>
+            AG
+          </div>
+        </div>
+      </header>
 
-        <form onSubmit={handleSaveApi} style={{ backgroundColor: '#f9fafb', padding: '20px', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-          <h3 style={{ marginTop: 0, marginBottom: '15px', color: '#374151' }}>Configure Courier API</h3>
+      {/* Main Container */}
+      <div style={{ maxWidth: '1200px', margin: '30px auto', padding: '0 20px' }}>
+        
+        <h1 style={{ fontSize: '24px', fontWeight: '700', color: '#0b2545', marginBottom: '25px' }}>
+          Hi, Assam Goods Admin
+        </h1>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '25px' }}>
           
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', fontSize: '14px' }}>Select Aggregator</label>
-            <select 
-              value={apiName} 
-              onChange={(e) => setApiName(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #d1d5db' }}
-            >
-              <option value="Delhivery">Delhivery</option>
-              <option value="Xpressbees" disabled>Xpressbees (Coming Soon)</option>
-              <option value="Bluedart" disabled>Bluedart (Coming Soon)</option>
-            </select>
+          {/* Left Column (Actions & Shortcuts) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+            
+            {/* Actions Card */}
+            <div style={{ background: '#ffffff', padding: '25px', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                🚚 Live Shipment Actions
+              </div>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', textAlign: 'center' }}>
+                <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                  <div style={{ fontSize: '26px', fontWeight: '800', color: '#0b2545' }}>5</div>
+                  <div style={{ fontSize: '12px', color: '#64748b', margin: '5px 0 10px 0' }}>Awaiting Pickup</div>
+                  <a href="#" style={{ fontSize: '12px', color: '#0b2545', fontWeight: '700', textDecoration: 'none' }}>View</a>
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                  <div style={{ fontSize: '26px', fontWeight: '800', color: '#0b2545' }}>9</div>
+                  <div style={{ fontSize: '12px', color: '#64748b', margin: '5px 0 10px 0' }}>In Transit</div>
+                  <a href="#" style={{ fontSize: '12px', color: '#0b2545', fontWeight: '700', textDecoration: 'none' }}>View</a>
+                </div>
+
+                <div style={{ background: '#f8fafc', padding: '15px', borderRadius: '8px', border: '1px solid #f1f5f9' }}>
+                  <div style={{ fontSize: '26px', fontWeight: '800', color: '#dc2626' }}>0</div>
+                  <div style={{ fontSize: '12px', color: '#64748b', margin: '5px 0 10px 0' }}>Exceptions</div>
+                  <a href="#" style={{ fontSize: '12px', color: '#dc2626', fontWeight: '700', textDecoration: 'none' }}>Act Now</a>
+                </div>
+              </div>
+            </div>
+
+            {/* Shortcuts Card */}
+            <div style={{ background: '#ffffff', padding: '25px', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '20px' }}>
+                ⚡ Quick Shortcuts
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                <div style={{ border: '1px solid #cbd5e1', padding: '18px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: '#fafafa' }}>
+                  <span style={{ fontSize: '20px' }}>📦</span>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#0b2545' }}>Create New Order</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Book a fresh shipment</div>
+                  </div>
+                </div>
+
+                <div style={{ border: '1px solid #cbd5e1', padding: '18px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: '#fafafa' }}>
+                  <span style={{ fontSize: '20px' }}>🚛</span>
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#0b2545' }}>Create New Pickup</div>
+                    <div style={{ fontSize: '11px', color: '#64748b' }}>Schedule vendor pickup</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', fontSize: '14px' }}>API Key / Token</label>
-            <input 
-              type="text" 
-              placeholder="Apni Delhivery API key yahan daalein" 
-              value={apiKey} 
-              onChange={(e) => setApiKey(e.target.value)}
-              required
-              style={{ width: '100%', padding: '10px', borderRadius: '4px', border: '1px solid #d1d5db', boxSizing: 'border-box' }}
-            />
+          {/* Right Column (Tools / Rate Calculator Shortcut) */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div style={{ background: '#ffffff', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', textAlign: 'center', cursor: 'pointer' }}>
+                <div style={{ fontSize: '24px', marginBottom: '8px' }}>📖</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#0b2545' }}>Knowledge Base</div>
+              </div>
+
+              <a href="/super-admin/rate-calculater" style={{ background: '#ffffff', padding: '25px', borderRadius: '10px', border: '1px solid #e2e8f0', textAlign: 'center', textDecoration: 'none', display: 'block' }}>
+                <div style={{ fontSize: '24px', marginBottom: '8px' }}>🧮</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#0b2545' }}>Rate Calculator</div>
+              </a>
+            </div>
           </div>
 
-          <button 
-            type="submit"
-            style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
-          >
-            Save API Settings
-          </button>
-        </form>
+        </div>
+
+        {/* Upcoming Pickups Section */}
+        <div style={{ background: '#ffffff', padding: '25px', borderRadius: '10px', marginTop: '25px', boxShadow: '0 2px 10px rgba(0,0,0,0.03)', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+            <span style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b' }}>Upcoming Pickups</span>
+            <span style={{ fontSize: '13px', color: '#0b2545', fontWeight: '700', cursor: 'pointer' }}>+ Create New Pickup</span>
+          </div>
+
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#64748b', fontSize: '13px', background: '#f8fafc', borderRadius: '8px' }}>
+            No upcoming pickups.<br/>
+            <span style={{ fontSize: '11px', color: '#94a3b8' }}>Your upcoming pickup requests appear here</span>
+          </div>
+        </div>
 
       </div>
     </div>

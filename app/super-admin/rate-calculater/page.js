@@ -62,23 +62,43 @@ export default function AdvancedRateCalculator() {
   };
 
   return (
-    <div style={{ background: '#f4f7fa', minHeight: '100vh', fontFamily: 'Inter, sans-serif', paddingBottom: '40px' }}>
+    <div style={{ background: '#f4f7fa', minHeight: '100vh', fontFamily: 'Inter, Arial, sans-serif', paddingBottom: '40px' }}>
       
-      {/* Official Website Matching Header */}
-      <header style={{ background: '#ffffff', borderBottom: '1px solid #e2e8f0', padding: '15px 30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <div style={{ background: '#0b2545', color: '#fff', width: '40px', height: '40px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '900', fontSize: '18px' }}>
-            AG
+      {/* 100% Matching Website Header */}
+      <header style={{ background: '#113575', padding: '15px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+        
+        {/* Left: Logo Section */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ fontSize: '34px', fontWeight: '900', color: '#f37021', fontStyle: 'italic', letterSpacing: '-1px', lineHeight: '1' }}>
+            A
           </div>
-          <div>
-            <span style={{ fontWeight: '800', fontSize: '16px', color: '#0b2545', letterSpacing: '0.5px', display: 'block' }}>ASSAM GOODS CARRIER</span>
-            <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>Enterprise Logistics & Rate Estimator</span>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <span style={{ fontWeight: '900', fontSize: '18px', color: '#ffffff', letterSpacing: '0.5px', lineHeight: '1.1' }}>
+              ASSAM GOODS CARRIER
+            </span>
+            <span style={{ fontSize: '9px', color: '#f37021', fontWeight: '700', letterSpacing: '1.5px', marginTop: '2px' }}>
+              SAFE • FAST • RELIABLE
+            </span>
           </div>
         </div>
 
-        <div>
-          <a href="/super-admin/dashboard" style={{ background: '#f1f5f9', color: '#0b2545', padding: '8px 16px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', textDecoration: 'none' }}>
-            ← Back to Dashboard
+        {/* Center: Main Navigation */}
+        <nav style={{ display: 'flex', gap: '25px', fontSize: '14px', fontWeight: '600' }}>
+          <a href="#" style={{ color: '#ffffff', textDecoration: 'none' }}>Track</a>
+          <a href="#" style={{ color: '#ffffff', textDecoration: 'none' }}>Services</a>
+          <a href="#" style={{ color: '#ffffff', textDecoration: 'none' }}>Coverage</a>
+          <a href="#" style={{ color: '#ffffff', textDecoration: 'none' }}>Contact</a>
+        </nav>
+
+        {/* Right: Sub Navigation & CTA */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', fontSize: '12px', fontWeight: '600' }}>
+          <a href="#" style={{ color: '#ffffff', textDecoration: 'none' }}>Customer</a>
+          <a href="#" style={{ color: '#ffffff', textDecoration: 'none' }}>Branch</a>
+          <a href="#" style={{ color: '#ffffff', textDecoration: 'none' }}>Driver</a>
+          <a href="/super-admin/dashboard" style={{ color: '#ffffff', textDecoration: 'none' }}>Admin</a>
+          
+          <a href="tel:8847428801" style={{ background: '#f37021', color: '#000000', padding: '8px 20px', borderRadius: '30px', fontSize: '14px', fontWeight: '800', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
+            <span style={{ fontSize: '14px' }}>📞</span> 8847428801
           </a>
         </div>
       </header>
@@ -91,7 +111,7 @@ export default function AdvancedRateCalculator() {
           
           {/* Left Form Section */}
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#113575', marginBottom: '15px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
               📍 Route & Pincode Details
             </h3>
             
@@ -112,7 +132,7 @@ export default function AdvancedRateCalculator() {
               </div>
             </div>
 
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#1e293b', marginBottom: '12px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#113575', marginBottom: '12px', borderBottom: '2px solid #f1f5f9', paddingBottom: '8px' }}>
               📦 Package Dimensions & Quantities
             </h3>
 
@@ -141,7 +161,7 @@ export default function AdvancedRateCalculator() {
                 </div>
               ))}
 
-              <button type="button" onClick={addBoxRow} style={{ background: 'transparent', border: 'none', color: '#0b2545', cursor: 'pointer', fontWeight: '700', fontSize: '13px', marginTop: '6px' }}>
+              <button type="button" onClick={addBoxRow} style={{ background: 'transparent', border: 'none', color: '#f37021', cursor: 'pointer', fontWeight: '700', fontSize: '13px', marginTop: '6px' }}>
                 + Add Another Box Size
               </button>
             </div>
@@ -184,7 +204,7 @@ export default function AdvancedRateCalculator() {
               </div>
             </div>
 
-            <button onClick={handleCalculate} style={{ width: '100%', background: '#0b2545', color: '#fff', padding: '14px', borderRadius: '8px', fontWeight: '700', fontSize: '15px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(11,37,69,0.2)' }}>
+            <button onClick={handleCalculate} style={{ width: '100%', background: '#113575', color: '#fff', padding: '14px', borderRadius: '8px', fontWeight: '700', fontSize: '15px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(17,53,117,0.2)' }}>
               Calculate Final Quote
             </button>
           </div>
@@ -194,8 +214,8 @@ export default function AdvancedRateCalculator() {
             {result ? (
               <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '25px', borderRadius: '10px', position: 'sticky', top: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '16px', fontWeight: '700', color: '#0b2545' }}>Surface Express</span>
-                  <span style={{ fontSize: '26px', fontWeight: '800', color: '#0b2545' }}>₹{result.totalAmount}</span>
+                  <span style={{ fontSize: '16px', fontWeight: '700', color: '#113575' }}>Surface Express</span>
+                  <span style={{ fontSize: '26px', fontWeight: '800', color: '#113575' }}>₹{result.totalAmount}</span>
                 </div>
                 <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '20px' }}>
                   Estimated Delivery in 3-4 days • Total Weight: {result.totalWeight} kg
@@ -229,7 +249,7 @@ export default function AdvancedRateCalculator() {
                   <span>₹{result.gstAmount}</span>
                 </div>
 
-                <button style={{ width: '100%', background: '#134074', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', marginTop: '10px' }}>
+                <button style={{ width: '100%', background: '#f37021', color: '#fff', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '700', cursor: 'pointer', marginTop: '10px', boxShadow: '0 4px 12px rgba(243,112,33,0.3)' }}>
                   Create Order & Generate Bilty
                 </button>
               </div>
