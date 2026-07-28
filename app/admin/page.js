@@ -1441,7 +1441,6 @@ const fetchPincode = async (pincode, type) => {
 
               <Label>Other Charges</Label>
               <div>
-  <Label>ODA</Label>
 
   <Select
     value={form.oda}
@@ -1450,7 +1449,6 @@ const fetchPincode = async (pincode, type) => {
       oda:v
     })}
   >
-
     <SelectTrigger>
       <SelectValue />
     </SelectTrigger>
