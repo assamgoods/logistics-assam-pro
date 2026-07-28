@@ -398,14 +398,30 @@ function Dashboard({ onLogout }) {
           )}
 
           {tab === 'new' && (
-            <NewBooking
-              onCreated={() => {
-                loadDashboard()
-                setTab('bookings')
-              }}
-            />
-          )}
 
+  <NewBooking
+
+    editBooking={selectedBooking}
+
+    onUpdated={() => {
+
+      loadDashboard()
+
+      setTab('bookings')
+
+    }}
+
+    onCreated={() => {
+
+      loadDashboard()
+
+      setTab('bookings')
+
+    }}
+
+  />
+
+)}
           {tab === 'billing' && (
             <BillingModule
               bookings={bookings}
@@ -882,10 +898,9 @@ function BookingsList({
       variant="outline"
       title="Edit Booking"
       onClick={()=>{
-        setSelectedBooking(item)
-        setShowEdit(true)
-      }}
-    >
+  setSelectedBooking(item)
+  setTab('new')
+}}    >
 
       <Edit className="h-4 w-4" />
 
@@ -980,7 +995,7 @@ function BookingsList({
   )
 
 }
-function NewBooking({ onCreated }) {
+function NewBooking({ onCreated, editBooking, onUpdated }) {
 
   const emptyForm = {
 
@@ -1020,6 +1035,16 @@ function NewBooking({ onCreated }) {
 
   const [form, setForm] = useState(emptyForm)
   const [saving, setSaving] = useState(false)
+  useEffect(() => {
+
+  if(editBooking){
+    setForm({
+      ...emptyForm,
+      ...editBooking
+    })
+  }
+
+}, [editBooking])
 
 
 const odaCharge =
