@@ -1454,6 +1454,37 @@ const fetchPincode = async (pincode, type) => {
   />
 
 </div>
+<div>
+
+  <Label>ODA</Label>
+
+  <Select
+    value={form.oda}
+    onValueChange={(v)=>setForm({
+      ...form,
+      oda:v
+    })}
+  >
+
+    <SelectTrigger>
+      <SelectValue placeholder="Select ODA" />
+    </SelectTrigger>
+
+    <SelectContent>
+
+      <SelectItem value="NO">
+        NO
+      </SelectItem>
+
+      <SelectItem value="YES">
+        YES
+      </SelectItem>
+
+    </SelectContent>
+
+  </Select>
+
+</div>
               <Label>Payment Mode</Label>
 
               <Select
