@@ -1202,8 +1202,8 @@ const fetchPincode = async (pincode, type) => {
 
      const res = await fetch(
   editBooking
-    ? `/api/bookings/${editBooking._id}`
-    : '/api/bookings',
+  ? `/api/bookings/${editBooking.id}`
+  : '/api/bookings',
   {
     method: editBooking ? 'PUT' : 'POST',
 
