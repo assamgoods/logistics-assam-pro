@@ -1043,10 +1043,59 @@ function NewBooking({ onCreated, editBooking, onUpdated }) {
   useEffect(() => {
 
   if(editBooking){
+
     setForm({
       ...emptyForm,
-      ...editBooking
+
+      ...editBooking,
+
+      senderName:
+        editBooking.senderName ||
+        editBooking.sender?.name ||
+        '',
+
+      receiverName:
+        editBooking.receiverName ||
+        editBooking.receiver?.name ||
+        '',
+
+      destination:
+        editBooking.destination ||
+        '',
+
+      actualWeight:
+        editBooking.actualWeight ||
+        '',
+
+      chargeableWeight:
+        editBooking.chargeableWeight ||
+        '',
+
+      freight:
+        editBooking.freight ||
+        '',
+
+      loading:
+        editBooking.loading ||
+        '',
+
+      unloading:
+        editBooking.unloading ||
+        '',
+
+      hamali:
+        editBooking.hamali ||
+        '',
+
+      otherCharges:
+        editBooking.otherCharges ||
+        '',
+
+      oda:
+        editBooking.oda ||
+        'NO'
     })
+
   }
 
 }, [editBooking])
