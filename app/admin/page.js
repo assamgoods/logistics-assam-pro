@@ -1229,11 +1229,18 @@ const fetchPincode = async (pincode, type) => {
 
       if (data.ok) {
 
-        toast.success('Booking Created Successfully')
-
+        toast.success(
+  editBooking
+    ? 'Booking Updated Successfully'
+    : 'Booking Created Successfully'
+)
         setForm(emptyForm)
 
-        onCreated()
+        if(editBooking){
+  onUpdated()
+}else{
+  onCreated()
+}
 
       } else {
 
@@ -1810,7 +1817,7 @@ const fetchPincode = async (pincode, type) => {
                     className="h-12 px-8 bg-[#0F3D91] hover:bg-[#1E4FB8]"
                   >
 
-                    {saving ? 'Saving...' : 'Create Booking'}
+                    {saving ? 'Saving...' : editBooking ? 'Update Booking' : 'Create Booking'}
 
                   </Button>
 
