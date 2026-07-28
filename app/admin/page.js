@@ -17,6 +17,7 @@ import {
   Users,
   Building2,
   FileSpreadsheet,
+  FileText,
   DollarSign,
   Tag,
   ArrowRightLeft,
