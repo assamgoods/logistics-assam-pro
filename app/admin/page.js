@@ -1392,7 +1392,7 @@ const fetchPincode = async (pincode, type) => {
 
             <div>
 
-              <Label>Loading Charges</Label>
+              <Label>Green Charge</Label>
 
               <Input
                 type="number"
@@ -1408,9 +1408,24 @@ const fetchPincode = async (pincode, type) => {
 
 
             <div>
+<div>
 
-              <Label>LC</Label>
-              <div>
+  <Label>LC</Label>
+
+  <Input
+    type="number"
+    value={form.unloading || ''}
+    onChange={(e)=>setForm({
+      ...form,
+      unloading:e.target.value
+    })}
+  />
+
+</div>
+
+
+<div>
+
   <Label>Hamali Charges</Label>
 
   <Input
@@ -1424,66 +1439,21 @@ const fetchPincode = async (pincode, type) => {
 
 </div>
 
-              <Input
-                type="number"
-                value={form.unloading}
-                onChange={(e)=>setForm({
-                  ...form,
-                  unloading:e.target.value
-                })}
-              />
 
-            </div>
+<div>
 
+  <Label>Other Charges</Label>
 
-
-            <div>
-
-              <Label>Other Charges</Label>
-              <div>
-
-  <Select
-    value={form.oda}
-    onValueChange={(v)=>setForm({
+  <Input
+    type="number"
+    value={form.otherCharges || ''}
+    onChange={(e)=>setForm({
       ...form,
-      oda:v
+      otherCharges:e.target.value
     })}
-  >
-    <SelectTrigger>
-      <SelectValue />
-    </SelectTrigger>
-
-    <SelectContent>
-
-      <SelectItem value="NO">
-        NO
-      </SelectItem>
-
-      <SelectItem value="YES">
-        YES
-      </SelectItem>
-
-    </SelectContent>
-
-  </Select>
+  />
 
 </div>
-
-              <Input
-                type="number"
-                value={form.otherCharges}
-                onChange={(e)=>setForm({
-                  ...form,
-                  otherCharges:e.target.value
-                })}
-              />
-
-            </div>
-
-
-
-            <div>
-
               <Label>Payment Mode</Label>
 
               <Select
