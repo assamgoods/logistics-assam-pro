@@ -4,9 +4,9 @@ import React from 'react';
 
 export default function SuperAdminDashboard() {
   const [orders, setOrders] = useState([
-    { lrNumber: 'AGC312438', date: '28 Jul, 2026', route: 'Chandigarh → Mathabhanga', client: 'Mehek Medical Store', amount: '₹10,076', boxes: 5, user: 'Branch Admin (CHD)', status: 'Manifested' },
-    { lrNumber: 'AGC312414', date: '28 Jul, 2026', route: 'Chandigarh → Jeypore', client: 'Lakshmi Agencies', amount: '₹4,536', boxes: 3, user: 'Super Admin', status: 'Manifested' },
-    { lrNumber: 'AGC312405', date: '28 Jul, 2026', route: 'Mandya → Kurnool', client: 'Royal Enterprises', amount: '₹3,188', boxes: 2, user: 'Branch Admin (BLR)', status: 'In Transit' }
+    { lrNumber: 'AGC312438', date: '28 Jul, 2026', route: 'Chandigarh → Mathabhanga', client: 'Mehek Medical Store', amount: 10076, boxes: 5, user: 'Branch Admin (CHD)', paymentType: 'Prepaid', status: 'Manifested' },
+    { lrNumber: 'AGC312414', date: '28 Jul, 2026', route: 'Chandigarh → Jeypore', client: 'Lakshmi Agencies', amount: 4536, boxes: 3, user: 'Super Admin', paymentType: 'COD', status: 'Manifested' },
+    { lrNumber: 'AGC312405', date: '28 Jul, 2026', route: 'Mandya → Kurnool', client: 'Royal Enterprises', amount: 3188, boxes: 2, user: 'Branch Admin (BLR)', paymentType: 'COD', status: 'In Transit' }
   ]);
 
   const [showModal, setShowModal] = useState(false);
@@ -14,6 +14,7 @@ export default function SuperAdminDashboard() {
   const [route, setRoute] = useState('');
   const [amount, setAmount] = useState('');
   const [boxes, setBoxes] = useState('');
+  const [paymentType, setPaymentType] = useState('Prepaid');
 
   const handleCreateOrder = (e) => {
     e.preventDefault();
@@ -24,9 +25,10 @@ export default function SuperAdminDashboard() {
       date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       route,
       client: clientName,
-      amount: '₹' + parseInt(amount).toLocaleString(),
+      amount: parseInt(amount),
       boxes: parseInt(boxes || 1),
       user: 'Super Admin',
+      paymentType,
       status: 'Manifested'
     };
 
@@ -35,33 +37,28 @@ export default function SuperAdminDashboard() {
     setRoute('');
     setAmount('');
     setBoxes('');
+    setPaymentType('Prepaid');
     setShowModal(false);
   };
 
+  // Calculations for Super Admin Power Panel
   const totalBookings = orders.length;
-  const totalRevenue = orders.reduce((acc, curr) => acc + parseInt(curr.amount.replace('₹', '').replace(/,/g, '')), 0);
+  const totalRevenue = orders.reduce((acc, curr) => acc + curr.amount, 0);
+  
+  const prepaidOrders = orders.filter(o => o.paymentType === 'Prepaid');
+  const codOrders = orders.filter(o => o.paymentType === 'COD');
+
+  const totalPrepaidAmount = prepaidOrders.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalCodAmount = codOrders.reduce((acc, curr) => acc + curr.amount, 0);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#0b192c', fontFamily: 'Inter, Arial, sans-serif', color: '#fff' }}>
       
-      {/* Left Sidebar Menu with Ditto Screenshot Branding */}
+      {/* Left Sidebar Menu */}
       <aside style={{ width: '260px', background: '#08121e', borderRight: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', position: 'fixed', height: '100vh', zIndex: 100 }}>
         
-        {/* Ditto Logo Header */}
         <div style={{ padding: '20px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ 
-            width: '38px', 
-            height: '38px', 
-            background: '#ff7b00', 
-            borderRadius: '6px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            fontSize: '24px', 
-            fontWeight: '900', 
-            color: '#08121e',
-            boxShadow: '0 4px 10px rgba(255,123,0,0.3)'
-          }}>A</div>
+          <div style={{ width: '38px', height: '38px', background: '#ff7b00', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', fontWeight: '900', color: '#08121e', boxShadow: '0 4px 10px rgba(255,123,0,0.3)' }}>A</div>
           <div>
             <div style={{ fontWeight: '900', fontSize: '13px', color: '#ffffff', letterSpacing: '0.8px', lineHeight: '1.2' }}>ASSAM GOODS</div>
             <div style={{ fontWeight: '900', fontSize: '13px', color: '#ffffff', letterSpacing: '0.8px', lineHeight: '1.2' }}>CARRIER</div>
@@ -70,9 +67,8 @@ export default function SuperAdminDashboard() {
         </div>
 
         <nav style={{ padding: '20px 12px', display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-          <a href="/super-admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', background: '#ff7b00', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '700', boxShadow: '0 4px 12px rgba(255,123,0,0.3)' }}>📦 B2B Orders & Bookings</a>
+          <a href="/super-admin/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', background: '#ff7b00', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '700', boxShadow: '0 4px 12px rgba(255,123,0,0.3)' }}>📦 Super Admin Ledger</a>
           <a href="/super-admin/rate-calculater" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>🧮 Rate Calculator</a>
-          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>🏢 Branch & Users Ledger</a>
         </nav>
 
         <div style={{ padding: '15px 20px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '11px', color: '#94a3b8', textAlign: 'center' }}>
@@ -83,27 +79,38 @@ export default function SuperAdminDashboard() {
       {/* Main Content Area */}
       <main style={{ marginLeft: '260px', flex: 1, padding: '30px 40px' }}>
         
-        {/* Top Summary Metrics */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '25px' }}>
-          <div style={{ background: '#102238', padding: '22px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', marginBottom: '8px', letterSpacing: '0.5px' }}>TOTAL BOOKINGS</div>
-            <div style={{ fontSize: '24px', fontWeight: '800', color: '#fff' }}>{totalBookings} Shipments</div>
+        {/* Top Summary Metrics for Super Admin Powers */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginBottom: '25px' }}>
+          <div style={{ background: '#102238', padding: '18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', marginBottom: '6px', letterSpacing: '0.5px' }}>TOTAL REVENUE</div>
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#fff' }}>₹{totalRevenue.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', color: '#60a5fa', marginTop: '4px' }}>{totalBookings} Total Shipments</div>
           </div>
-          <div style={{ background: '#102238', padding: '22px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', marginBottom: '8px', letterSpacing: '0.5px' }}>TOTAL REVENUE</div>
-            <div style={{ fontSize: '24px', fontWeight: '800', color: '#ff7b00' }}>₹{totalRevenue.toLocaleString()}</div>
+
+          <div style={{ background: '#102238', padding: '18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', marginBottom: '6px', letterSpacing: '0.5px' }}>PREPAID BOOKINGS</div>
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#22c55e' }}>₹{totalPrepaidAmount.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>{prepaidOrders.length} Shipments Paid</div>
           </div>
-          <div style={{ background: '#102238', padding: '22px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8', marginBottom: '8px', letterSpacing: '0.5px' }}>ACTIVE PANEL</div>
-            <div style={{ fontSize: '22px', fontWeight: '800', color: '#60a5fa' }}>Super Admin</div>
+
+          <div style={{ background: '#102238', padding: '18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', marginBottom: '6px', letterSpacing: '0.5px' }}>TODAY COD COLLECTION</div>
+            <div style={{ fontSize: '20px', fontWeight: '800', color: '#ff7b00' }}>₹{totalCodAmount.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>{codOrders.length} COD Shipments</div>
+          </div>
+
+          <div style={{ background: '#102238', padding: '18px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', marginBottom: '6px', letterSpacing: '0.5px' }}>ACTIVE PANEL</div>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: '#f59e0b' }}>Super Admin 👑</div>
+            <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>Full Network Access</div>
           </div>
         </div>
 
         {/* Action Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: '#102238', padding: '18px 25px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
           <div>
-            <span style={{ fontSize: '15px', fontWeight: '700', color: '#fff', display: 'block' }}>Manifested Bookings & User Activity</span>
-            <span style={{ fontSize: '12px', color: '#94a3b8' }}>Assam Goods Carrier B2B Logistics Network</span>
+            <span style={{ fontSize: '15px', fontWeight: '700', color: '#fff', display: 'block' }}>All Branch Bookings & Payment Ledger</span>
+            <span style={{ fontSize: '12px', color: '#94a3b8' }}>Monitor staff bookings, COD amounts and shipment statuses</span>
           </div>
           <button onClick={() => setShowModal(true)} style={{ background: '#ff7b00', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(255,123,0,0.3)' }}>
             + Create New Order
@@ -118,7 +125,7 @@ export default function SuperAdminDashboard() {
             <div>ROUTE & CLIENT</div>
             <div>BOOKED BY</div>
             <div>AMOUNT</div>
-            <div>BOXES</div>
+            <div>PAYMENT</div>
             <div style={{ textAlign: 'right' }}>STATUS</div>
           </div>
 
@@ -131,10 +138,18 @@ export default function SuperAdminDashboard() {
                 <div style={{ fontSize: '11px', color: '#ff7b00', fontWeight: '600' }}>{order.client}</div>
               </div>
               <div style={{ color: '#cbd5e1', fontSize: '12px', fontWeight: '600' }}>{order.user}</div>
-              <div style={{ color: '#fff', fontWeight: '700' }}>{order.amount}</div>
-              <div style={{ color: '#fff' }}>{order.boxes} Box</div>
+              <div style={{ color: '#fff', fontWeight: '700' }}>₹{order.amount.toLocaleString()}</div>
+              <div>
+                <span style={{ 
+                  background: order.paymentType === 'Prepaid' ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.15)', 
+                  color: order.paymentType === 'Prepaid' ? '#22c55e' : '#f59e0b', 
+                  padding: '4px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' 
+                }}>
+                  {order.paymentType}
+                </span>
+              </div>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+                <span style={{ background: 'rgba(59,130,246,0.15)', color: '#60a5fa', padding: '4px 10px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
                   {order.status}
                 </span>
               </div>
@@ -142,11 +157,11 @@ export default function SuperAdminDashboard() {
           ))}
         </div>
 
-        {/* Modal for Creating New Order */}
+        {/* Modal for Creating New Order with Payment Selection */}
         {showModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.7)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
             <div style={{ background: '#102238', padding: '30px', borderRadius: '12px', width: '450px', border: '1px solid rgba(255,255,255,0.1)' }}>
-              <h3 style={{ marginBottom: '20px', color: '#ff7b00', fontSize: '16px' }}>📦 AGC - Create New B2B Shipment</h3>
+              <h3 style={{ marginBottom: '20px', color: '#ff7b00', fontSize: '16px' }}>📦 Super Admin - New Shipment Booking</h3>
               <form onSubmit={handleCreateOrder}>
                 <div style={{ marginBottom: '15px' }}>
                   <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '5px' }}>Client / Consignee Name</label>
@@ -156,15 +171,22 @@ export default function SuperAdminDashboard() {
                   <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '5px' }}>Route (Origin → Destination)</label>
                   <input type="text" placeholder="e.g. Guwahati → Silchar" value={route} onChange={e => setRoute(e.target.value)} required style={{ width: '100%', padding: '10px', background: '#0b192c', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '5px' }}>Invoice Amount (₹)</label>
+                    <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '5px' }}>Amount (₹)</label>
                     <input type="number" placeholder="e.g. 15000" value={amount} onChange={e => setAmount(e.target.value)} required style={{ width: '100%', padding: '10px', background: '#0b192c', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '5px' }}>Box Count</label>
-                    <input type="number" placeholder="e.g. 3" value={boxes} onChange={e => setBoxes(e.target.value)} required style={{ width: '100%', padding: '10px', background: '#0b192c', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
+                    <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '5px' }}>Payment Mode</label>
+                    <select value={paymentType} onChange={e => setPaymentType(e.target.value)} style={{ width: '100%', padding: '10px', background: '#0b192c', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }}>
+                      <option value="Prepaid">Prepaid</option>
+                      <option value="COD">COD</option>
+                    </select>
                   </div>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ fontSize: '12px', color: '#94a3b8', display: 'block', marginBottom: '5px' }}>Box Count</label>
+                  <input type="number" placeholder="e.g. 3" value={boxes} onChange={e => setBoxes(e.target.value)} required style={{ width: '100%', padding: '10px', background: '#0b192c', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: '6px' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <button type="submit" style={{ flex: 1, background: '#ff7b00', color: '#fff', border: 'none', padding: '12px', borderRadius: '6px', fontWeight: '700', cursor: 'pointer' }}>Save & Generate LR</button>
