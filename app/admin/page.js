@@ -1045,55 +1045,71 @@ function NewBooking({ onCreated, editBooking, onUpdated }) {
   if(editBooking){
 
     setForm({
-      ...emptyForm,
 
-      ...editBooking,
+      ...emptyForm,
 
       senderName:
         editBooking.senderName ||
         editBooking.sender?.name ||
         '',
 
+      senderPhone:
+        editBooking.senderPhone ||
+        editBooking.sender?.phone ||
+        '',
+
+      senderAddress:
+        editBooking.senderAddress ||
+        editBooking.sender?.address ||
+        '',
+
+
       receiverName:
         editBooking.receiverName ||
         editBooking.receiver?.name ||
         '',
 
-      destination:
-        editBooking.destination ||
+      receiverPhone:
+        editBooking.receiverPhone ||
+        editBooking.receiver?.phone ||
         '',
+
+      receiverAddress:
+        editBooking.receiverAddress ||
+        editBooking.receiver?.address ||
+        '',
+
+
+      destination:
+        editBooking.destination || '',
 
       actualWeight:
-        editBooking.actualWeight ||
-        '',
+        editBooking.actualWeight || '',
 
       chargeableWeight:
-        editBooking.chargeableWeight ||
-        '',
+        editBooking.chargeableWeight || '',
 
       freight:
-        editBooking.freight ||
-        '',
+        editBooking.freight || '',
 
       loading:
-        editBooking.loading ||
-        '',
+        editBooking.loading || '',
 
       unloading:
-        editBooking.unloading ||
-        '',
+        editBooking.unloading || '',
 
       hamali:
-        editBooking.hamali ||
-        '',
+        editBooking.hamali || '',
 
       otherCharges:
-        editBooking.otherCharges ||
-        '',
+        editBooking.otherCharges || '',
 
       oda:
-        editBooking.oda ||
-        'NO'
+        editBooking.oda || 'NO',
+
+      paymentMode:
+        editBooking.paymentMode || 'TO_PAY'
+
     })
 
   }
