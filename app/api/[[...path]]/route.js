@@ -458,9 +458,8 @@ async function handle(request, ctx) {
 
   const id = parts[1]
   const body = await request.json()
-
-  const result = await db.collection('bookings').updateOne(
-    { _id: new ObjectId(id) },
+const result = await db.collection('bookings').updateOne(
+    { id: id },
     {
       $set: {
         ...body,
