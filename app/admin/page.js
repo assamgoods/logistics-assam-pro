@@ -390,11 +390,14 @@ function Dashboard({ onLogout }) {
 
           {tab === 'bookings' && (
             <BookingsList
-              bookings={filteredBookings}
-              search={search}
-              setSearch={setSearch}
-              reload={loadDashboard}
-            />
+  bookings={filteredBookings}
+  search={search}
+  setSearch={setSearch}
+  reload={loadDashboard}
+  setTab={setTab}
+  selectedBooking={selectedBooking}
+  setSelectedBooking={setSelectedBooking}
+/>
           )}
 
           {tab === 'new' && (
@@ -676,10 +679,11 @@ function BookingsList({
   search,
   setSearch,
   reload,
-  setTab
+  setTab,
+  selectedBooking,
+  setSelectedBooking
 }) {
 
-  const [selectedBooking, setSelectedBooking] = useState(null)
   const [showView, setShowView] = useState(false)
   const [showEdit, setShowEdit] = useState(false)
 
