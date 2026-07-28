@@ -662,14 +662,20 @@ function BookingsList({
   reload,
   setTab
 }) {
-const [selectedBooking, setSelectedBooking] = useState(null)
-const [showView, setShowView] = useState(false)
+
+  const [selectedBooking, setSelectedBooking] = useState(null)
+  const [showView, setShowView] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
+
+
   return (
+
     <div className="space-y-6">
 
       <Card className="border-0 shadow-md">
 
         <CardContent className="p-6">
+
 
           <div className="flex items-center justify-between mb-5">
 
@@ -677,159 +683,292 @@ const [showView, setShowView] = useState(false)
               Booking Management
             </h2>
 
+
             <Button
               onClick={reload}
               variant="outline"
             >
+
               <RefreshCw className="h-4 w-4 mr-2" />
+
               Refresh
+
             </Button>
 
+
           </div>
+
+
 
           <div className="relative mb-6">
 
-            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
 
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search LR Number, Sender, Receiver..."
-              className="pl-10 h-11"
+            <Search
+              className="absolute left-3 top-3 h-4 w-4 text-slate-400"
             />
 
+
+            <Input
+
+              value={search}
+
+              onChange={(e)=>setSearch(e.target.value)}
+
+              placeholder="Search LR Number, Sender, Receiver..."
+
+              className="pl-10 h-11"
+
+            />
+
+
           </div>
+
+
 
           <div className="overflow-x-auto">
 
+
             <table className="w-full text-sm">
+
+
               <thead className="bg-slate-100 text-slate-600 uppercase text-[11px]">
+
+
                 <tr>
-                  <th className="p-3 text-left">LR No.</th>
-                  <th className="p-3 text-left">Sender</th>
-                  <th className="p-3 text-left">Receiver</th>
-                  <th className="p-3 text-left">Destination</th>
-                  <th className="p-3 text-center">Weight</th>
-                  <th className="p-3 text-right">Amount</th>
-                  <th className="p-3 text-center">Status</th>
-                  <th className="p-3 text-center">Actions</th>
+
+
+                  <th className="p-3 text-left">
+                    LR No.
+                  </th>
+
+
+                  <th className="p-3 text-left">
+                    Sender
+                  </th>
+
+
+                  <th className="p-3 text-left">
+                    Receiver
+                  </th>
+
+
+                  <th className="p-3 text-left">
+                    Destination
+                  </th>
+
+
+                  <th className="p-3 text-center">
+                    Weight
+                  </th>
+
+
+                  <th className="p-3 text-right">
+                    Amount
+                  </th>
+
+
+                  <th className="p-3 text-center">
+                    Status
+                  </th>
+
+
+                  <th className="p-3 text-center">
+                    Actions
+                  </th>
+
+
                 </tr>
+
+
               </thead>
+
+
 
               <tbody>
 
-                {bookings.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      className="text-center p-10 text-slate-400"
-                    >
-                      No Booking Found
-                    </td>
-                  </tr>
-                )}
 
-                {bookings.map((item, index) => (
+                {bookings.map((item,index)=>(
+
+
                   <tr
+
                     key={item._id || index}
+
                     className="border-b hover:bg-slate-50"
+
                   >
+
+
                     <td className="p-3 font-bold text-[#0F3D91]">
+
                       {item.lrNumber}
+
                     </td>
 
+
                     <td className="p-3">
+
                       {item.senderName || item.sender?.name || '-'}
+
                     </td>
 
+
                     <td className="p-3">
+
                       {item.receiverName || item.receiver?.name || '-'}
+
                     </td>
 
+
                     <td className="p-3">
+
                       {item.destination || '-'}
+
                     </td>
+
 
                     <td className="p-3 text-center">
+
                       {item.chargeableWeight || item.actualWeight || 0} Kg
+
                     </td>
+
 
                     <td className="p-3 text-right font-bold">
+
                       ₹{Number(item.totalAmount || 0).toLocaleString('en-IN')}
+
                     </td>
+
 
                     <td className="p-3 text-center">
 
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold ${
-                          item.status === 'DELIVERED'
-                            ? 'bg-green-100 text-green-700'
-                            : item.status === 'IN_TRANSIT'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-yellow-100 text-yellow-700'
-                        }`}
-                      >
+
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
+
                         {item.status || 'BOOKED'}
+
                       </span>
 
-                    </td>
-                    <td className="p-3">
-
-                      <div className="flex items-center justify-center gap-2">
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          title="View Booking"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          title="Edit Booking"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          title="Print LR"
-                        >
-                          <Printer className="h-4 w-4" />
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          title="Generate Invoice"
-                          onClick={() => setTab('billing')}
-                        >
-                          <IndianRupee className="h-4 w-4" />
-                        </Button>
-
-                      </div>
 
                     </td>
+<td className="p-3">
 
-                  </tr>
-                ))}
+  <div className="flex items-center justify-center gap-2">
+
+
+    {/* View */}
+
+    <Button
+      size="sm"
+      variant="outline"
+      title="View Booking"
+      onClick={()=>{
+        setSelectedBooking(item)
+        setShowView(true)
+      }}
+    >
+
+      <Eye className="h-4 w-4" />
+
+    </Button>
+
+
+
+    {/* Edit / Update */}
+
+    <Button
+      size="sm"
+      variant="outline"
+      title="Edit Booking"
+      onClick={()=>{
+        setSelectedBooking(item)
+        setShowEdit(true)
+      }}
+    >
+
+      <Edit className="h-4 w-4" />
+
+    </Button>
+
+
+
+    {/* LR Print */}
+
+    <Button
+      size="sm"
+      variant="outline"
+      title="Print LR"
+      onClick={()=>{
+        setSelectedBooking(item)
+      }}
+    >
+
+      <Printer className="h-4 w-4" />
+
+    </Button>
+
+
+
+    {/* Sticker Print */}
+
+    <Button
+      size="sm"
+      variant="outline"
+      title="Print Sticker"
+      onClick={()=>{
+        setSelectedBooking(item)
+      }}
+    >
+
+      <Tag className="h-4 w-4" />
+
+    </Button>
+
+
+
+    {/* Invoice */}
+
+    <Button
+      size="sm"
+      variant="outline"
+      title="Generate Invoice"
+      onClick={()=>setTab('billing')}
+    >
+
+      <IndianRupee className="h-4 w-4" />
+
+    </Button>
+
+
+  </div>
+
+</td>
+
+
+                </tr>
+
+              ))}
+
 
               </tbody>
 
+
             </table>
 
+
           </div>
+
 
         </CardContent>
 
       </Card>
 
+
     </div>
 
   )
+
 }
 function NewBooking({ onCreated }) {
 
@@ -873,12 +1012,21 @@ function NewBooking({ onCreated }) {
   const [saving, setSaving] = useState(false)
 
 
+const odaCharge =
+  form.oda === 'YES'
+    ? Number(form.chargeableWeight || form.actualWeight || 0) <= 120
+      ? 500
+      : Number(form.chargeableWeight || form.actualWeight || 0) * 3
+    : 0
+
+
 const totalAmount =
   Number(form.freight || 0) +
   Number(form.loading || 0) +
   Number(form.unloading || 0) +
   Number(form.hamali || 0) +
-  Number(form.otherCharges || 0)
+  Number(form.otherCharges || 0) +
+  odaCharge
 const fetchPincode = async (pincode, type) => {
 
   if (pincode.length !== 6) return
