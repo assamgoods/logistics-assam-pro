@@ -1,130 +1,159 @@
 'use client';
+import { useState } from 'react';
 import React from 'react';
 
 export default function SuperAdminDashboard() {
+  const [activeTab, setActiveTab] = useState('orders');
+
+  // Dummy data for bookings / shipments tracking per user/branch
+  const bookingsData = [
+    { lrNumber: '312438499', date: '28 Jul, 2026 07:46 PM', route: 'Chandigarh (134109) → Mathabhanga (736158)', client: 'MEHEK MEDICAL STORE', amount: '₹10076.00', mode: 'Pre-paid', freight: 'FOD', boxes: 5, status: 'Manifested' },
+    { lrNumber: '312414449', date: '28 Jul, 2026 03:35 PM', route: 'Chandigarh (134109) → Jeypore (764001)', client: 'LAKSHMI MEDICAL AGENCIES', amount: '₹4536.00', mode: 'COD', freight: 'FOD', boxes: 3, status: 'Manifested' },
+    { lrNumber: '312405951', date: '28 Jul, 2026 01:58 PM', route: 'Mandya (571401) → Kurnool (518002)', client: 'ROYAL ENTERPRISES', amount: '₹3188.00', mode: 'Pre-paid', freight: 'FOP-Paid', boxes: 2, status: 'In Transit' }
+  ];
+
   return (
-    <div style={{ background: '#0b192c', minHeight: '100vh', fontFamily: 'Inter, Arial, sans-serif', paddingBottom: '40px', color: '#fff' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#0b192c', fontFamily: 'Inter, Arial, sans-serif', color: '#fff' }}>
       
-      {/* Clean Admin Header */}
-      <header style={{ background: '#08121e', borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '15px 40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ fontSize: '32px', fontWeight: '900', color: '#ff7b00', fontStyle: 'italic', lineHeight: '1' }}>
+      {/* Left Sidebar Menu */}
+      <aside style={{ width: '260px', background: '#08121e', borderRight: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', position: 'fixed', height: '100vh', overflowY: 'auto' }}>
+        
+        {/* Brand Logo Header */}
+        <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ fontSize: '28px', fontWeight: '900', color: '#ff7b00', fontStyle: 'italic', lineHeight: '1' }}>
             A
           </div>
           <div>
-            <span style={{ fontWeight: '900', fontSize: '16px', color: '#ffffff', letterSpacing: '0.5px', display: 'block' }}>
+            <span style={{ fontWeight: '900', fontSize: '14px', color: '#ffffff', letterSpacing: '0.5px', display: 'block' }}>
               ASSAM GOODS CARRIER
             </span>
-            <span style={{ fontSize: '9px', color: '#ff7b00', fontWeight: '700', letterSpacing: '1.5px' }}>
+            <span style={{ fontSize: '8px', color: '#ff7b00', fontWeight: '700', letterSpacing: '1px' }}>
               SAFE • FAST • RELIABLE
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <a href="/super-admin/rate-calculater" style={{ background: '#ff7b00', color: '#ffffff', padding: '8px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 4px 12px rgba(255,123,0,0.3)' }}>
+        {/* Sidebar Navigation Links */}
+        <nav style={{ padding: '15px 10px', display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
+            📊 Dashboard
+          </a>
+          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', background: '#ff7b00', color: '#ffffff', textDecoration: 'none', fontSize: '13px', fontWeight: '700', boxShadow: '0 4px 12px rgba(255,123,0,0.3)' }}>
+            📦 B2B Orders / Bookings
+          </a>
+          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
+            🚚 Pickup Requests
+          </a>
+          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
+            ⚠️ Delivery Exceptions
+          </a>
+          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
+            💰 Finances & Ledger
+          </a>
+          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
+            🏢 Branch & Users
+          </a>
+          <a href="/super-admin/rate-calculater" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
             🧮 Rate Calculator
           </a>
-          
-          <div style={{ background: 'rgba(255,255,255,0.08)', color: '#ffffff', padding: '8px 18px', borderRadius: '30px', fontSize: '13px', fontWeight: '800', border: '1px solid rgba(255,255,255,0.1)' }}>
-            📞 8847428801
-          </div>
-        </div>
-      </header>
+          <a href="#" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 15px', borderRadius: '8px', color: '#cbd5e1', textDecoration: 'none', fontSize: '13px', fontWeight: '600' }}>
+            ⚙️ Settings
+          </a>
+        </nav>
 
-      {/* Main Dashboard Container */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
+        {/* Sidebar Footer Support */}
+        <div style={{ padding: '15px', borderTop: '1px solid rgba(255,255,255,0.08)', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+          📞 Support: 8847428801
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main style={{ marginLeft: '260px', flex: 1, padding: '25px 35px' }}>
         
-        {/* Top Grid: Live Shipment Actions & Quick Navigation */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px', marginBottom: '25px' }}>
-          
-          {/* Live Shipment Actions Box */}
-          <div style={{ background: '#102238', border: '1px solid rgba(255,255,255,0.08)', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#ff7b00', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              🚚 Live Shipment Actions
-            </h3>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
-              
-              <div style={{ background: '#0b192c', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '10px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: '800', color: '#ffffff', marginBottom: '4px' }}>5</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px' }}>Awaiting Pickup</div>
-                <a href="#" style={{ fontSize: '12px', color: '#60a5fa', fontWeight: '700', textDecoration: 'none' }}>View →</a>
-              </div>
-
-              <div style={{ background: '#0b192c', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '10px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: '800', color: '#ffffff', marginBottom: '4px' }}>9</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px' }}>In Transit</div>
-                <a href="#" style={{ fontSize: '12px', color: '#60a5fa', fontWeight: '700', textDecoration: 'none' }}>View →</a>
-              </div>
-
-              <div style={{ background: '#0b192c', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '10px', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: '800', color: '#ef4444', marginBottom: '4px' }}>0</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px' }}>Exceptions</div>
-                <a href="#" style={{ fontSize: '12px', color: '#ef4444', fontWeight: '700', textDecoration: 'none' }}>Act Now →</a>
-              </div>
-
-            </div>
+        {/* Top Header Bar */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', background: '#102238', padding: '15px 25px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <span style={{ fontSize: '18px', fontWeight: '700', color: '#fff' }}>Manifested Bookings</span>
+            <span style={{ background: 'rgba(255,123,0,0.15)', color: '#ff7b00', padding: '4px 10px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>Total: 3 Bookings</span>
           </div>
 
-          {/* Side Shortcuts (Knowledge Base & Rate Calculator) */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-            <div style={{ background: '#102238', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '12px', textAlign: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-              <div style={{ fontSize: '18px', marginBottom: '6px' }}>📖</div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: '#ffffff', marginBottom: '4px' }}>Knowledge Base</div>
-              <a href="#" style={{ fontSize: '12px', color: '#94a3b8', textDecoration: 'none' }}>Read guides & policies</a>
-            </div>
-
-            <a href="/super-admin/rate-calculater" style={{ background: '#102238', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '12px', textAlign: 'center', textDecoration: 'none', display: 'block', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-              <div style={{ fontSize: '18px', marginBottom: '6px' }}>🧮</div>
-              <div style={{ fontSize: '14px', fontWeight: '700', color: '#ff7b00', marginBottom: '4px' }}>Rate Calculator</div>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>Calculate shipment pricing</span>
-            </a>
-          </div>
-
-        </div>
-
-        {/* Quick Shortcuts Section */}
-        <div style={{ background: '#102238', border: '1px solid rgba(255,255,255,0.08)', padding: '25px', borderRadius: '12px', marginBottom: '25px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#ff7b00', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            ⚡ Quick Shortcuts
-          </h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-            <div style={{ background: '#0b192c', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }}>
-              <div style={{ fontSize: '24px', background: 'rgba(255,123,0,0.1)', padding: '12px', borderRadius: '8px' }}>📦</div>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: '700', color: '#ffffff', marginBottom: '2px' }}>Create New Order</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Book a fresh shipment</div>
-              </div>
-            </div>
-
-            <div style={{ background: '#0b192c', border: '1px solid rgba(255,255,255,0.08)', padding: '20px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }}>
-              <div style={{ fontSize: '24px', background: 'rgba(255,123,0,0.1)', padding: '12px', borderRadius: '8px' }}>🚚</div>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: '700', color: '#ffffff', marginBottom: '2px' }}>Create New Pickup</div>
-                <div style={{ fontSize: '12px', color: '#94a3b8' }}>Schedule vendor pickup</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Upcoming Pickups Section */}
-        <div style={{ background: '#102238', border: '1px solid rgba(255,255,255,0.08)', padding: '25px', borderRadius: '12px', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#ffffff' }}>Upcoming Pickups</h3>
-            <button style={{ background: '#ff7b00', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(255,123,0,0.3)' }}>
-              + Create New Pickup
+          <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <input 
+              type="text" placeholder="Search LRN / Client..." 
+              style={{ padding: '8px 14px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.15)', background: '#0b192c', color: '#fff', fontSize: '13px', outline: 'none', width: '220px' }}
+            />
+            <button style={{ background: '#ff7b00', color: '#fff', border: 'none', padding: '9px 18px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', boxShadow: '0 4px 12px rgba(255,123,0,0.3)' }}>
+              + Create New Order
             </button>
           </div>
-
-          <div style={{ background: '#0b192c', border: '2px dashed rgba(255,255,255,0.1)', padding: '40px', borderRadius: '10px', textAlign: 'center' }}>
-            <div style={{ fontWeight: '700', fontSize: '14px', color: '#ffffff', marginBottom: '4px' }}>No upcoming pickups.</div>
-            <div style={{ fontSize: '12px', color: '#94a3b8' }}>Your upcoming pickup requests appear here</div>
-          </div>
         </div>
 
-      </div>
+        {/* Bookings / Shipments Table List */}
+        <div style={{ background: '#102238', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+          
+          {/* Table Header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.8fr 1.2fr 0.8fr 0.6fr 0.8fr', padding: '15px 20px', background: '#08121e', borderBottom: '1px solid rgba(255,255,255,0.08)', fontSize: '11px', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.5px' }}>
+            <div>LR NUMBER & MWB</div>
+            <div>MANIFESTED ON</div>
+            <div>PICKUP & DELIVERY ADDRESS</div>
+            <div>PRODUCT DETAILS</div>
+            <div>FREIGHT MODE</div>
+            <div>BOXES</div>
+            <div style={{ textAlign: 'right' }}>ACTION</div>
+          </div>
+
+          {/* Table Rows */}
+          {bookingsData.map((item, index) => (
+            <div key={index} style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1.8fr 1.2fr 0.8fr 0.6fr 0.8fr', padding: '18px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)', alignItems: 'center', fontSize: '13px' }}>
+              
+              {/* LR Number */}
+              <div>
+                <div style={{ color: '#60a5fa', fontWeight: '700', cursor: 'pointer' }}>{item.lrNumber}</div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>{item.lrNumber.replace('31', '309024')}</div>
+              </div>
+
+              {/* Date */}
+              <div style={{ color: '#cbd5e1', fontSize: '12px' }}>
+                {item.date}
+              </div>
+
+              {/* Route & Client */}
+              <div>
+                <div style={{ fontWeight: '600', color: '#fff', fontSize: '12px' }}>{item.route}</div>
+                <div style={{ fontSize: '11px', color: '#ff7b00', fontWeight: '600', marginTop: '2px' }}>{item.client}</div>
+              </div>
+
+              {/* Product Details */}
+              <div>
+                <div style={{ color: '#fff', fontWeight: '600' }}>1 Invoice</div>
+                <div style={{ fontSize: '11px', color: '#94a3b8' }}>{item.amount} | {item.mode}</div>
+              </div>
+
+              {/* Freight Mode */}
+              <div>
+                <span style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444', padding: '3px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: '700' }}>
+                  {item.freight}
+                </span>
+              </div>
+
+              {/* Boxes */}
+              <div style={{ fontWeight: '700', color: '#fff' }}>
+                {item.boxes} Box
+              </div>
+
+              {/* Action Button */}
+              <div style={{ textAlign: 'right' }}>
+                <button style={{ background: 'rgba(255,255,255,0.08)', color: '#fff', border: '1px solid rgba(255,255,255,0.15)', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>
+                  Print Label
+                </button>
+              </div>
+
+            </div>
+          ))}
+
+        </div>
+
+      </main>
     </div>
   );
 }
