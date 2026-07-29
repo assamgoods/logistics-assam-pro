@@ -1,4 +1,4 @@
-import EnterpriseSidebar from "@/components/super-admin/EnterpriseSidebar";
+import EnterpriseSidebar from "./components/EnterpriseSidebar";
 
 export default function SuperAdminLayout({ children }) {
   return (
