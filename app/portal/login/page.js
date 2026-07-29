@@ -38,7 +38,7 @@ export default function PortalLoginPage() {
         localStorage.setItem("portalToken", data.token);
       }
 
-      router.push("/portal/super-admin");
+      router.push("/super-admin/dashboard");
     } catch (err) {
       console.error(err);
       alert("Something went wrong.");
