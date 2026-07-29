@@ -19,13 +19,7 @@ export default function PortalLoginPage() {
   // Redirect already authenticated users directly to /super-admin/dashboard
   useEffect(() => {
     try {
-      const token =
-  localStorage.getItem("portalToken") ||
-  sessionStorage.getItem("portalToken");
-
-if (token) {
-  router.replace("/super-admin/dashboard");
-}
+      const token = localStorage.getItem('portalToken');
       if (token) {
         router.replace('/super-admin/dashboard');
       }
