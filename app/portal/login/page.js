@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Truck, ShieldCheck, Lock, Mail, Eye, EyeOff, 
@@ -17,17 +17,7 @@ export default function PortalLoginPage() {
   const [error, setError] = useState('');
 
   // Redirect already authenticated users directly to /super-admin/dashboard
-  useEffect(() => {
-    try {
-      const token = localStorage.getItem('portalToken');
-      if (token) {
-        router.replace('/super-admin/dashboard');
-      }
-    } catch {
-      // Ignore localStorage read errors in restricted contexts
-    }
-  }, [router]);
-
+  
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
