@@ -1797,6 +1797,12 @@ Quick Links
   >
     🏢 Branch Login
   </a>
+  <a
+  href="/portal/login"
+  className="hover:text-agc-gold transition duration-300"
+>
+  🛡️ Portal Login
+</a>
 
 </div>
 </div>
